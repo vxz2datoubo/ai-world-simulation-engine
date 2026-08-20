@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import copy
+import hashlib
+import json
 from dataclasses import dataclass, field
 from enum import Enum
 from types import MappingProxyType
@@ -33,6 +34,16 @@ def freeze_value(value: Any) -> Any:
         return tuple(freeze_value(item) for item in value)
     if isinstance(value, set):
         return frozenset(freeze_value(item) for item in value)
+    return value
+
+
+def thaw_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): thaw_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [thaw_value(item) for item in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted((thaw_value(item) for item in value), key=repr)
     return value
 
 
@@ -194,10 +205,204 @@ class WorldState:
 @dataclass(frozen=True)
 class WorldBaseline:
     baseline_version: str
-    _state: WorldState = field(repr=False, compare=False)
+    snapshot_digest: str
+    _snapshot: bytes = field(repr=False, compare=False)
 
     def instantiate(self) -> WorldState:
-        return copy.deepcopy(self._state)
+        actual_digest = hashlib.sha256(self._snapshot).hexdigest()
+        if actual_digest != self.snapshot_digest:
+            raise ValueError("BASELINE_SNAPSHOT_INTEGRITY_FAILURE")
+        rebuilt = _decode_world_snapshot(self._snapshot)
+        if rebuilt.baseline_version != self.baseline_version:
+            raise ValueError("BASELINE_VERSION_MISMATCH")
+        return rebuilt
+
+
+def _event_to_data(event: Event) -> dict[str, Any]:
+    return {
+        "event_id": event.event_id,
+        "event_type": event.event_type,
+        "actor_id": event.actor_id,
+        "scene_id": event.scene_id,
+        "baseline_version": event.baseline_version,
+        "payload": thaw_value(event.payload),
+        "caused_by_action_id": event.caused_by_action_id,
+    }
+
+
+def _world_to_data(world: WorldState) -> dict[str, Any]:
+    return {
+        "world_id": world.world_id,
+        "active_scene_id": world.active_scene_id,
+        "baseline_version": world.baseline_version,
+        "state_version": world.state_version,
+        "primary_player_actor_id": world.primary_player_actor_id,
+        "actors": {
+            actor_id: {
+                "actor_id": actor.actor_id,
+                "name": actor.name,
+                "scene_id": actor.scene_id,
+                "strength": actor.strength,
+                "fatigue": actor.fatigue,
+                "injury": actor.injury,
+                "free_hands": actor.free_hands,
+                "inventory_refs": list(actor.inventory_refs),
+                "max_targets_per_strike": actor.max_targets_per_strike,
+                "capabilities": sorted(actor.capabilities),
+            }
+            for actor_id, actor in world.actors.items()
+        },
+        "objects": {
+            object_id: {
+                "object_id": obj.object_id,
+                "name": obj.name,
+                "scene_id": obj.scene_id,
+                "mass": obj.mass,
+                "graspable": obj.graspable,
+                "fragility": obj.fragility,
+                "damage_state": obj.damage_state,
+                "contamination_state": obj.contamination_state,
+            }
+            for object_id, obj in world.objects.items()
+        },
+        "npc_minds": {
+            npc_id: {
+                "npc_id": npc.npc_id,
+                "role": npc.role,
+                "beliefs": list(npc.beliefs),
+                "memories": list(npc.memories),
+                "emotion_state": npc.emotion_state,
+                "relationship_to_player": npc.relationship_to_player,
+                "knowledge_boundary_refs": list(npc.knowledge_boundary_refs),
+            }
+            for npc_id, npc in world.npc_minds.items()
+        },
+        "scenes": {
+            scene_id: {
+                "scene_id": scene.scene_id,
+                "base_asset_refs": list(scene.base_asset_refs),
+                "object_state_refs": list(scene.object_state_refs),
+                "actor_state_refs": list(scene.actor_state_refs),
+                "persistent_delta_refs": list(scene.persistent_delta_refs),
+                "relevant_event_refs": list(scene.relevant_event_refs),
+            }
+            for scene_id, scene in world.scenes.items()
+        },
+        "event_log": [_event_to_data(event) for event in world.event_log],
+        "committed_event_ids": sorted(world.committed_event_ids),
+        "principal_actor_bindings": {
+            principal_id: sorted(actor_ids)
+            for principal_id, actor_ids in world.principal_actor_bindings.items()
+        },
+        "reachable_pairs": [list(pair) for pair in sorted(world.reachable_pairs)],
+        "audible_pairs": [list(pair) for pair in sorted(world.audible_pairs)],
+        "visible_pairs": [list(pair) for pair in sorted(world.visible_pairs)],
+    }
+
+
+def _world_from_data(data: Mapping[str, Any]) -> WorldState:
+    actors = {
+        actor_id: ActorState(
+            actor_id=str(item["actor_id"]),
+            name=str(item["name"]),
+            scene_id=str(item["scene_id"]),
+            strength=float(item["strength"]),
+            fatigue=float(item["fatigue"]),
+            injury=float(item["injury"]),
+            free_hands=int(item["free_hands"]),
+            inventory_refs=[str(value) for value in item["inventory_refs"]],
+            max_targets_per_strike=int(item["max_targets_per_strike"]),
+            capabilities={str(value) for value in item["capabilities"]},
+        )
+        for actor_id, item in data["actors"].items()
+    }
+    objects = {
+        object_id: ObjectState(
+            object_id=str(item["object_id"]),
+            name=str(item["name"]),
+            scene_id=str(item["scene_id"]),
+            mass=float(item["mass"]),
+            graspable=bool(item["graspable"]),
+            fragility=float(item["fragility"]),
+            damage_state=str(item["damage_state"]),
+            contamination_state=str(item["contamination_state"]),
+        )
+        for object_id, item in data["objects"].items()
+    }
+    npc_minds = {
+        npc_id: NPCMindState(
+            npc_id=str(item["npc_id"]),
+            role=str(item["role"]),
+            beliefs=[str(value) for value in item["beliefs"]],
+            memories=[str(value) for value in item["memories"]],
+            emotion_state=str(item["emotion_state"]),
+            relationship_to_player=int(item["relationship_to_player"]),
+            knowledge_boundary_refs=[str(value) for value in item["knowledge_boundary_refs"]],
+        )
+        for npc_id, item in data["npc_minds"].items()
+    }
+    scenes = {
+        scene_id: SceneState(
+            scene_id=str(item["scene_id"]),
+            base_asset_refs=[str(value) for value in item["base_asset_refs"]],
+            object_state_refs=[str(value) for value in item["object_state_refs"]],
+            actor_state_refs=[str(value) for value in item["actor_state_refs"]],
+            persistent_delta_refs=[str(value) for value in item["persistent_delta_refs"]],
+            relevant_event_refs=[str(value) for value in item["relevant_event_refs"]],
+        )
+        for scene_id, item in data["scenes"].items()
+    }
+    events = [
+        Event(
+            event_id=str(item["event_id"]),
+            event_type=str(item["event_type"]),
+            actor_id=None if item["actor_id"] is None else str(item["actor_id"]),
+            scene_id=str(item["scene_id"]),
+            baseline_version=str(item["baseline_version"]),
+            payload=dict(item["payload"]),
+            caused_by_action_id=(
+                None if item["caused_by_action_id"] is None else str(item["caused_by_action_id"])
+            ),
+        )
+        for item in data["event_log"]
+    ]
+    return WorldState(
+        world_id=str(data["world_id"]),
+        active_scene_id=str(data["active_scene_id"]),
+        baseline_version=str(data["baseline_version"]),
+        state_version=int(data["state_version"]),
+        primary_player_actor_id=str(data["primary_player_actor_id"]),
+        actors=actors,
+        objects=objects,
+        npc_minds=npc_minds,
+        scenes=scenes,
+        event_log=events,
+        committed_event_ids={str(value) for value in data["committed_event_ids"]},
+        principal_actor_bindings={
+            str(principal_id): {str(actor_id) for actor_id in actor_ids}
+            for principal_id, actor_ids in data["principal_actor_bindings"].items()
+        },
+        reachable_pairs={tuple(str(value) for value in pair) for pair in data["reachable_pairs"]},
+        audible_pairs={tuple(str(value) for value in pair) for pair in data["audible_pairs"]},
+        visible_pairs={tuple(str(value) for value in pair) for pair in data["visible_pairs"]},
+    )
+
+
+def _encode_world_snapshot(world: WorldState) -> bytes:
+    return json.dumps(
+        _world_to_data(world),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def _decode_world_snapshot(snapshot: bytes) -> WorldState:
+    return _world_from_data(json.loads(snapshot.decode("utf-8")))
+
+
+def _clone_world_state(world: WorldState) -> WorldState:
+    return _decode_world_snapshot(_encode_world_snapshot(world))
 
 
 def capture_pristine_baseline(world: WorldState) -> WorldBaseline:
@@ -205,4 +410,9 @@ def capture_pristine_baseline(world: WorldState) -> WorldBaseline:
         raise ValueError("BASELINE_MUST_BE_PRISTINE")
     if not world.baseline_version or world.baseline_version == "R001-UNVERSIONED":
         raise ValueError("BASELINE_VERSION_REQUIRED")
-    return WorldBaseline(world.baseline_version, copy.deepcopy(world))
+    snapshot = _encode_world_snapshot(world)
+    return WorldBaseline(
+        baseline_version=world.baseline_version,
+        snapshot_digest=hashlib.sha256(snapshot).hexdigest(),
+        _snapshot=snapshot,
+    )
