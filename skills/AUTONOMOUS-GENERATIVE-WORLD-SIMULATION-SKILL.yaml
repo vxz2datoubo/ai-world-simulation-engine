@@ -1,0 +1,134 @@
+schema_version: "0.1"
+skill_family_id: "AWRSE-AUTONOMOUS-GENERATIVE-WORLD-SIMULATION"
+status: "CANDIDATE_SKILL_FAMILY_DESIGN_READY"
+
+root_goal: >-
+  Support a persistent AI world in which players have broad expressive freedom,
+  while valid outcomes remain constrained by canonical world state, physics,
+  affordances, NPC autonomy, knowledge boundaries, social consequences and
+  validated rendering contracts.
+
+core_principle: "MAXIMUM_VALID_FREEDOM"
+
+modules:
+  S01_WORLD_STATE_AUTHORITY:
+    solves: "What actually happened in the world?"
+    concepts:
+      - authoritative_state
+      - event_sourcing
+      - state_projection
+      - snapshot
+      - replay
+      - temporal_state
+  S02_NATURAL_LANGUAGE_ACTION_COMPILER:
+    solves: "How does arbitrary user language become executable attempted action?"
+    concepts:
+      - semantic_parsing
+      - action_dsl
+      - entity_resolution
+      - preconditions
+      - ambiguity_handling
+  S03_PHYSICAL_REALITY_CONSTRAINT:
+    solves: "Can this attempted action physically occur?"
+    concepts:
+      - affordance
+      - reachability
+      - collision
+      - force
+      - body_constraint
+      - object_property
+      - failure_outcome
+  S04_NPC_AUTONOMOUS_COGNITION:
+    solves: "How does an NPC remain an autonomous role rather than a player puppet?"
+    concepts:
+      - BDI
+      - behavior_tree
+      - blackboard
+      - utility_ai
+      - planning
+      - generative_agent
+      - long_term_memory
+  S05_NPC_KNOWLEDGE_BOUNDARY:
+    solves: "Why is an NPC allowed to know a fact?"
+    concepts:
+      - perception_boundary
+      - witness_model
+      - information_provenance
+      - rumor
+      - inference
+  S06_SOCIAL_CONSEQUENCE_SIMULATION:
+    solves: "How do actions propagate through relationships and institutions?"
+    concepts:
+      - reputation
+      - rumor_spread
+      - authority_response
+      - group_behavior
+      - social_norm
+  S07_PERSISTENT_SCENE_CONTINUITY:
+    solves: "How does a location remain the same place after the player leaves and returns?"
+    concepts:
+      - scene_identity
+      - asset_binding
+      - spatial_layout
+      - persistent_delta
+      - revisit
+  S08_GENERATIVE_RENDERER_ROUTING:
+    solves: "Which renderer should visualize a resolved event or navigation segment?"
+    concepts:
+      - H3
+      - Matrix_Game_3_5
+      - renderer_adapter
+      - latency
+      - cost
+      - fidelity
+  S09_PROMPT_INJECTION_AND_AUTHORITY_SECURITY:
+    solves: "How are user instructions prevented from rewriting privileged rules or NPC constitutions?"
+    concepts:
+      - trust_boundary
+      - instruction_data_separation
+      - privilege_boundary
+      - prompt_injection
+      - persona_hijack
+      - state_tampering
+  S10_WORLD_SIMULATION_EVALUATION:
+    solves: "How do we detect a visually impressive but causally fake world?"
+    concepts:
+      - physical_consistency
+      - character_consistency
+      - causal_consistency
+      - temporal_persistence
+      - spatial_persistence
+      - render_state_alignment
+      - replay
+  S11_SIMULATION_FAILURE_LEARNING:
+    solves: "How do real failures become regression tests and validated methods?"
+    concepts:
+      - failure_case
+      - root_cause
+      - countermeasure
+      - regression_test
+      - validation
+      - promotion_gate
+  S12_EMERGENT_WORLD_LEARNING:
+    solves: "How do observed patterns become tested mechanisms rather than folklore?"
+    concepts:
+      - hypothesis
+      - controlled_test
+      - ablation
+      - counterexample
+      - validated_mechanism
+
+promotion_rules:
+  - "A useful idea enters as a candidate, not a validated skill."
+  - "Real user/world failures should create reproducible regression cases."
+  - "No renderer benchmark claim becomes a routing rule without measured evidence."
+  - "No NPC behavioral heuristic becomes canonical solely because an LLM recommended it."
+  - "New findings must preserve prior evidence and record supersession/refinement explicitly."
+
+cross_system_boundaries:
+  second_brain:
+    relationship: "knowledge_and_learning_federation"
+    rule: "May ingest validated methods, evidence and failures; does not own runtime world state."
+  ai_film:
+    relationship: "explicit_renderer_and_director_knowledge_reference"
+    rule: "Reuse validated video-model knowledge through reference/contract; do not fork competing H3 canonical rules by default."
