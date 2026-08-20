@@ -105,20 +105,26 @@ def validate_render_claims(
     if rendered_scene_id is not None and rendered_scene_id != packet.scene_id:
         contradictions.append(f"SCENE_ID:{rendered_scene_id}!={packet.scene_id}")
 
-    if rendered_object_states is not None:
-        canonical_object_states = {
-            str(delta["object_id"]): str(delta["damage_state"])
-            for delta in packet.environment_delta
-            if delta.get("kind") == "OBJECT_STATE"
-        }
-        for object_id, rendered_state in rendered_object_states.items():
-            canonical_state = canonical_object_states.get(object_id)
-            if canonical_state is None:
-                contradictions.append(f"UNCONFIRMED_OBJECT:{object_id}")
-            elif canonical_state != rendered_state:
+    canonical_object_states = {
+        str(delta["object_id"]): str(delta["damage_state"])
+        for delta in packet.environment_delta
+        if delta.get("kind") == "OBJECT_STATE"
+    }
+    if canonical_object_states and rendered_object_states is None:
+        contradictions.append("OBJECT_STATE_CLAIMS_REQUIRED")
+    elif rendered_object_states is not None:
+        for object_id, canonical_state in canonical_object_states.items():
+            if object_id not in rendered_object_states:
+                contradictions.append(f"MISSING_OBJECT_STATE:{object_id}")
+                continue
+            rendered_state = rendered_object_states[object_id]
+            if canonical_state != rendered_state:
                 contradictions.append(
                     f"OBJECT_STATE:{object_id}:{rendered_state}!={canonical_state}"
                 )
+        for object_id in rendered_object_states:
+            if object_id not in canonical_object_states:
+                contradictions.append(f"UNCONFIRMED_OBJECT:{object_id}")
 
     if missing or extras or contradictions:
         return RenderValidation(
