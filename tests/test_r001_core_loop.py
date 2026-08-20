@@ -1,11 +1,10 @@
-from dataclasses import fields
+from dataclasses import FrozenInstanceError, fields
 
 import pytest
 
 from awrse import (
     ActionCompiler,
     ActorState,
-    Event,
     NPCMindState,
     ObjectState,
     ResolutionStatus,
@@ -18,6 +17,8 @@ from awrse import (
     capture_pristine_baseline,
     validate_render_claims,
 )
+from awrse.engine import Resolution
+from awrse.model import Event
 
 PRINCIPAL = "principal://player-1"
 
@@ -59,6 +60,24 @@ def make_world() -> WorldState:
 
 def compile_action(compiler: ActionCompiler, world: WorldState, text: str, actor_id: str = "PLAYER"):
     return compiler.compile(text, actor_id=actor_id, world=world, principal_id=PRINCIPAL)
+
+
+def canonical_object_states(packet: WorldRenderPacket) -> dict[str, str]:
+    return {
+        str(delta["object_id"]): str(delta["damage_state"])
+        for delta in packet.environment_delta
+        if delta.get("kind") == "OBJECT_STATE"
+    }
+
+
+def aligned_render_kwargs(packet: WorldRenderPacket) -> dict:
+    return {
+        "rendered_event_ids": {event.event_id for event in packet.confirmed_events},
+        "rendered_object_states": canonical_object_states(packet),
+        "rendered_scene_id": packet.scene_id,
+        "rendered_actor_state_refs": packet.actor_state_refs,
+        "rendered_camera": packet.camera,
+    }
 
 
 def test_b01_authority_binds_principal_to_controlling_actor_and_rejects_spoofing():
@@ -169,23 +188,21 @@ def test_explicit_superhuman_declared_effect_is_rejected_before_commit():
     assert world.event_log == []
 
 
-def test_b04_committed_event_payload_is_deeply_immutable_and_commit_is_idempotent():
+def test_b04_event_payload_is_immutable_and_replay_is_exactly_once_by_event_id():
     world = make_world()
+    baseline = capture_pristine_baseline(world)
     compiler = ActionCompiler()
     engine = SimulationEngine()
 
     resolution = engine.resolve_and_commit(compile_action(compiler, world, "我砸碎窗户。"), world)
     event = resolution.events[0]
-    original_version = world.state_version
-    original_log = tuple(world.event_log)
-
     with pytest.raises(TypeError):
         event.payload["damage_state"] = "INTACT"
 
-    engine.commit(resolution, world)
-    assert tuple(world.event_log) == original_log
-    assert world.state_version == original_version
-    assert world.objects["WINDOW_001"].damage_state == "BROKEN"
+    replayed = engine.replay(baseline, (event, event))
+    assert len(replayed.event_log) == 1
+    assert replayed.state_version == 1
+    assert replayed.objects["WINDOW_001"].damage_state == "BROKEN"
 
     conflicting = Event(
         event_id=event.event_id,
@@ -193,11 +210,11 @@ def test_b04_committed_event_payload_is_deeply_immutable_and_commit_is_idempoten
         actor_id=event.actor_id,
         scene_id=event.scene_id,
         baseline_version=event.baseline_version,
-        payload={"object_id": "WINDOW_001", "damage_state": "INTACT"},
+        payload={"object_id": "WINDOW_001", "damage_state": "DAMAGED"},
         caused_by_action_id=event.caused_by_action_id,
     )
     with pytest.raises(ValueError, match="EVENT_ID_CONFLICT"):
-        engine._commit_events(world, [conflicting])
+        engine.replay(baseline, (event, conflicting))
 
 
 def test_b05_replay_requires_versioned_pristine_baseline_and_reconstructs_projected_domains():
@@ -213,7 +230,7 @@ def test_b05_replay_requires_versioned_pristine_baseline_and_reconstructs_projec
     assert world.npc_minds["GUARD_001"].relationship_to_player == -10
     assert world.npc_minds["GUARD_001"].knowledge_boundary_refs
 
-    replayed = engine.replay(baseline, list(world.event_log))
+    replayed = engine.replay(baseline, tuple(world.event_log))
     assert replayed.objects["WINDOW_001"].damage_state == "BROKEN"
     assert replayed.npc_minds["GUARD_001"].relationship_to_player == -10
     assert replayed.npc_minds["GUARD_001"].knowledge_boundary_refs == world.npc_minds["GUARD_001"].knowledge_boundary_refs
@@ -227,7 +244,7 @@ def test_b05_replay_requires_versioned_pristine_baseline_and_reconstructs_projec
     wrong_world.baseline_version = "R001-OTHER-BASELINE-v2"
     wrong_baseline = capture_pristine_baseline(wrong_world)
     with pytest.raises(ValueError, match="EVENT_BASELINE_VERSION_MISMATCH"):
-        engine.replay(wrong_baseline, list(world.event_log))
+        engine.replay(wrong_baseline, tuple(world.event_log))
 
 
 def test_b06_world_render_packet_matches_all_canonical_required_fields():
@@ -265,13 +282,9 @@ def test_b07_semantic_render_contradiction_detected_even_when_all_event_ids_are_
     resolution = engine.resolve_and_commit(compile_action(compiler, world, "我砸碎窗户。"), world)
     packet = build_render_packet(world, resolution.events)
 
-    rendered_event_ids = {event.event_id for event in packet.confirmed_events}
-    validation = validate_render_claims(
-        packet,
-        rendered_event_ids=rendered_event_ids,
-        rendered_object_states={"WINDOW_001": "INTACT"},
-        rendered_scene_id="STREET_001",
-    )
+    kwargs = aligned_render_kwargs(packet)
+    kwargs["rendered_object_states"] = {"WINDOW_001": "INTACT"}
+    validation = validate_render_claims(packet, **kwargs)
 
     assert validation.status == "RENDER_MISMATCH"
     assert validation.missing_canonical_events == ()
@@ -279,21 +292,13 @@ def test_b07_semantic_render_contradiction_detected_even_when_all_event_ids_are_
     assert "MISSING_OBJECT_STATE:BOTTLE_001" in validation.semantic_contradictions
     assert world.objects["WINDOW_001"].damage_state == "BROKEN"
 
-    omitted_semantics = validate_render_claims(
-        packet,
-        rendered_event_ids=rendered_event_ids,
-        rendered_scene_id="STREET_001",
-    )
-    assert omitted_semantics.status == "RENDER_MISMATCH"
-    assert "OBJECT_STATE_CLAIMS_REQUIRED" in omitted_semantics.semantic_contradictions
+    omitted_semantics = aligned_render_kwargs(packet)
+    omitted_semantics["rendered_object_states"] = None
+    omitted = validate_render_claims(packet, **omitted_semantics)
+    assert omitted.status == "RENDER_MISMATCH"
+    assert "OBJECT_STATE_CLAIMS_REQUIRED" in omitted.semantic_contradictions
 
-    aligned = validate_render_claims(
-        packet,
-        rendered_event_ids=rendered_event_ids,
-        rendered_object_states={"WINDOW_001": "BROKEN", "BOTTLE_001": "INTACT"},
-        rendered_scene_id="STREET_001",
-    )
-    assert aligned.status == "RENDER_ALIGNED"
+    assert validate_render_claims(packet, **aligned_render_kwargs(packet)).status == "RENDER_ALIGNED"
 
 
 def test_hidden_event_does_not_leak_without_explicit_perception_path():
@@ -358,5 +363,172 @@ def test_b08_broken_window_same_scene_identity_and_revisit_persistence():
     packet = build_render_packet(world, resolution.events)
     assert packet.scene_id == "STREET_001"
     assert packet.continuity_refs["scene_canonical_bundle_ref"].startswith("scene://STREET_001@")
-    object_states = {delta["object_id"]: delta["damage_state"] for delta in packet.environment_delta}
-    assert object_states["WINDOW_001"] == "BROKEN"
+    assert canonical_object_states(packet)["WINDOW_001"] == "BROKEN"
+
+
+def test_b10_direct_commit_cannot_turn_rejected_action_and_fabricated_event_into_canonical_truth():
+    world = make_world()
+    compiler = ActionCompiler()
+    engine = SimulationEngine()
+
+    spoofed = compile_action(compiler, world, "砸碎窗户。", actor_id="GUARD_001")
+    rejected = engine.resolve(spoofed, world)
+    assert rejected.action.resolution_status == ResolutionStatus.REJECTED_AUTHORITY
+
+    rejected.action.resolution_status = ResolutionStatus.RESOLVED_SUCCESS
+    fabricated = Event(
+        event_id="E-FORGED-001",
+        event_type="OBJECT_DAMAGED",
+        actor_id="GUARD_001",
+        scene_id="STREET_001",
+        baseline_version=world.baseline_version,
+        payload={"object_id": "WINDOW_001", "damage_state": "BROKEN"},
+        caused_by_action_id=rejected.action.action_id,
+    )
+    forged = Resolution(rejected.action, (fabricated,))
+
+    with pytest.raises(PermissionError, match="DIRECT_COMMIT_FORBIDDEN"):
+        engine.commit(forged, world)
+    assert world.event_log == []
+    assert world.objects["WINDOW_001"].damage_state == "INTACT"
+
+
+def test_b10_event_batch_prevalidation_is_atomic_before_live_projection():
+    world = make_world()
+    engine = SimulationEngine()
+    valid = Event(
+        event_id="E-ATOMIC-001",
+        event_type="OBJECT_DAMAGED",
+        actor_id="PLAYER",
+        scene_id="STREET_001",
+        baseline_version=world.baseline_version,
+        payload={"object_id": "WINDOW_001", "damage_state": "BROKEN"},
+        caused_by_action_id="A-ATOMIC",
+    )
+    invalid = Event(
+        event_id="E-ATOMIC-002",
+        event_type="RELATIONSHIP_CHANGED",
+        actor_id="PLAYER",
+        scene_id="STREET_001",
+        baseline_version=world.baseline_version,
+        payload={"npc_id": "NPC_DOES_NOT_EXIST", "delta": -10},
+        caused_by_action_id="A-ATOMIC",
+    )
+
+    with pytest.raises(ValueError, match="INVALID_RELATIONSHIP_EVENT"):
+        engine._SimulationEngine__commit_events(world, (valid, invalid))
+    assert world.event_log == []
+    assert world.state_version == 0
+    assert world.objects["WINDOW_001"].damage_state == "INTACT"
+
+
+def test_b11_world_baseline_is_immutable_serialized_snapshot_not_reachable_world_state():
+    world = make_world()
+    baseline = capture_pristine_baseline(world)
+
+    assert not hasattr(baseline, "_state")
+    assert isinstance(baseline._snapshot, bytes)
+    with pytest.raises(TypeError):
+        baseline._snapshot[0] = 0  # type: ignore[index]
+    with pytest.raises(FrozenInstanceError):
+        baseline._snapshot = b"tampered"  # type: ignore[misc]
+
+    world.objects["WINDOW_001"].damage_state = "BROKEN"
+    world.npc_minds["GUARD_001"].relationship_to_player = -99
+    world.scenes["STREET_001"].persistent_delta_refs.append("forged-delta")
+    world.principal_actor_bindings[PRINCIPAL].add("GUARD_001")
+
+    first = baseline.instantiate()
+    assert first.objects["WINDOW_001"].damage_state == "INTACT"
+    assert first.npc_minds["GUARD_001"].relationship_to_player == 0
+    assert first.scenes["STREET_001"].persistent_delta_refs == []
+    assert first.principal_actor_bindings[PRINCIPAL] == {"PLAYER"}
+
+    first.objects["WINDOW_001"].damage_state = "BROKEN"
+    second = baseline.instantiate()
+    assert second.objects["WINDOW_001"].damage_state == "INTACT"
+
+
+def test_b12_render_packet_rejects_uncommitted_fabricated_conflicting_and_wrong_scene_events():
+    world = make_world()
+    compiler = ActionCompiler()
+    engine = SimulationEngine()
+
+    uncommitted = engine.resolve(compile_action(compiler, world, "我砸碎窗户。"), world)
+    with pytest.raises(ValueError, match="UNCOMMITTED_CONFIRMED_EVENT"):
+        build_render_packet(world, uncommitted.events)
+    assert world.objects["WINDOW_001"].damage_state == "INTACT"
+
+    committed = engine.resolve_and_commit(compile_action(compiler, world, "我砸碎窗户。"), world)
+    packet = build_render_packet(world, committed.events)
+    assert packet.confirmed_events == committed.events
+
+    canonical = committed.events[0]
+    conflicting = Event(
+        event_id=canonical.event_id,
+        event_type=canonical.event_type,
+        actor_id=canonical.actor_id,
+        scene_id=canonical.scene_id,
+        baseline_version=canonical.baseline_version,
+        payload={"object_id": "WINDOW_001", "damage_state": "DAMAGED"},
+        caused_by_action_id=canonical.caused_by_action_id,
+    )
+    with pytest.raises(ValueError, match="CONFIRMED_EVENT_MISMATCH"):
+        build_render_packet(world, (conflicting,))
+
+    fabricated = Event(
+        event_id="E-FABRICATED-RENDER",
+        event_type="OBJECT_DAMAGED",
+        actor_id="PLAYER",
+        scene_id="STREET_001",
+        baseline_version=world.baseline_version,
+        payload={"object_id": "WINDOW_001", "damage_state": "BROKEN"},
+        caused_by_action_id="A-FABRICATED",
+    )
+    with pytest.raises(ValueError, match="UNCOMMITTED_CONFIRMED_EVENT"):
+        build_render_packet(world, (fabricated,))
+
+    world.active_scene_id = "BAR_001"
+    with pytest.raises(ValueError, match="CONFIRMED_EVENT_WRONG_SCENE"):
+        build_render_packet(world, committed.events)
+
+
+def test_b13_render_validator_rejects_extra_event_and_missing_required_semantic_claims():
+    world = make_world()
+    compiler = ActionCompiler()
+    engine = SimulationEngine()
+    resolution = engine.resolve_and_commit(compile_action(compiler, world, "我砸碎窗户。"), world)
+    packet = build_render_packet(world, resolution.events)
+
+    aligned = aligned_render_kwargs(packet)
+    assert validate_render_claims(packet, **aligned).status == "RENDER_ALIGNED"
+
+    hallucinated = dict(aligned)
+    hallucinated["rendered_event_ids"] = set(aligned["rendered_event_ids"]) | {"FAKE_E999"}
+    validation = validate_render_claims(packet, **hallucinated)
+    assert validation.status == "RENDER_MISMATCH"
+    assert "UNCONFIRMED_EVENT_ID:FAKE_E999" in validation.unauthorized_claims
+
+    missing_scene = dict(aligned)
+    missing_scene["rendered_scene_id"] = None
+    validation = validate_render_claims(packet, **missing_scene)
+    assert validation.status == "RENDER_MISMATCH"
+    assert "SCENE_ID_CLAIM_REQUIRED" in validation.semantic_contradictions
+
+    missing_actor_claims = dict(aligned)
+    missing_actor_claims["rendered_actor_state_refs"] = None
+    validation = validate_render_claims(packet, **missing_actor_claims)
+    assert validation.status == "RENDER_MISMATCH"
+    assert "ACTOR_STATE_CLAIMS_REQUIRED" in validation.semantic_contradictions
+
+    missing_camera = dict(aligned)
+    missing_camera["rendered_camera"] = None
+    validation = validate_render_claims(packet, **missing_camera)
+    assert validation.status == "RENDER_MISMATCH"
+    assert "CAMERA_CLAIM_REQUIRED" in validation.semantic_contradictions
+
+    wrong_camera = dict(aligned)
+    wrong_camera["rendered_camera"] = {"mode": "INVENTED", "framing": "UNSPECIFIED"}
+    validation = validate_render_claims(packet, **wrong_camera)
+    assert validation.status == "RENDER_MISMATCH"
+    assert "CAMERA_INTENT_MISMATCH" in validation.semantic_contradictions
