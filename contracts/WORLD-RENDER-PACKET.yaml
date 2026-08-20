@@ -1,0 +1,105 @@
+schema_version: "0.1"
+contract_id: "AWRSE-WORLD-RENDER-PACKET"
+status: "DESIGN_FOUNDATION"
+
+purpose: >-
+  Define the non-authoritative rendering handoff from canonical simulation state
+  to any generative or conventional renderer. Renderers must visualize resolved
+  events and may not mutate canonical world truth.
+
+required_fields:
+  - render_request_id
+  - world_state_version
+  - scene_id
+  - scene_asset_refs
+  - camera
+  - player_state_ref
+  - actor_state_refs
+  - confirmed_events
+  - environment_delta
+  - continuity_refs
+  - renderer_constraints
+  - output_contract
+
+fields:
+  render_request_id:
+    type: string
+  world_state_version:
+    type: string
+    note: "Exact canonical state/version this render must represent."
+  scene_id:
+    type: string
+  scene_asset_refs:
+    type: array
+    items: string
+  camera:
+    type: object
+    suggested_fields:
+      - mode
+      - pose
+      - trajectory
+      - framing
+  player_state_ref:
+    type: string
+  actor_state_refs:
+    type: array
+    items: string
+  confirmed_events:
+    type: array
+    note: "Only already-resolved canonical events; renderer does not decide outcomes."
+  environment_delta:
+    type: array
+    note: "Visible persistent or transient changes required in the render."
+  continuity_refs:
+    type: object
+    suggested_fields:
+      - prior_frame_ref
+      - prior_clip_ref
+      - scene_canonical_bundle_ref
+      - character_reference_refs
+  renderer_constraints:
+    type: object
+    required:
+      - no_world_rule_mutation
+      - no_unconfirmed_outcome_invention
+    optional:
+      - no_new_characters
+      - no_location_change
+      - preserve_identity
+      - preserve_costume
+      - preserve_object_state
+  output_contract:
+    type: object
+    suggested_fields:
+      - duration_seconds
+      - resolution_class
+      - audio_required
+      - latency_class
+
+renderer_adapters:
+  H3:
+    role: "PRIMARY_PHASE_1_REACTION_RENDERER"
+    intended_use:
+      - complex_character_action
+      - dialogue_or_emotion
+      - cinematic_short_feedback
+      - multimodal_reference_conditioning
+  MATRIX_GAME_3_5:
+    role: "STRATEGIC_R_AND_D_PERSISTENT_VISUAL_EXPLORATION_RENDERER"
+    intended_use:
+      - camera_controllable_navigation
+      - first_person_exploration
+      - third_person_exploration
+      - long_horizon_scene_revisit
+
+validation:
+  mandatory_post_render_checks:
+    - CONFIRMED_EVENT_ALIGNMENT
+    - CHARACTER_IDENTITY_ALIGNMENT
+    - SCENE_IDENTITY_ALIGNMENT
+    - OBJECT_STATE_ALIGNMENT
+    - CAMERA_INTENT_ALIGNMENT
+    - UNCONFIRMED_EVENT_HALLUCINATION_CHECK
+  mismatch_policy: >-
+    Any material mismatch is a rendering failure. Canonical simulation state must
+    not be changed merely to match generated pixels or audio.
