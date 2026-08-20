@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import itertools
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Iterable, Mapping
 
 from .compiler import declared_superhuman_effect
-from .model import Action, Event, ResolutionStatus, WorldBaseline, WorldState
+from .model import Action, Event, ResolutionStatus, WorldBaseline, WorldState, _clone_world_state
 
 
-@dataclass
+@dataclass(frozen=True)
 class Resolution:
     action: Action
-    events: list[Event] = field(default_factory=list)
+    events: tuple[Event, ...] = ()
 
 
 class WorldProjector:
@@ -48,8 +49,77 @@ class WorldProjector:
 class SimulationEngine:
     _event_counter = itertools.count(1)
     _implemented_player_verbs = frozenset({"SPEAK", "HIT"})
+    _supported_event_types = frozenset(
+        {
+            "SPEECH_UTTERED",
+            "OBJECT_DAMAGED",
+            "ACTOR_STRUCK",
+            "NPC_KNOWLEDGE_ACQUIRED",
+            "RELATIONSHIP_CHANGED",
+        }
+    )
 
     def resolve(self, action: Action, world: WorldState) -> Resolution:
+        """Resolve for inspection only. This does not grant later commit authority."""
+        return self.__resolve_authoritatively(action, world)
+
+    def commit(self, resolution: Resolution, world: WorldState) -> Resolution:
+        """Direct caller-supplied Resolution commits are forbidden.
+
+        Canonical live commits are reachable only through engine-controlled APIs that
+        perform validation and event generation in the same call.
+        """
+        raise PermissionError("DIRECT_COMMIT_FORBIDDEN_USE_RESOLVE_AND_COMMIT")
+
+    def resolve_and_commit(self, action: Action, world: WorldState) -> Resolution:
+        resolution = self.__resolve_authoritatively(action, world)
+        if resolution.action.resolution_status in {
+            ResolutionStatus.RESOLVED_SUCCESS,
+            ResolutionStatus.RESOLVED_PARTIAL,
+        }:
+            self.__commit_events(world, resolution.events)
+        return resolution
+
+    def replay(self, baseline: WorldBaseline, events: Iterable[Event]) -> WorldState:
+        rebuilt = baseline.instantiate()
+        if rebuilt.event_log or rebuilt.committed_event_ids or rebuilt.state_version != 0:
+            raise ValueError("BASELINE_MUST_BE_PRISTINE")
+        if rebuilt.baseline_version != baseline.baseline_version:
+            raise ValueError("BASELINE_VERSION_MISMATCH")
+        self.__commit_events(rebuilt, tuple(events))
+        return rebuilt
+
+    def propagate_knowledge(
+        self,
+        source_npc_id: str,
+        recipient_npc_id: str,
+        source_event_id: str,
+        world: WorldState,
+    ) -> Event | None:
+        source = world.npc_minds.get(source_npc_id)
+        recipient = world.npc_minds.get(recipient_npc_id)
+        if source is None or recipient is None:
+            return None
+        if source_event_id not in source.knowledge_boundary_refs:
+            return None
+        if not world.can_hear(source_npc_id, recipient_npc_id):
+            return None
+        event = self._new_event(
+            event_type="NPC_KNOWLEDGE_ACQUIRED",
+            actor_id=source_npc_id,
+            scene_id=world.actors[source_npc_id].scene_id,
+            world=world,
+            payload={
+                "npc_id": recipient_npc_id,
+                "mode": "WAS_TOLD",
+                "source_event_id": source_event_id,
+                "source_npc_id": source_npc_id,
+            },
+        )
+        self.__commit_events(world, (event,))
+        return event
+
+    def __resolve_authoritatively(self, action: Action, world: WorldState) -> Resolution:
         if action.resolution_status == ResolutionStatus.UNKNOWN_REQUIRES_DISAMBIGUATION:
             return Resolution(action)
 
@@ -86,57 +156,6 @@ class SimulationEngine:
         if action.verb == "SPEAK":
             return self._resolve_speech(action, world)
         return self._resolve_hit(action, world)
-
-    def commit(self, resolution: Resolution, world: WorldState) -> Resolution:
-        if resolution.action.resolution_status not in {
-            ResolutionStatus.RESOLVED_SUCCESS,
-            ResolutionStatus.RESOLVED_PARTIAL,
-        }:
-            return resolution
-        self._commit_events(world, resolution.events)
-        return resolution
-
-    def resolve_and_commit(self, action: Action, world: WorldState) -> Resolution:
-        return self.commit(self.resolve(action, world), world)
-
-    def replay(self, baseline: WorldBaseline, events: list[Event]) -> WorldState:
-        rebuilt = baseline.instantiate()
-        if rebuilt.event_log or rebuilt.committed_event_ids or rebuilt.state_version != 0:
-            raise ValueError("BASELINE_MUST_BE_PRISTINE")
-        if rebuilt.baseline_version != baseline.baseline_version:
-            raise ValueError("BASELINE_VERSION_MISMATCH")
-        self._commit_events(rebuilt, events)
-        return rebuilt
-
-    def propagate_knowledge(
-        self,
-        source_npc_id: str,
-        recipient_npc_id: str,
-        source_event_id: str,
-        world: WorldState,
-    ) -> Event | None:
-        source = world.npc_minds.get(source_npc_id)
-        recipient = world.npc_minds.get(recipient_npc_id)
-        if source is None or recipient is None:
-            return None
-        if source_event_id not in source.knowledge_boundary_refs:
-            return None
-        if not world.can_hear(source_npc_id, recipient_npc_id):
-            return None
-        event = self._new_event(
-            event_type="NPC_KNOWLEDGE_ACQUIRED",
-            actor_id=source_npc_id,
-            scene_id=world.actors[source_npc_id].scene_id,
-            world=world,
-            payload={
-                "npc_id": recipient_npc_id,
-                "mode": "WAS_TOLD",
-                "source_event_id": source_event_id,
-                "source_npc_id": source_npc_id,
-            },
-        )
-        self._commit_events(world, [event])
-        return event
 
     def _evaluate_preconditions(self, action: Action, world: WorldState) -> str | None:
         required_by_verb = {
@@ -178,7 +197,7 @@ class SimulationEngine:
                 "authority": "NONE_OVER_TARGET_INTERNAL_STATE",
             },
         )
-        events = [speech]
+        events: list[Event] = [speech]
         for npc_id in sorted(world.npc_minds):
             if not world.can_hear(action.actor_id, npc_id):
                 continue
@@ -205,7 +224,8 @@ class SimulationEngine:
                     )
                 )
         action.resolution_status = ResolutionStatus.RESOLVED_SUCCESS
-        return Resolution(action, events)
+        action.failure_reason = None
+        return Resolution(action, tuple(events))
 
     def _resolve_hit(self, action: Action, world: WorldState) -> Resolution:
         if not action.target_ids:
@@ -221,7 +241,7 @@ class SimulationEngine:
                 world,
                 {"object_id": target_id, "damage_state": damage_state},
             )
-            events = [object_event]
+            events: list[Event] = [object_event]
             for npc_id in sorted(world.npc_minds):
                 if world.can_see(target_id, npc_id):
                     events.append(
@@ -238,7 +258,8 @@ class SimulationEngine:
                         )
                     )
             action.resolution_status = ResolutionStatus.RESOLVED_SUCCESS
-            return Resolution(action, events)
+            action.failure_reason = None
+            return Resolution(action, tuple(events))
 
         event = self._event(
             "ACTOR_STRUCK",
@@ -247,21 +268,129 @@ class SimulationEngine:
             {"target_id": target_id, "effect": "NORMAL_HUMAN_STRIKE"},
         )
         action.resolution_status = ResolutionStatus.RESOLVED_SUCCESS
-        return Resolution(action, [event])
+        action.failure_reason = None
+        return Resolution(action, (event,))
 
-    def _commit_events(self, world: WorldState, events: list[Event]) -> None:
-        existing_by_id = {event.event_id: event for event in world.event_log}
+    def __commit_events(self, world: WorldState, events: Iterable[Event]) -> None:
+        new_events = self.__prevalidate_event_batch(world, tuple(events))
+        if not new_events:
+            return
+
+        # Transactional witness: every projection must succeed against an isolated
+        # clone before any mutation touches the live canonical world.
+        staged = _clone_world_state(world)
+        self.__apply_prevalidated_events(staged, new_events)
+        self.__apply_prevalidated_events(world, new_events)
+
+    def __prevalidate_event_batch(self, world: WorldState, events: tuple[Event, ...]) -> tuple[Event, ...]:
+        existing_by_id: dict[str, Event] = {}
+        for existing in world.event_log:
+            prior = existing_by_id.get(existing.event_id)
+            if prior is not None and prior != existing:
+                raise ValueError(f"CANONICAL_EVENT_LOG_CONFLICT:{existing.event_id}")
+            if prior is not None:
+                raise ValueError(f"CANONICAL_EVENT_LOG_DUPLICATE:{existing.event_id}")
+            existing_by_id[existing.event_id] = existing
+        if set(existing_by_id) != set(world.committed_event_ids):
+            raise ValueError("CANONICAL_EVENT_INDEX_MISMATCH")
+
+        batch_by_id: dict[str, Event] = {}
+        candidates: list[Event] = []
         for event in events:
+            if not event.event_id:
+                raise ValueError("EVENT_ID_REQUIRED")
             if event.baseline_version != world.baseline_version:
                 raise ValueError("EVENT_BASELINE_VERSION_MISMATCH")
+            if event.scene_id not in world.scenes:
+                raise ValueError(f"EVENT_SCENE_NOT_FOUND:{event.scene_id}")
+            if event.event_type not in self._supported_event_types:
+                raise ValueError(f"UNSUPPORTED_EVENT_TYPE:{event.event_type}")
+
             existing = existing_by_id.get(event.event_id)
             if existing is not None:
                 if existing != event:
                     raise ValueError(f"EVENT_ID_CONFLICT:{event.event_id}")
                 continue
+
+            prior = batch_by_id.get(event.event_id)
+            if prior is not None:
+                if prior != event:
+                    raise ValueError(f"EVENT_ID_CONFLICT:{event.event_id}")
+                continue
+            batch_by_id[event.event_id] = event
+            candidates.append(event)
+
+        available_event_ids = set(existing_by_id) | set(batch_by_id)
+        for event in candidates:
+            self.__validate_event_semantics(world, event, available_event_ids)
+        return tuple(candidates)
+
+    def __validate_event_semantics(
+        self,
+        world: WorldState,
+        event: Event,
+        available_event_ids: set[str],
+    ) -> None:
+        payload: Mapping[str, object] = event.payload
+
+        if event.event_type == "OBJECT_DAMAGED":
+            object_id = str(payload.get("object_id", ""))
+            obj = world.objects.get(object_id)
+            if obj is None or obj.scene_id != event.scene_id:
+                raise ValueError("INVALID_OBJECT_DAMAGED_EVENT")
+            if payload.get("damage_state") not in {"DAMAGED", "BROKEN"}:
+                raise ValueError("INVALID_OBJECT_DAMAGE_STATE")
+            return
+
+        if event.event_type == "SPEECH_UTTERED":
+            actor = world.actors.get(event.actor_id or "")
+            if actor is None or actor.scene_id != event.scene_id:
+                raise ValueError("INVALID_SPEECH_EVENT_ACTOR")
+            if payload.get("trust_class") != "UNTRUSTED_DATA":
+                raise ValueError("INVALID_SPEECH_TRUST_CLASS")
+            if payload.get("authority") != "NONE_OVER_TARGET_INTERNAL_STATE":
+                raise ValueError("INVALID_SPEECH_AUTHORITY")
+            return
+
+        if event.event_type == "ACTOR_STRUCK":
+            actor = world.actors.get(event.actor_id or "")
+            target = world.actors.get(str(payload.get("target_id", "")))
+            if actor is None or target is None:
+                raise ValueError("INVALID_ACTOR_STRUCK_EVENT")
+            if actor.scene_id != event.scene_id or target.scene_id != event.scene_id:
+                raise ValueError("INVALID_ACTOR_STRUCK_SCENE")
+            return
+
+        if event.event_type == "NPC_KNOWLEDGE_ACQUIRED":
+            npc_id = str(payload.get("npc_id", ""))
+            npc_actor = world.actors.get(npc_id)
+            if npc_id not in world.npc_minds or npc_actor is None or npc_actor.scene_id != event.scene_id:
+                raise ValueError("INVALID_NPC_KNOWLEDGE_EVENT")
+            mode = payload.get("mode")
+            if mode not in {"SAW", "HEARD", "WAS_TOLD", "INFERRED", "RUMORED", "DOCUMENTED", "UNKNOWN"}:
+                raise ValueError("INVALID_KNOWLEDGE_MODE")
+            source_event_id = str(payload.get("source_event_id", ""))
+            if source_event_id not in available_event_ids or source_event_id == event.event_id:
+                raise ValueError("INVALID_KNOWLEDGE_SOURCE_EVENT")
+            return
+
+        if event.event_type == "RELATIONSHIP_CHANGED":
+            npc_id = str(payload.get("npc_id", ""))
+            npc_actor = world.actors.get(npc_id)
+            if npc_id not in world.npc_minds or npc_actor is None or npc_actor.scene_id != event.scene_id:
+                raise ValueError("INVALID_RELATIONSHIP_EVENT")
+            delta = payload.get("delta")
+            if isinstance(delta, bool) or not isinstance(delta, int):
+                raise ValueError("INVALID_RELATIONSHIP_DELTA")
+            return
+
+        raise ValueError(f"UNSUPPORTED_EVENT_TYPE:{event.event_type}")
+
+    @staticmethod
+    def __apply_prevalidated_events(world: WorldState, events: tuple[Event, ...]) -> None:
+        for event in events:
             world.event_log.append(event)
             world.committed_event_ids.add(event.event_id)
-            existing_by_id[event.event_id] = event
             WorldProjector.apply(world, event)
             world.state_version += 1
 
