@@ -1,20 +1,29 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
+from typing import Any, Mapping
 
-from .model import Event, WorldState
+from .model import Event, WorldState, freeze_value
+
+
+_render_counter = itertools.count(1)
 
 
 @dataclass(frozen=True)
 class WorldRenderPacket:
+    render_request_id: str
+    world_state_version: str
     scene_id: str
-    base_asset_refs: tuple[str, ...]
-    persistent_deltas: tuple[str, ...]
-    confirmed_event_ids: tuple[str, ...]
-    confirmed_event_types: tuple[str, ...]
-    actor_ids: tuple[str, ...]
-    object_states: tuple[tuple[str, str], ...]
-    authority_note: str = "RENDERER_IS_PROJECTION_ONLY"
+    scene_asset_refs: tuple[str, ...]
+    camera: Mapping[str, Any]
+    player_state_ref: str
+    actor_state_refs: tuple[str, ...]
+    confirmed_events: tuple[Event, ...]
+    environment_delta: tuple[Mapping[str, Any], ...]
+    continuity_refs: Mapping[str, Any]
+    renderer_constraints: Mapping[str, Any]
+    output_contract: Mapping[str, Any]
 
 
 @dataclass(frozen=True)
@@ -22,41 +31,100 @@ class RenderValidation:
     status: str
     missing_canonical_events: tuple[str, ...] = ()
     unauthorized_claims: tuple[str, ...] = ()
+    semantic_contradictions: tuple[str, ...] = ()
 
 
 def build_render_packet(world: WorldState, events: list[Event]) -> WorldRenderPacket:
     scene = world.scenes[world.active_scene_id]
-    scene_objects = tuple(
-        sorted(
-            (obj.object_id, obj.damage_state)
-            for obj in world.objects.values()
-            if obj.scene_id == world.active_scene_id
-        )
+    actor_refs = tuple(
+        f"actor://{actor.actor_id}@{world.world_state_version}"
+        for actor in sorted(world.actors.values(), key=lambda item: item.actor_id)
+        if actor.scene_id == world.active_scene_id
     )
-    scene_actors = tuple(
-        sorted(actor.actor_id for actor in world.actors.values() if actor.scene_id == world.active_scene_id)
+    object_deltas = tuple(
+        freeze_value(
+            {
+                "kind": "OBJECT_STATE",
+                "object_id": obj.object_id,
+                "damage_state": obj.damage_state,
+                "contamination_state": obj.contamination_state,
+            }
+        )
+        for obj in sorted(world.objects.values(), key=lambda item: item.object_id)
+        if obj.scene_id == world.active_scene_id
     )
     return WorldRenderPacket(
+        render_request_id=f"RRP-{next(_render_counter):06d}",
+        world_state_version=world.world_state_version,
         scene_id=world.active_scene_id,
-        base_asset_refs=tuple(scene.base_asset_refs),
-        persistent_deltas=tuple(scene.persistent_delta_refs),
-        confirmed_event_ids=tuple(event.event_id for event in events),
-        confirmed_event_types=tuple(event.event_type for event in events),
-        actor_ids=scene_actors,
-        object_states=scene_objects,
+        scene_asset_refs=tuple(scene.base_asset_refs),
+        camera=freeze_value({"mode": "CANONICAL_SCENE_DEFAULT", "framing": "UNSPECIFIED"}),
+        player_state_ref=f"actor://{world.primary_player_actor_id}@{world.world_state_version}",
+        actor_state_refs=actor_refs,
+        confirmed_events=tuple(events),
+        environment_delta=object_deltas,
+        continuity_refs=freeze_value(
+            {
+                "scene_canonical_bundle_ref": f"scene://{scene.scene_id}@{world.world_state_version}",
+                "prior_frame_ref": None,
+                "prior_clip_ref": None,
+                "character_reference_refs": actor_refs,
+            }
+        ),
+        renderer_constraints=freeze_value(
+            {
+                "no_world_rule_mutation": True,
+                "no_unconfirmed_outcome_invention": True,
+                "preserve_identity": True,
+                "preserve_object_state": True,
+            }
+        ),
+        output_contract=freeze_value(
+            {
+                "duration_seconds": None,
+                "resolution_class": "UNSPECIFIED",
+                "audio_required": False,
+                "latency_class": "UNSPECIFIED",
+            }
+        ),
     )
 
 
-def validate_render_claims(packet: WorldRenderPacket, rendered_event_ids: set[str], extra_claims: set[str] | None = None) -> RenderValidation:
-    """Validate renderer self-reported semantic claims against canonical packet.
-
-    Real video understanding is intentionally out of scope for R001. This contract
-    gives later VLM/video evaluators a deterministic authority boundary to target.
-    """
-
-    canonical = set(packet.confirmed_event_ids)
-    missing = tuple(sorted(canonical - rendered_event_ids))
+def validate_render_claims(
+    packet: WorldRenderPacket,
+    rendered_event_ids: set[str],
+    rendered_object_states: Mapping[str, str] | None = None,
+    rendered_scene_id: str | None = None,
+    extra_claims: set[str] | None = None,
+) -> RenderValidation:
+    canonical_event_ids = {event.event_id for event in packet.confirmed_events}
+    missing = tuple(sorted(canonical_event_ids - rendered_event_ids))
     extras = tuple(sorted(extra_claims or set()))
-    if missing or extras:
-        return RenderValidation("RENDER_MISMATCH", missing, extras)
+    contradictions: list[str] = []
+
+    if rendered_scene_id is not None and rendered_scene_id != packet.scene_id:
+        contradictions.append(f"SCENE_ID:{rendered_scene_id}!={packet.scene_id}")
+
+    if rendered_object_states is not None:
+        canonical_object_states = {
+            str(delta["object_id"]): str(delta["damage_state"])
+            for delta in packet.environment_delta
+            if delta.get("kind") == "OBJECT_STATE"
+        }
+        for object_id, rendered_state in rendered_object_states.items():
+            canonical_state = canonical_object_states.get(object_id)
+            if canonical_state is None:
+                contradictions.append(f"UNCONFIRMED_OBJECT:{object_id}")
+            elif canonical_state != rendered_state:
+                contradictions.append(
+                    f"OBJECT_STATE:{object_id}:{rendered_state}!={canonical_state}"
+                )
+
+    if missing or extras or contradictions:
+        return RenderValidation(
+            "RENDER_MISMATCH",
+            missing_canonical_events=missing,
+            unauthorized_claims=extras,
+            semantic_contradictions=tuple(sorted(contradictions)),
+        )
     return RenderValidation("RENDER_ALIGNED")
