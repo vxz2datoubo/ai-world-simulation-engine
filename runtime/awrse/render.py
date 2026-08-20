@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import itertools
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
-from .model import Event, WorldState, freeze_value
+from .model import Event, WorldState, freeze_value, thaw_value
 
 
 _render_counter = itertools.count(1)
@@ -34,8 +34,40 @@ class RenderValidation:
     semantic_contradictions: tuple[str, ...] = ()
 
 
-def build_render_packet(world: WorldState, events: list[Event]) -> WorldRenderPacket:
+def _canonical_confirmed_events(world: WorldState, events: Iterable[Event]) -> tuple[Event, ...]:
+    canonical_by_id: dict[str, Event] = {}
+    for canonical in world.event_log:
+        if canonical.event_id in canonical_by_id:
+            raise ValueError(f"CANONICAL_EVENT_LOG_DUPLICATE:{canonical.event_id}")
+        canonical_by_id[canonical.event_id] = canonical
+    if set(canonical_by_id) != set(world.committed_event_ids):
+        raise ValueError("CANONICAL_EVENT_INDEX_MISMATCH")
+
+    confirmed: list[Event] = []
+    requested_ids: set[str] = set()
+    for event in events:
+        if event.event_id in requested_ids:
+            raise ValueError(f"DUPLICATE_CONFIRMED_EVENT_REQUEST:{event.event_id}")
+        requested_ids.add(event.event_id)
+
+        if event.baseline_version != world.baseline_version:
+            raise ValueError(f"CONFIRMED_EVENT_BASELINE_MISMATCH:{event.event_id}")
+        if event.scene_id != world.active_scene_id:
+            raise ValueError(f"CONFIRMED_EVENT_WRONG_SCENE:{event.event_id}")
+        if event.event_id not in world.committed_event_ids:
+            raise ValueError(f"UNCOMMITTED_CONFIRMED_EVENT:{event.event_id}")
+        canonical = canonical_by_id.get(event.event_id)
+        if canonical is None:
+            raise ValueError(f"COMMITTED_EVENT_NOT_IN_LOG:{event.event_id}")
+        if canonical != event:
+            raise ValueError(f"CONFIRMED_EVENT_MISMATCH:{event.event_id}")
+        confirmed.append(canonical)
+    return tuple(confirmed)
+
+
+def build_render_packet(world: WorldState, events: Iterable[Event]) -> WorldRenderPacket:
     scene = world.scenes[world.active_scene_id]
+    confirmed_events = _canonical_confirmed_events(world, events)
     actor_refs = tuple(
         f"actor://{actor.actor_id}@{world.world_state_version}"
         for actor in sorted(world.actors.values(), key=lambda item: item.actor_id)
@@ -61,7 +93,7 @@ def build_render_packet(world: WorldState, events: list[Event]) -> WorldRenderPa
         camera=freeze_value({"mode": "CANONICAL_SCENE_DEFAULT", "framing": "UNSPECIFIED"}),
         player_state_ref=f"actor://{world.primary_player_actor_id}@{world.world_state_version}",
         actor_state_refs=actor_refs,
-        confirmed_events=tuple(events),
+        confirmed_events=confirmed_events,
         environment_delta=object_deltas,
         continuity_refs=freeze_value(
             {
@@ -95,15 +127,36 @@ def validate_render_claims(
     rendered_event_ids: set[str],
     rendered_object_states: Mapping[str, str] | None = None,
     rendered_scene_id: str | None = None,
+    rendered_actor_state_refs: Iterable[str] | None = None,
+    rendered_camera: Mapping[str, Any] | None = None,
     extra_claims: set[str] | None = None,
 ) -> RenderValidation:
     canonical_event_ids = {event.event_id for event in packet.confirmed_events}
     missing = tuple(sorted(canonical_event_ids - rendered_event_ids))
-    extras = tuple(sorted(extra_claims or set()))
+    unexpected_event_ids = rendered_event_ids - canonical_event_ids
+    unauthorized = set(extra_claims or set())
+    unauthorized.update(f"UNCONFIRMED_EVENT_ID:{event_id}" for event_id in unexpected_event_ids)
     contradictions: list[str] = []
 
-    if rendered_scene_id is not None and rendered_scene_id != packet.scene_id:
+    if rendered_scene_id is None:
+        contradictions.append("SCENE_ID_CLAIM_REQUIRED")
+    elif rendered_scene_id != packet.scene_id:
         contradictions.append(f"SCENE_ID:{rendered_scene_id}!={packet.scene_id}")
+
+    canonical_actor_refs = set(packet.actor_state_refs)
+    if rendered_actor_state_refs is None:
+        contradictions.append("ACTOR_STATE_CLAIMS_REQUIRED")
+    else:
+        rendered_actor_refs = set(rendered_actor_state_refs)
+        for actor_ref in sorted(canonical_actor_refs - rendered_actor_refs):
+            contradictions.append(f"MISSING_ACTOR_STATE_REF:{actor_ref}")
+        for actor_ref in sorted(rendered_actor_refs - canonical_actor_refs):
+            contradictions.append(f"UNCONFIRMED_ACTOR_STATE_REF:{actor_ref}")
+
+    if rendered_camera is None:
+        contradictions.append("CAMERA_CLAIM_REQUIRED")
+    elif thaw_value(rendered_camera) != thaw_value(packet.camera):
+        contradictions.append("CAMERA_INTENT_MISMATCH")
 
     canonical_object_states = {
         str(delta["object_id"]): str(delta["damage_state"])
@@ -126,11 +179,11 @@ def validate_render_claims(
             if object_id not in canonical_object_states:
                 contradictions.append(f"UNCONFIRMED_OBJECT:{object_id}")
 
-    if missing or extras or contradictions:
+    if missing or unauthorized or contradictions:
         return RenderValidation(
             "RENDER_MISMATCH",
             missing_canonical_events=missing,
-            unauthorized_claims=extras,
+            unauthorized_claims=tuple(sorted(unauthorized)),
             semantic_contradictions=tuple(sorted(contradictions)),
         )
     return RenderValidation("RENDER_ALIGNED")
