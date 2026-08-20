@@ -276,7 +276,16 @@ def test_b07_semantic_render_contradiction_detected_even_when_all_event_ids_are_
     assert validation.status == "RENDER_MISMATCH"
     assert validation.missing_canonical_events == ()
     assert "OBJECT_STATE:WINDOW_001:INTACT!=BROKEN" in validation.semantic_contradictions
+    assert "MISSING_OBJECT_STATE:BOTTLE_001" in validation.semantic_contradictions
     assert world.objects["WINDOW_001"].damage_state == "BROKEN"
+
+    omitted_semantics = validate_render_claims(
+        packet,
+        rendered_event_ids=rendered_event_ids,
+        rendered_scene_id="STREET_001",
+    )
+    assert omitted_semantics.status == "RENDER_MISMATCH"
+    assert "OBJECT_STATE_CLAIMS_REQUIRED" in omitted_semantics.semantic_contradictions
 
     aligned = validate_render_claims(
         packet,
