@@ -1,0 +1,97 @@
+schema_version: "0.1"
+schema_id: "AWRSE-WORLD-STATE"
+status: "DESIGN_FOUNDATION"
+
+purpose: >-
+  Define the canonical state domains whose projections drive simulation,
+  NPC reasoning, scene persistence and rendering.
+
+domains:
+  world:
+    fields:
+      - world_id
+      - simulation_time
+      - weather_state
+      - region_state_refs
+      - law_state_ref
+      - global_event_refs
+  scene:
+    fields:
+      - scene_id
+      - base_asset_refs
+      - spatial_layout_ref
+      - object_state_refs
+      - actor_state_refs
+      - persistent_delta_refs
+      - temporary_delta_refs
+      - relevant_event_refs
+  physical_actor:
+    fields:
+      - actor_id
+      - position
+      - orientation
+      - velocity
+      - posture
+      - capability_profile_ref
+      - strength
+      - fatigue
+      - injury_state
+      - hand_state
+      - inventory_refs
+  object:
+    fields:
+      - object_id
+      - location
+      - owner_ref
+      - mass
+      - material
+      - shape_class
+      - graspability
+      - fragility
+      - damage_state
+      - contamination_state
+  npc_mind:
+    fields:
+      - npc_id
+      - identity_ref
+      - role_ref
+      - value_profile_ref
+      - belief_refs
+      - goal_refs
+      - fear_refs
+      - relationship_refs
+      - memory_refs
+      - emotion_state
+      - current_plan_ref
+      - knowledge_boundary_refs
+  social:
+    fields:
+      - witness_refs
+      - rumor_refs
+      - reputation_refs
+      - report_refs
+      - faction_refs
+      - norm_refs
+      - authority_attention_refs
+
+knowledge_acquisition_modes:
+  - SAW
+  - HEARD
+  - WAS_TOLD
+  - INFERRED
+  - RUMORED
+  - DOCUMENTED
+  - UNKNOWN
+
+event_sourcing:
+  event_log_required: true
+  current_state_is_projection: true
+  append_preserve_history: true
+  replay_required_for_core_domains: true
+
+invariants:
+  - "Visual render output is not canonical world state."
+  - "Hidden simulator knowledge must not automatically become NPC knowledge."
+  - "State mutation must resolve to explicit events or authorized deterministic projections."
+  - "Scene revisit must bind to the same scene identity plus accumulated dynamic deltas."
+  - "Historical events are preserved even when current state changes."
