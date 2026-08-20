@@ -1,10 +1,9 @@
 from .compiler import ActionCompiler
-from .engine import Resolution, SimulationEngine
+from .engine import SimulationEngine
 from .model import (
     Action,
     ActorState,
     AuthorityScope,
-    Event,
     NPCMindState,
     ObjectState,
     ResolutionStatus,
@@ -21,11 +20,9 @@ __all__ = [
     "ActionCompiler",
     "ActorState",
     "AuthorityScope",
-    "Event",
     "NPCMindState",
     "ObjectState",
     "RenderValidation",
-    "Resolution",
     "ResolutionStatus",
     "SceneState",
     "SimulationEngine",
