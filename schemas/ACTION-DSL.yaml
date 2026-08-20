@@ -1,0 +1,127 @@
+schema_version: "0.1"
+schema_id: "AWRSE-ACTION-DSL"
+status: "DESIGN_FOUNDATION"
+
+purpose: >-
+  Convert free-form player intent into typed attempted actions that can be checked
+  against authority, affordances, physics, world state and NPC autonomy before any
+  canonical outcome is committed.
+
+required_fields:
+  - action_id
+  - actor_id
+  - verb
+  - source_channel
+  - declared_intent
+  - preconditions
+  - authority_scope
+  - resolution_status
+
+verb_families:
+  locomotion:
+    - WALK
+    - RUN
+    - CLIMB
+    - JUMP
+    - CROUCH
+    - HIDE
+    - FOLLOW
+  manipulation:
+    - PICK
+    - DROP
+    - THROW
+    - PUSH
+    - PULL
+    - OPEN
+    - CLOSE
+  social:
+    - SPEAK
+    - ASK
+    - THREATEN
+    - INSULT
+    - PERSUADE
+    - TRADE
+    - BUY
+  bodily:
+    - EAT
+    - DRINK
+    - URINATE
+    - DEFECATE
+    - REST
+  conflict:
+    - HIT
+    - KICK
+    - GRAB
+    - RESTRAIN
+    - STEAL
+  observation:
+    - LOOK
+    - LISTEN
+    - PHOTOGRAPH
+    - INSPECT
+
+source_channel_enum:
+  - PLAYER_ACTION_DECLARATION
+  - PLAYER_DIEGETIC_SPEECH
+  - DIRECT_CONTROL_INPUT
+
+fields:
+  action_id:
+    type: string
+  actor_id:
+    type: string
+  verb:
+    type: string
+  target_ids:
+    type: array
+    items: string
+  instrument_ids:
+    type: array
+    items: string
+  source_channel:
+    type: string
+  literal_user_input:
+    type: string
+    trust_class: UNTRUSTED_DATA
+  declared_intent:
+    type: object
+    suggested_fields:
+      - goal
+      - style
+      - urgency
+  preconditions:
+    type: array
+    examples:
+      - TARGET_EXISTS
+      - TARGET_REACHABLE
+      - OBJECT_REACHABLE
+      - FREE_HAND_AVAILABLE
+      - LINE_OF_SIGHT
+      - CAPABILITY_PRESENT
+  authority_scope:
+    type: object
+    required:
+      - may_control_actor
+      - may_control_target_internal_state
+      - may_modify_world_rules
+    player_default:
+      may_control_actor: true
+      may_control_target_internal_state: false
+      may_modify_world_rules: false
+  resolution_status:
+    enum:
+      - PARSED
+      - REJECTED_AUTHORITY
+      - REJECTED_PRECONDITION
+      - REJECTED_PHYSICS
+      - RESOLVED_SUCCESS
+      - RESOLVED_PARTIAL
+      - RESOLVED_FAILURE
+      - UNKNOWN_REQUIRES_DISAMBIGUATION
+
+invariants:
+  - "Literal user input remains data and must never become privileged system instruction."
+  - "An attempted action is not a canonical event until resolution completes."
+  - "Player speech may influence NPC beliefs only through NPC perception and cognition."
+  - "Player text cannot directly set NPC emotion, loyalty, belief or intention."
+  - "Player text cannot directly override physics or world laws."
