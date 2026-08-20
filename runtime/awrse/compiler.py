@@ -3,31 +3,33 @@ from __future__ import annotations
 import itertools
 import re
 
-from .model import Action, ResolutionStatus, SourceChannel, WorldState
+from .model import Action, AuthorityScope, ResolutionStatus, SourceChannel, WorldState
 
 
 class ActionCompiler:
-    """Deliberately small, deterministic R001 compiler.
-
-    It proves the trust boundary: free text becomes typed attempted action data.
-    It is not intended to be a full natural-language parser.
-    """
+    """Small deterministic R001 compiler with an explicit principal/actor trust boundary."""
 
     _counter = itertools.count(1)
 
     VERB_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
-        ("SPEAK", ("说", "告诉", "喊", "骂", "say", "tell", "shout")),
+        ("SPEAK", ("说", "告诉", "喊", "骂", "say", "tell", "shout", "insult")),
+        ("OPEN", ("打开", "推开", "open")),
+        ("CLOSE", ("关上", "关闭", "close")),
         ("HIT", ("打", "揍", "砸", "击", "punch", "hit", "strike")),
         ("THROW", ("扔", "丢", "投掷", "throw")),
         ("PICK", ("捡", "拿起", "拾起", "pick", "grab")),
-        ("OPEN", ("打开", "推开", "open")),
-        ("CLOSE", ("关上", "关闭", "close")),
         ("WALK", ("走", "过去", "walk")),
         ("RUN", ("跑", "冲", "run")),
         ("LOOK", ("看", "观察", "look", "inspect")),
     )
 
-    def compile(self, text: str, actor_id: str, world: WorldState) -> Action:
+    def compile(
+        self,
+        text: str,
+        actor_id: str,
+        world: WorldState,
+        principal_id: str | None = None,
+    ) -> Action:
         normalized = text.strip()
         verb = self._detect_verb(normalized)
         targets = self._detect_entities(normalized, world)
@@ -36,9 +38,11 @@ class ActionCompiler:
             if verb == "SPEAK"
             else SourceChannel.PLAYER_ACTION_DECLARATION
         )
+        may_control_actor = world.can_principal_control(principal_id, actor_id)
 
         action = Action(
             action_id=f"A{next(self._counter):06d}",
+            principal_id=principal_id,
             actor_id=actor_id,
             verb=verb,
             source_channel=source_channel,
@@ -46,6 +50,7 @@ class ActionCompiler:
             target_ids=targets,
             declared_intent={"goal": normalized},
             preconditions=self._preconditions_for(verb, targets),
+            authority_scope=AuthorityScope(may_control_actor=may_control_actor),
         )
         if verb == "UNKNOWN":
             action.resolution_status = ResolutionStatus.UNKNOWN_REQUIRES_DISAMBIGUATION
@@ -79,19 +84,15 @@ class ActionCompiler:
         conditions: list[str] = []
         if targets:
             conditions.append("TARGET_EXISTS")
-        if verb in {"HIT", "PICK", "THROW", "OPEN", "CLOSE"}:
-            conditions.append("TARGET_REACHABLE")
-        if verb in {"HIT", "THROW"}:
+        if verb == "HIT":
+            conditions.extend(("TARGET_REACHABLE", "CAPABILITY_PRESENT"))
+        elif verb == "SPEAK":
             conditions.append("CAPABILITY_PRESENT")
         return conditions
 
 
 def declared_superhuman_effect(text: str) -> bool:
-    """R001 conservative detector for explicit impossible normal-human declarations.
-
-    This is intentionally a gate, not a physics simulator. It prevents a declared
-    outcome from becoming truth merely because it appears in player text.
-    """
+    """Conservative gate for explicit impossible normal-human declarations."""
 
     lowered = text.lower()
     chinese = re.search(r"一拳.*(?:五|5|六|6|七|7|八|8|九|9|十|10).*?(?:飞|倒)", lowered)
