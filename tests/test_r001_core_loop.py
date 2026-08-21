@@ -764,3 +764,56 @@ def test_b16_causal_order_rejects_future_source_and_accepts_earlier_or_existing_
     )
     engine._SimulationEngine__commit_events(replayed, (later,))
     assert "E-SOURCE" in replayed.npc_minds["BYSTANDER_001"].knowledge_boundary_refs
+
+
+def test_b14_live_seal_blocks_attribute_deletion_and_preserves_authorized_projection():
+    world = make_world()
+    world.audible_pairs.add(("PLAYER", "GUARD_001"))
+    world.seal_live()
+
+    before_events = tuple(world.event_log)
+    before_version = world.state_version
+    before_ids = frozenset(world.committed_event_ids)
+    before_bindings = frozenset(world.principal_actor_bindings[PRINCIPAL])
+    before_damage = world.objects["WINDOW_001"].damage_state
+    before_relationship = world.npc_minds["GUARD_001"].relationship_to_player
+    before_scene_deltas = tuple(world.scenes["STREET_001"].persistent_delta_refs)
+    before_strength = world.actors["PLAYER"].strength
+
+    for target in (
+        world,
+        world.objects["WINDOW_001"],
+    ):
+        with pytest.raises(AttributeError, match="CANONICAL_SEAL_STATE_IS_INTERNAL"):
+            delattr(target, "_sealed")
+        assert target.is_read_only is True
+
+    for target, field_name in (
+        (world, "state_version"),
+        (world, "event_log"),
+        (world, "committed_event_ids"),
+        (world, "principal_actor_bindings"),
+        (world.objects["WINDOW_001"], "damage_state"),
+        (world.npc_minds["GUARD_001"], "relationship_to_player"),
+        (world.scenes["STREET_001"], "persistent_delta_refs"),
+        (world.actors["PLAYER"], "strength"),
+    ):
+        with pytest.raises(AttributeError, match="LIVE_CANONICAL_STATE_IS_READ_ONLY"):
+            delattr(target, field_name)
+
+    assert tuple(world.event_log) == before_events
+    assert world.state_version == before_version
+    assert frozenset(world.committed_event_ids) == before_ids
+    assert frozenset(world.principal_actor_bindings[PRINCIPAL]) == before_bindings
+    assert world.objects["WINDOW_001"].damage_state == before_damage
+    assert world.npc_minds["GUARD_001"].relationship_to_player == before_relationship
+    assert tuple(world.scenes["STREET_001"].persistent_delta_refs) == before_scene_deltas
+    assert world.actors["PLAYER"].strength == before_strength
+
+    engine = SimulationEngine()
+    engine.resolve_and_commit(compile_action(world, "砸碎窗户"), world)
+    engine.resolve_and_commit(compile_action(world, "骂守卫是蠢货"), world)
+    assert world.objects["WINDOW_001"].damage_state == "BROKEN"
+    assert world.npc_minds["GUARD_001"].relationship_to_player == -10
+    assert world.state_version > before_version
+    assert len(world.event_log) > len(before_events)
