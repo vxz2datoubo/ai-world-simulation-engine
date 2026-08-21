@@ -51,7 +51,9 @@ class _SealableState:
     __slots__ = ("_sealed",)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name != "_sealed" and getattr(self, "_sealed", False):
+        if name == "_sealed":
+            raise AttributeError("CANONICAL_SEAL_STATE_IS_INTERNAL")
+        if getattr(self, "_sealed", False):
             raise AttributeError("LIVE_CANONICAL_STATE_IS_READ_ONLY")
         object.__setattr__(self, name, value)
 
