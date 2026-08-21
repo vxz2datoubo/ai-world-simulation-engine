@@ -777,7 +777,46 @@ class SimulationEngine:
                     raise ValueError("INVALID_SAW_OBSERVED_OBJECT_SCENE")
                 if not world.can_see(observed_entity_id, npc_id):
                     raise ValueError("INVALID_SAW_VISIBILITY_PATH")
-            return
+                return
+
+            if mode == "HEARD":
+                if source_event.event_type != "SPEECH_UTTERED":
+                    raise ValueError("INVALID_HEARD_SOURCE_EVENT_TYPE")
+                speaker_id = str(payload.get("speaker_id", ""))
+                if (
+                    not speaker_id
+                    or speaker_id != (source_event.actor_id or "")
+                    or event.actor_id != speaker_id
+                ):
+                    raise ValueError("INVALID_HEARD_SPEAKER")
+                speaker_actor = world.actors.get(speaker_id)
+                if (
+                    speaker_actor is None
+                    or source_event.scene_id != event.scene_id
+                    or speaker_actor.scene_id != event.scene_id
+                ):
+                    raise ValueError("INVALID_HEARD_SOURCE_SCENE")
+                if not world.can_hear(speaker_id, npc_id):
+                    raise ValueError("INVALID_HEARD_AUDIBILITY_PATH")
+                return
+
+            if mode == "WAS_TOLD":
+                source_npc_id = str(payload.get("source_npc_id", ""))
+                if not source_npc_id or source_npc_id != (event.actor_id or ""):
+                    raise ValueError("INVALID_WAS_TOLD_SOURCE_NPC")
+                source_actor = world.actors.get(source_npc_id)
+                source_mind = world.npc_minds.get(source_npc_id)
+                if source_actor is None or source_mind is None:
+                    raise ValueError("INVALID_WAS_TOLD_SOURCE_NPC")
+                if source_actor.scene_id != event.scene_id:
+                    raise ValueError("INVALID_WAS_TOLD_SOURCE_SCENE")
+                if source_event_id not in source_mind.knowledge_boundary_refs:
+                    raise ValueError("INVALID_WAS_TOLD_SOURCE_KNOWLEDGE")
+                if not world.can_hear(source_npc_id, npc_id):
+                    raise ValueError("INVALID_WAS_TOLD_AUDIBILITY_PATH")
+                return
+
+            raise ValueError(f"UNSUPPORTED_KNOWLEDGE_PROVENANCE_MODE:{mode}")
 
         if event.event_type == "RELATIONSHIP_CHANGED":
             npc_id = str(payload.get("npc_id", ""))
