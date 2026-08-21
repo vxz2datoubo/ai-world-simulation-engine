@@ -47,6 +47,22 @@ def thaw_value(value: Any) -> Any:
     return value
 
 
+class _SealableState:
+    __slots__ = ("_sealed",)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name != "_sealed" and getattr(self, "_sealed", False):
+            raise AttributeError("LIVE_CANONICAL_STATE_IS_READ_ONLY")
+        object.__setattr__(self, name, value)
+
+    def _seal_read_only(self) -> None:
+        object.__setattr__(self, "_sealed", True)
+
+    @property
+    def is_read_only(self) -> bool:
+        return bool(getattr(self, "_sealed", False))
+
+
 @dataclass(frozen=True)
 class AuthorityScope:
     may_control_actor: bool = False
@@ -85,8 +101,8 @@ class Event:
         object.__setattr__(self, "payload", freeze_value(dict(self.payload)))
 
 
-@dataclass
-class ActorState:
+@dataclass(slots=True)
+class ActorState(_SealableState):
     actor_id: str
     name: str
     scene_id: str
@@ -94,13 +110,18 @@ class ActorState:
     fatigue: float = 0.0
     injury: float = 0.0
     free_hands: int = 2
-    inventory_refs: list[str] = field(default_factory=list)
+    inventory_refs: list[str] | tuple[str, ...] = field(default_factory=list)
     max_targets_per_strike: int = 1
-    capabilities: set[str] = field(default_factory=lambda: {"SPEAK", "HIT"})
+    capabilities: set[str] | frozenset[str] = field(default_factory=lambda: {"SPEAK", "HIT"})
+
+    def _seal_graph(self) -> None:
+        object.__setattr__(self, "inventory_refs", tuple(self.inventory_refs))
+        object.__setattr__(self, "capabilities", frozenset(self.capabilities))
+        self._seal_read_only()
 
 
-@dataclass
-class ObjectState:
+@dataclass(slots=True)
+class ObjectState(_SealableState):
     object_id: str
     name: str
     scene_id: str
@@ -110,75 +131,93 @@ class ObjectState:
     damage_state: str = "INTACT"
     contamination_state: str = "CLEAN"
 
+    def _seal_graph(self) -> None:
+        self._seal_read_only()
 
-@dataclass
-class NPCMindState:
+
+@dataclass(slots=True)
+class NPCMindState(_SealableState):
     npc_id: str
     role: str
-    beliefs: list[str] = field(default_factory=list)
-    memories: list[str] = field(default_factory=list)
+    beliefs: list[str] | tuple[str, ...] = field(default_factory=list)
+    memories: list[str] | tuple[str, ...] = field(default_factory=list)
     emotion_state: str = "NEUTRAL"
     relationship_to_player: int = 0
-    knowledge_boundary_refs: list[str] = field(default_factory=list)
+    knowledge_boundary_refs: list[str] | tuple[str, ...] = field(default_factory=list)
+
+    def _seal_graph(self) -> None:
+        object.__setattr__(self, "beliefs", tuple(self.beliefs))
+        object.__setattr__(self, "memories", tuple(self.memories))
+        object.__setattr__(self, "knowledge_boundary_refs", tuple(self.knowledge_boundary_refs))
+        self._seal_read_only()
 
 
-@dataclass
-class SceneState:
+@dataclass(slots=True)
+class SceneState(_SealableState):
     scene_id: str
-    base_asset_refs: list[str] = field(default_factory=list)
-    object_state_refs: list[str] = field(default_factory=list)
-    actor_state_refs: list[str] = field(default_factory=list)
-    persistent_delta_refs: list[str] = field(default_factory=list)
-    relevant_event_refs: list[str] = field(default_factory=list)
+    base_asset_refs: list[str] | tuple[str, ...] = field(default_factory=list)
+    object_state_refs: list[str] | tuple[str, ...] = field(default_factory=list)
+    actor_state_refs: list[str] | tuple[str, ...] = field(default_factory=list)
+    persistent_delta_refs: list[str] | tuple[str, ...] = field(default_factory=list)
+    relevant_event_refs: list[str] | tuple[str, ...] = field(default_factory=list)
+
+    def _seal_graph(self) -> None:
+        object.__setattr__(self, "base_asset_refs", tuple(self.base_asset_refs))
+        object.__setattr__(self, "object_state_refs", tuple(self.object_state_refs))
+        object.__setattr__(self, "actor_state_refs", tuple(self.actor_state_refs))
+        object.__setattr__(self, "persistent_delta_refs", tuple(self.persistent_delta_refs))
+        object.__setattr__(self, "relevant_event_refs", tuple(self.relevant_event_refs))
+        self._seal_read_only()
 
 
-@dataclass
-class WorldState:
+_LIVE_MUTATION_TOKEN = object()
+
+
+@dataclass(slots=True)
+class WorldState(_SealableState):
     world_id: str
     active_scene_id: str
     baseline_version: str = "R001-UNVERSIONED"
     state_version: int = 0
     primary_player_actor_id: str = "PLAYER"
-    actors: dict[str, ActorState] = field(default_factory=dict)
-    objects: dict[str, ObjectState] = field(default_factory=dict)
-    npc_minds: dict[str, NPCMindState] = field(default_factory=dict)
-    scenes: dict[str, SceneState] = field(default_factory=dict)
-    event_log: list[Event] = field(default_factory=list)
-    committed_event_ids: set[str] = field(default_factory=set)
-    principal_actor_bindings: dict[str, set[str]] = field(default_factory=dict)
-    reachable_pairs: set[tuple[str, str]] = field(default_factory=set)
-    audible_pairs: set[tuple[str, str]] = field(default_factory=set)
-    visible_pairs: set[tuple[str, str]] = field(default_factory=set)
+    actors: Mapping[str, ActorState] = field(default_factory=dict)
+    objects: Mapping[str, ObjectState] = field(default_factory=dict)
+    npc_minds: Mapping[str, NPCMindState] = field(default_factory=dict)
+    scenes: Mapping[str, SceneState] = field(default_factory=dict)
+    event_log: list[Event] | tuple[Event, ...] = field(default_factory=list)
+    committed_event_ids: set[str] | frozenset[str] = field(default_factory=set)
+    principal_actor_bindings: Mapping[str, set[str] | frozenset[str]] = field(default_factory=dict)
+    reachable_pairs: set[tuple[str, str]] | frozenset[tuple[str, str]] = field(default_factory=set)
+    audible_pairs: set[tuple[str, str]] | frozenset[tuple[str, str]] = field(default_factory=set)
+    visible_pairs: set[tuple[str, str]] | frozenset[tuple[str, str]] = field(default_factory=set)
 
     @property
     def world_state_version(self) -> str:
         return f"{self.baseline_version}:{self.state_version}"
 
+    @property
+    def is_live(self) -> bool:
+        return self.is_read_only
+
     def entity_exists(self, entity_id: str) -> bool:
-        return (
-            entity_id in self.actors
-            or entity_id in self.objects
-            or entity_id in self.npc_minds
-            or entity_id in self.scenes
-        )
+        return entity_id in self.actors or entity_id in self.objects or entity_id in self.npc_minds or entity_id in self.scenes
 
     def can_principal_control(self, principal_id: str | None, actor_id: str) -> bool:
         if principal_id is None:
             return False
-        return actor_id in self.principal_actor_bindings.get(principal_id, set())
+        return actor_id in self.principal_actor_bindings.get(principal_id, frozenset())
 
     def is_reachable(self, actor_id: str, target_id: str) -> bool:
         actor = self.actors.get(actor_id)
         if actor is None:
             return False
-        target_scene = None
         if target_id in self.actors:
             target_scene = self.actors[target_id].scene_id
         elif target_id in self.objects:
             target_scene = self.objects[target_id].scene_id
-        if target_scene != actor.scene_id:
+        else:
             return False
-        return (actor_id, target_id) in self.reachable_pairs
+        return target_scene == actor.scene_id and (actor_id, target_id) in self.reachable_pairs
 
     def can_hear(self, speaker_id: str, listener_id: str) -> bool:
         speaker = self.actors.get(speaker_id)
@@ -197,9 +236,57 @@ class WorldState:
             entity_scene = self.actors[entity_id].scene_id
         else:
             return False
-        if entity_scene != observer.scene_id:
-            return False
-        return (entity_id, observer_id) in self.visible_pairs
+        return entity_scene == observer.scene_id and (entity_id, observer_id) in self.visible_pairs
+
+    def seal_live(self) -> None:
+        """Seal pristine bootstrap/config state into caller-read-only live canonical state."""
+        if self.is_live:
+            return
+        if self.event_log or self.committed_event_ids or self.state_version != 0:
+            raise ValueError("UNTRUSTED_EVENTFUL_BOOTSTRAP_STATE")
+        self._seal_graph_authorized(_LIVE_MUTATION_TOKEN)
+
+    def _seal_graph_authorized(self, token: object) -> None:
+        if token is not _LIVE_MUTATION_TOKEN:
+            raise PermissionError("CANONICAL_MUTATION_CAPABILITY_REQUIRED")
+        if self.is_live:
+            return
+        for actor in self.actors.values():
+            actor._seal_graph()
+        for obj in self.objects.values():
+            obj._seal_graph()
+        for npc in self.npc_minds.values():
+            npc._seal_graph()
+        for scene in self.scenes.values():
+            scene._seal_graph()
+        object.__setattr__(self, "actors", MappingProxyType(dict(self.actors)))
+        object.__setattr__(self, "objects", MappingProxyType(dict(self.objects)))
+        object.__setattr__(self, "npc_minds", MappingProxyType(dict(self.npc_minds)))
+        object.__setattr__(self, "scenes", MappingProxyType(dict(self.scenes)))
+        object.__setattr__(self, "event_log", tuple(self.event_log))
+        object.__setattr__(self, "committed_event_ids", frozenset(self.committed_event_ids))
+        object.__setattr__(
+            self,
+            "principal_actor_bindings",
+            MappingProxyType({principal: frozenset(actor_ids) for principal, actor_ids in self.principal_actor_bindings.items()}),
+        )
+        object.__setattr__(self, "reachable_pairs", frozenset(self.reachable_pairs))
+        object.__setattr__(self, "audible_pairs", frozenset(self.audible_pairs))
+        object.__setattr__(self, "visible_pairs", frozenset(self.visible_pairs))
+        self._seal_read_only()
+
+    def _adopt_authorized_state(self, candidate: WorldState, token: object) -> None:
+        if token is not _LIVE_MUTATION_TOKEN:
+            raise PermissionError("CANONICAL_MUTATION_CAPABILITY_REQUIRED")
+        if not candidate.is_live:
+            candidate._seal_graph_authorized(token)
+        for name in (
+            "world_id", "active_scene_id", "baseline_version", "state_version", "primary_player_actor_id",
+            "actors", "objects", "npc_minds", "scenes", "event_log", "committed_event_ids",
+            "principal_actor_bindings", "reachable_pairs", "audible_pairs", "visible_pairs",
+        ):
+            object.__setattr__(self, name, getattr(candidate, name))
+        object.__setattr__(self, "_sealed", True)
 
 
 @dataclass(frozen=True)
@@ -239,61 +326,40 @@ def _world_to_data(world: WorldState) -> dict[str, Any]:
         "primary_player_actor_id": world.primary_player_actor_id,
         "actors": {
             actor_id: {
-                "actor_id": actor.actor_id,
-                "name": actor.name,
-                "scene_id": actor.scene_id,
-                "strength": actor.strength,
-                "fatigue": actor.fatigue,
-                "injury": actor.injury,
-                "free_hands": actor.free_hands,
-                "inventory_refs": list(actor.inventory_refs),
-                "max_targets_per_strike": actor.max_targets_per_strike,
-                "capabilities": sorted(actor.capabilities),
+                "actor_id": actor.actor_id, "name": actor.name, "scene_id": actor.scene_id,
+                "strength": actor.strength, "fatigue": actor.fatigue, "injury": actor.injury,
+                "free_hands": actor.free_hands, "inventory_refs": list(actor.inventory_refs),
+                "max_targets_per_strike": actor.max_targets_per_strike, "capabilities": sorted(actor.capabilities),
             }
             for actor_id, actor in world.actors.items()
         },
         "objects": {
             object_id: {
-                "object_id": obj.object_id,
-                "name": obj.name,
-                "scene_id": obj.scene_id,
-                "mass": obj.mass,
-                "graspable": obj.graspable,
-                "fragility": obj.fragility,
-                "damage_state": obj.damage_state,
+                "object_id": obj.object_id, "name": obj.name, "scene_id": obj.scene_id, "mass": obj.mass,
+                "graspable": obj.graspable, "fragility": obj.fragility, "damage_state": obj.damage_state,
                 "contamination_state": obj.contamination_state,
             }
             for object_id, obj in world.objects.items()
         },
         "npc_minds": {
             npc_id: {
-                "npc_id": npc.npc_id,
-                "role": npc.role,
-                "beliefs": list(npc.beliefs),
-                "memories": list(npc.memories),
-                "emotion_state": npc.emotion_state,
-                "relationship_to_player": npc.relationship_to_player,
+                "npc_id": npc.npc_id, "role": npc.role, "beliefs": list(npc.beliefs), "memories": list(npc.memories),
+                "emotion_state": npc.emotion_state, "relationship_to_player": npc.relationship_to_player,
                 "knowledge_boundary_refs": list(npc.knowledge_boundary_refs),
             }
             for npc_id, npc in world.npc_minds.items()
         },
         "scenes": {
             scene_id: {
-                "scene_id": scene.scene_id,
-                "base_asset_refs": list(scene.base_asset_refs),
-                "object_state_refs": list(scene.object_state_refs),
-                "actor_state_refs": list(scene.actor_state_refs),
-                "persistent_delta_refs": list(scene.persistent_delta_refs),
-                "relevant_event_refs": list(scene.relevant_event_refs),
+                "scene_id": scene.scene_id, "base_asset_refs": list(scene.base_asset_refs),
+                "object_state_refs": list(scene.object_state_refs), "actor_state_refs": list(scene.actor_state_refs),
+                "persistent_delta_refs": list(scene.persistent_delta_refs), "relevant_event_refs": list(scene.relevant_event_refs),
             }
             for scene_id, scene in world.scenes.items()
         },
         "event_log": [_event_to_data(event) for event in world.event_log],
         "committed_event_ids": sorted(world.committed_event_ids),
-        "principal_actor_bindings": {
-            principal_id: sorted(actor_ids)
-            for principal_id, actor_ids in world.principal_actor_bindings.items()
-        },
+        "principal_actor_bindings": {principal: sorted(actor_ids) for principal, actor_ids in world.principal_actor_bindings.items()},
         "reachable_pairs": [list(pair) for pair in sorted(world.reachable_pairs)],
         "audible_pairs": [list(pair) for pair in sorted(world.audible_pairs)],
         "visible_pairs": [list(pair) for pair in sorted(world.visible_pairs)],
@@ -303,98 +369,63 @@ def _world_to_data(world: WorldState) -> dict[str, Any]:
 def _world_from_data(data: Mapping[str, Any]) -> WorldState:
     actors = {
         actor_id: ActorState(
-            actor_id=str(item["actor_id"]),
-            name=str(item["name"]),
-            scene_id=str(item["scene_id"]),
-            strength=float(item["strength"]),
-            fatigue=float(item["fatigue"]),
-            injury=float(item["injury"]),
-            free_hands=int(item["free_hands"]),
-            inventory_refs=[str(value) for value in item["inventory_refs"]],
-            max_targets_per_strike=int(item["max_targets_per_strike"]),
-            capabilities={str(value) for value in item["capabilities"]},
+            actor_id=str(item["actor_id"]), name=str(item["name"]), scene_id=str(item["scene_id"]),
+            strength=float(item["strength"]), fatigue=float(item["fatigue"]), injury=float(item["injury"]),
+            free_hands=int(item["free_hands"]), inventory_refs=[str(v) for v in item["inventory_refs"]],
+            max_targets_per_strike=int(item["max_targets_per_strike"]), capabilities={str(v) for v in item["capabilities"]},
         )
         for actor_id, item in data["actors"].items()
     }
     objects = {
         object_id: ObjectState(
-            object_id=str(item["object_id"]),
-            name=str(item["name"]),
-            scene_id=str(item["scene_id"]),
-            mass=float(item["mass"]),
-            graspable=bool(item["graspable"]),
-            fragility=float(item["fragility"]),
-            damage_state=str(item["damage_state"]),
-            contamination_state=str(item["contamination_state"]),
+            object_id=str(item["object_id"]), name=str(item["name"]), scene_id=str(item["scene_id"]),
+            mass=float(item["mass"]), graspable=bool(item["graspable"]), fragility=float(item["fragility"]),
+            damage_state=str(item["damage_state"]), contamination_state=str(item["contamination_state"]),
         )
         for object_id, item in data["objects"].items()
     }
     npc_minds = {
         npc_id: NPCMindState(
-            npc_id=str(item["npc_id"]),
-            role=str(item["role"]),
-            beliefs=[str(value) for value in item["beliefs"]],
-            memories=[str(value) for value in item["memories"]],
-            emotion_state=str(item["emotion_state"]),
+            npc_id=str(item["npc_id"]), role=str(item["role"]), beliefs=[str(v) for v in item["beliefs"]],
+            memories=[str(v) for v in item["memories"]], emotion_state=str(item["emotion_state"]),
             relationship_to_player=int(item["relationship_to_player"]),
-            knowledge_boundary_refs=[str(value) for value in item["knowledge_boundary_refs"]],
+            knowledge_boundary_refs=[str(v) for v in item["knowledge_boundary_refs"]],
         )
         for npc_id, item in data["npc_minds"].items()
     }
     scenes = {
         scene_id: SceneState(
-            scene_id=str(item["scene_id"]),
-            base_asset_refs=[str(value) for value in item["base_asset_refs"]],
-            object_state_refs=[str(value) for value in item["object_state_refs"]],
-            actor_state_refs=[str(value) for value in item["actor_state_refs"]],
-            persistent_delta_refs=[str(value) for value in item["persistent_delta_refs"]],
-            relevant_event_refs=[str(value) for value in item["relevant_event_refs"]],
+            scene_id=str(item["scene_id"]), base_asset_refs=[str(v) for v in item["base_asset_refs"]],
+            object_state_refs=[str(v) for v in item["object_state_refs"]], actor_state_refs=[str(v) for v in item["actor_state_refs"]],
+            persistent_delta_refs=[str(v) for v in item["persistent_delta_refs"]],
+            relevant_event_refs=[str(v) for v in item["relevant_event_refs"]],
         )
         for scene_id, item in data["scenes"].items()
     }
     events = [
         Event(
-            event_id=str(item["event_id"]),
-            event_type=str(item["event_type"]),
-            actor_id=None if item["actor_id"] is None else str(item["actor_id"]),
-            scene_id=str(item["scene_id"]),
-            baseline_version=str(item["baseline_version"]),
-            payload=dict(item["payload"]),
-            caused_by_action_id=(
-                None if item["caused_by_action_id"] is None else str(item["caused_by_action_id"])
-            ),
+            event_id=str(item["event_id"]), event_type=str(item["event_type"]),
+            actor_id=None if item["actor_id"] is None else str(item["actor_id"]), scene_id=str(item["scene_id"]),
+            baseline_version=str(item["baseline_version"]), payload=dict(item["payload"]),
+            caused_by_action_id=None if item["caused_by_action_id"] is None else str(item["caused_by_action_id"]),
         )
         for item in data["event_log"]
     ]
     return WorldState(
-        world_id=str(data["world_id"]),
-        active_scene_id=str(data["active_scene_id"]),
-        baseline_version=str(data["baseline_version"]),
-        state_version=int(data["state_version"]),
-        primary_player_actor_id=str(data["primary_player_actor_id"]),
-        actors=actors,
-        objects=objects,
-        npc_minds=npc_minds,
-        scenes=scenes,
-        event_log=events,
-        committed_event_ids={str(value) for value in data["committed_event_ids"]},
-        principal_actor_bindings={
-            str(principal_id): {str(actor_id) for actor_id in actor_ids}
-            for principal_id, actor_ids in data["principal_actor_bindings"].items()
-        },
-        reachable_pairs={tuple(str(value) for value in pair) for pair in data["reachable_pairs"]},
-        audible_pairs={tuple(str(value) for value in pair) for pair in data["audible_pairs"]},
-        visible_pairs={tuple(str(value) for value in pair) for pair in data["visible_pairs"]},
+        world_id=str(data["world_id"]), active_scene_id=str(data["active_scene_id"]),
+        baseline_version=str(data["baseline_version"]), state_version=int(data["state_version"]),
+        primary_player_actor_id=str(data["primary_player_actor_id"]), actors=actors, objects=objects,
+        npc_minds=npc_minds, scenes=scenes, event_log=events,
+        committed_event_ids={str(v) for v in data["committed_event_ids"]},
+        principal_actor_bindings={str(p): {str(a) for a in ids} for p, ids in data["principal_actor_bindings"].items()},
+        reachable_pairs={tuple(str(v) for v in pair) for pair in data["reachable_pairs"]},
+        audible_pairs={tuple(str(v) for v in pair) for pair in data["audible_pairs"]},
+        visible_pairs={tuple(str(v) for v in pair) for pair in data["visible_pairs"]},
     )
 
 
 def _encode_world_snapshot(world: WorldState) -> bytes:
-    return json.dumps(
-        _world_to_data(world),
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
+    return json.dumps(_world_to_data(world), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
 def _decode_world_snapshot(snapshot: bytes) -> WorldState:
