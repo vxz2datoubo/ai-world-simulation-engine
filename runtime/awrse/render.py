@@ -49,7 +49,6 @@ def _canonical_confirmed_events(world: WorldState, events: Iterable[Event]) -> t
         if event.event_id in requested_ids:
             raise ValueError(f"DUPLICATE_CONFIRMED_EVENT_REQUEST:{event.event_id}")
         requested_ids.add(event.event_id)
-
         if event.baseline_version != world.baseline_version:
             raise ValueError(f"CONFIRMED_EVENT_BASELINE_MISMATCH:{event.event_id}")
         if event.scene_id != world.active_scene_id:
@@ -66,6 +65,7 @@ def _canonical_confirmed_events(world: WorldState, events: Iterable[Event]) -> t
 
 
 def build_render_packet(world: WorldState, events: Iterable[Event]) -> WorldRenderPacket:
+    world.seal_live()
     scene = world.scenes[world.active_scene_id]
     confirmed_events = _canonical_confirmed_events(world, events)
     actor_refs = tuple(
@@ -125,7 +125,7 @@ def build_render_packet(world: WorldState, events: Iterable[Event]) -> WorldRend
 def validate_render_claims(
     packet: WorldRenderPacket,
     rendered_event_ids: set[str],
-    rendered_object_states: Mapping[str, str] | None = None,
+    rendered_object_states: Mapping[str, Mapping[str, str]] | None = None,
     rendered_scene_id: str | None = None,
     rendered_actor_state_refs: Iterable[str] | None = None,
     rendered_camera: Mapping[str, Any] | None = None,
@@ -159,7 +159,10 @@ def validate_render_claims(
         contradictions.append("CAMERA_INTENT_MISMATCH")
 
     canonical_object_states = {
-        str(delta["object_id"]): str(delta["damage_state"])
+        str(delta["object_id"]): {
+            "damage_state": str(delta["damage_state"]),
+            "contamination_state": str(delta["contamination_state"]),
+        }
         for delta in packet.environment_delta
         if delta.get("kind") == "OBJECT_STATE"
     }
@@ -167,14 +170,22 @@ def validate_render_claims(
         contradictions.append("OBJECT_STATE_CLAIMS_REQUIRED")
     elif rendered_object_states is not None:
         for object_id, canonical_state in canonical_object_states.items():
-            if object_id not in rendered_object_states:
+            rendered_state = rendered_object_states.get(object_id)
+            if rendered_state is None:
                 contradictions.append(f"MISSING_OBJECT_STATE:{object_id}")
                 continue
-            rendered_state = rendered_object_states[object_id]
-            if canonical_state != rendered_state:
-                contradictions.append(
-                    f"OBJECT_STATE:{object_id}:{rendered_state}!={canonical_state}"
-                )
+            if not isinstance(rendered_state, Mapping):
+                contradictions.append(f"OBJECT_STATE_FIELDS_REQUIRED:{object_id}")
+                continue
+            for field_name, canonical_value in canonical_state.items():
+                if field_name not in rendered_state:
+                    contradictions.append(f"MISSING_OBJECT_FIELD:{object_id}:{field_name}")
+                    continue
+                rendered_value = str(rendered_state[field_name])
+                if rendered_value != canonical_value:
+                    contradictions.append(
+                        f"OBJECT_STATE:{object_id}:{field_name}:{rendered_value}!={canonical_value}"
+                    )
         for object_id in rendered_object_states:
             if object_id not in canonical_object_states:
                 contradictions.append(f"UNCONFIRMED_OBJECT:{object_id}")
