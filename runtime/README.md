@@ -1,10 +1,23 @@
 # Runtime
 
-Status: `NOT IMPLEMENTED`
+Status: `R001 IMPLEMENTATION CANDIDATE / NOT PRODUCTION READY`
 
-This directory is reserved for authorized implementation of the AWRSE runtime.
+The first authorized AWRSE runtime slice is being implemented on branch `gpt/r001-core-loop`.
 
-No production runtime exists yet. The current repository stage is architecture, contracts, schemas, skills and evaluation design.
+Current R001 scope:
+
+- deterministic free-text -> typed Action DSL compiler
+- untrusted player-text boundary
+- authoritative action resolution
+- conservative physical impossibility rejection
+- append-preserved canonical events
+- deterministic state projection and replay
+- NPC knowledge acquisition only through explicit channels
+- renderer-neutral `WorldRenderPacket`
+- render/canonical mismatch contract
+- executable regression tests for the implemented invariants
+
+This is deliberately a **small proof of authority**, not yet a game, full physics engine, autonomous society, H3 integration, or Matrix-Game integration.
 
 Implementation must preserve these invariants:
 
@@ -17,4 +30,4 @@ Implementation must preserve these invariants:
 7. core world state remains replayable from event history and authorized deterministic projections
 8. renderer mismatch cannot rewrite canonical truth
 
-Before implementation is considered acceptable, the core eval suite in `evals/AWRSE-CORE-EVALS.yaml` must have executable coverage appropriate to the implemented scope.
+Before implementation is considered acceptable, the core eval suite in `evals/AWRSE-CORE-EVALS.yaml` must have executable coverage appropriate to the implemented scope and CI must pass on the exact review head.
