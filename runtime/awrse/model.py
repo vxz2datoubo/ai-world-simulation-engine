@@ -282,6 +282,50 @@ class WorldState(_SealableState):
             if self.zone_scene_bindings[left] != self.zone_scene_bindings[right]:
                 raise ValueError(f"ZONE_ADJACENCY_CROSS_SCENE:{left}:{right}")
 
+    def _validate_possession_integrity(self) -> None:
+        inventory_owner_by_object: dict[str, str] = {}
+        for actor_id, actor in self.actors.items():
+            seen_inventory_refs: set[str] = set()
+            for object_id in actor.inventory_refs:
+                if object_id in seen_inventory_refs:
+                    raise ValueError(f"DUPLICATE_INVENTORY_REF:{actor_id}:{object_id}")
+                seen_inventory_refs.add(object_id)
+
+                obj = self.objects.get(object_id)
+                if obj is None:
+                    raise ValueError(f"INVENTORY_OBJECT_UNKNOWN:{actor_id}:{object_id}")
+
+                prior_actor_id = inventory_owner_by_object.get(object_id)
+                if prior_actor_id is not None and prior_actor_id != actor_id:
+                    raise ValueError(
+                        f"OBJECT_IN_MULTIPLE_INVENTORIES:{object_id}:{prior_actor_id}:{actor_id}"
+                    )
+                inventory_owner_by_object[object_id] = actor_id
+
+                if obj.owner_actor_id != actor_id:
+                    raise ValueError(
+                        f"INVENTORY_OWNER_MISMATCH:{actor_id}:{object_id}:{obj.owner_actor_id}"
+                    )
+                if obj.scene_id != actor.scene_id:
+                    raise ValueError(f"CARRIED_OBJECT_SCENE_MISMATCH:{actor_id}:{object_id}")
+                if self._symbolic_spatial_claimed() and obj.zone_id != actor.zone_id:
+                    raise ValueError(f"CARRIED_OBJECT_ZONE_MISMATCH:{actor_id}:{object_id}")
+
+        for object_id, obj in self.objects.items():
+            if obj.owner_actor_id is None:
+                continue
+            owner = self.actors.get(obj.owner_actor_id)
+            if owner is None:
+                raise ValueError(f"OBJECT_OWNER_UNKNOWN:{object_id}:{obj.owner_actor_id}")
+            if object_id not in owner.inventory_refs:
+                raise ValueError(f"OWNED_OBJECT_MISSING_FROM_INVENTORY:{object_id}:{obj.owner_actor_id}")
+            if inventory_owner_by_object.get(object_id) != obj.owner_actor_id:
+                raise ValueError(f"OBJECT_OWNER_INVENTORY_MISMATCH:{object_id}:{obj.owner_actor_id}")
+            if obj.scene_id != owner.scene_id:
+                raise ValueError(f"CARRIED_OBJECT_SCENE_MISMATCH:{obj.owner_actor_id}:{object_id}")
+            if self._symbolic_spatial_claimed() and obj.zone_id != owner.zone_id:
+                raise ValueError(f"CARRIED_OBJECT_ZONE_MISMATCH:{obj.owner_actor_id}:{object_id}")
+
     def is_reachable(self, actor_id: str, target_id: str) -> bool:
         actor = self.actors.get(actor_id)
         if actor is None:
@@ -355,6 +399,7 @@ class WorldState(_SealableState):
         if self.event_log or self.committed_event_ids or self.state_version != 0:
             raise ValueError("UNTRUSTED_EVENTFUL_BOOTSTRAP_STATE")
         self._validate_spatial_integrity()
+        self._validate_possession_integrity()
         self._seal_graph_authorized(_LIVE_MUTATION_TOKEN)
 
     def _seal_graph_authorized(self, token: object) -> None:
@@ -363,6 +408,7 @@ class WorldState(_SealableState):
         if self.is_live:
             return
         self._validate_spatial_integrity()
+        self._validate_possession_integrity()
         for actor in self.actors.values():
             actor._seal_graph()
         for obj in self.objects.values():
@@ -644,6 +690,7 @@ def capture_pristine_baseline(world: WorldState) -> WorldBaseline:
     if not world.baseline_version or world.baseline_version == "R001-UNVERSIONED":
         raise ValueError("BASELINE_VERSION_REQUIRED")
     world._validate_spatial_integrity()
+    world._validate_possession_integrity()
     snapshot = _encode_world_snapshot(world)
     return WorldBaseline(
         baseline_version=world.baseline_version,
