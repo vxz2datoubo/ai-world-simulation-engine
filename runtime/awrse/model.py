@@ -57,6 +57,13 @@ class _SealableState:
             raise AttributeError("LIVE_CANONICAL_STATE_IS_READ_ONLY")
         object.__setattr__(self, name, value)
 
+    def __delattr__(self, name: str) -> None:
+        if name == "_sealed":
+            raise AttributeError("CANONICAL_SEAL_STATE_IS_INTERNAL")
+        if getattr(self, "_sealed", False):
+            raise AttributeError("LIVE_CANONICAL_STATE_IS_READ_ONLY")
+        object.__delattr__(self, name)
+
     def _seal_read_only(self) -> None:
         object.__setattr__(self, "_sealed", True)
 
