@@ -234,18 +234,66 @@ class WorldState(_SealableState):
             return False
         return actor_id in self.principal_actor_bindings.get(principal_id, frozenset())
 
+    def _symbolic_spatial_claimed(self) -> bool:
+        return bool(
+            self.zone_scene_bindings
+            or self.zone_adjacency_pairs
+            or any(actor.zone_id is not None for actor in self.actors.values())
+            or any(obj.zone_id is not None for obj in self.objects.values())
+        )
+
+    def _zone_matches_scene(self, zone_id: str | None, scene_id: str) -> bool:
+        if zone_id is None:
+            return False
+        return self.zone_scene_bindings.get(zone_id) == scene_id
+
+    def _validate_spatial_integrity(self) -> None:
+        if not self._symbolic_spatial_claimed():
+            return
+        if not self.zone_scene_bindings:
+            raise ValueError("SPATIAL_ZONE_BINDINGS_REQUIRED")
+
+        for zone_id, scene_id in self.zone_scene_bindings.items():
+            if not zone_id or scene_id not in self.scenes:
+                raise ValueError(f"INVALID_ZONE_SCENE_BINDING:{zone_id}")
+
+        for actor_id, actor in self.actors.items():
+            if actor.zone_id is None:
+                continue
+            if actor.zone_id not in self.zone_scene_bindings:
+                raise ValueError(f"ACTOR_ZONE_UNKNOWN:{actor_id}:{actor.zone_id}")
+            if not self._zone_matches_scene(actor.zone_id, actor.scene_id):
+                raise ValueError(f"ACTOR_ZONE_SCENE_MISMATCH:{actor_id}:{actor.zone_id}")
+
+        for object_id, obj in self.objects.items():
+            if obj.zone_id is None:
+                continue
+            if obj.zone_id not in self.zone_scene_bindings:
+                raise ValueError(f"OBJECT_ZONE_UNKNOWN:{object_id}:{obj.zone_id}")
+            if not self._zone_matches_scene(obj.zone_id, obj.scene_id):
+                raise ValueError(f"OBJECT_ZONE_SCENE_MISMATCH:{object_id}:{obj.zone_id}")
+
+        for pair in self.zone_adjacency_pairs:
+            if len(pair) != 2:
+                raise ValueError("INVALID_ZONE_ADJACENCY_PAIR")
+            left, right = pair
+            if left not in self.zone_scene_bindings or right not in self.zone_scene_bindings:
+                raise ValueError(f"ZONE_ADJACENCY_UNKNOWN_ENDPOINT:{left}:{right}")
+            if self.zone_scene_bindings[left] != self.zone_scene_bindings[right]:
+                raise ValueError(f"ZONE_ADJACENCY_CROSS_SCENE:{left}:{right}")
+
     def is_reachable(self, actor_id: str, target_id: str) -> bool:
         actor = self.actors.get(actor_id)
         if actor is None:
             return False
+        possessed_by_actor = False
         if target_id in self.actors:
             target = self.actors[target_id]
             target_scene = target.scene_id
             target_zone = target.zone_id
         elif target_id in self.objects:
             target = self.objects[target_id]
-            if target.owner_actor_id == actor_id:
-                return True
+            possessed_by_actor = target.owner_actor_id == actor_id
             target_scene = target.scene_id
             target_zone = target.zone_id
         else:
@@ -253,13 +301,25 @@ class WorldState(_SealableState):
 
         if target_scene != actor.scene_id:
             return False
-        if actor.zone_id is not None and target_zone is not None:
-            return actor.zone_id == target_zone
+        if self._symbolic_spatial_claimed():
+            if not self._zone_matches_scene(actor.zone_id, actor.scene_id):
+                return False
+            if not self._zone_matches_scene(target_zone, target_scene):
+                return False
+            if actor.zone_id != target_zone:
+                return False
+            if possessed_by_actor:
+                return target_id in actor.inventory_refs
+            return True
+        if possessed_by_actor:
+            return target_id in actor.inventory_refs
         return (actor_id, target_id) in self.reachable_pairs
 
     def zone_is_adjacent(self, actor_id: str, target_zone_id: str) -> bool:
         actor = self.actors.get(actor_id)
         if actor is None or actor.zone_id is None:
+            return False
+        if not self._zone_matches_scene(actor.zone_id, actor.scene_id):
             return False
         if target_zone_id not in self.zone_scene_bindings:
             return False
@@ -294,6 +354,7 @@ class WorldState(_SealableState):
             return
         if self.event_log or self.committed_event_ids or self.state_version != 0:
             raise ValueError("UNTRUSTED_EVENTFUL_BOOTSTRAP_STATE")
+        self._validate_spatial_integrity()
         self._seal_graph_authorized(_LIVE_MUTATION_TOKEN)
 
     def _seal_graph_authorized(self, token: object) -> None:
@@ -301,6 +362,7 @@ class WorldState(_SealableState):
             raise PermissionError("CANONICAL_MUTATION_CAPABILITY_REQUIRED")
         if self.is_live:
             return
+        self._validate_spatial_integrity()
         for actor in self.actors.values():
             actor._seal_graph()
         for obj in self.objects.values():
@@ -581,6 +643,7 @@ def capture_pristine_baseline(world: WorldState) -> WorldBaseline:
         raise ValueError("BASELINE_MUST_BE_PRISTINE")
     if not world.baseline_version or world.baseline_version == "R001-UNVERSIONED":
         raise ValueError("BASELINE_VERSION_REQUIRED")
+    world._validate_spatial_integrity()
     snapshot = _encode_world_snapshot(world)
     return WorldBaseline(
         baseline_version=world.baseline_version,
