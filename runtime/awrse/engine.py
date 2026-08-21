@@ -117,6 +117,7 @@ class WorldProjector:
 class SimulationEngine:
     _event_counter = itertools.count(1)
     _r002_player_verbs = frozenset({"PICK", "DROP", "THROW", "OPEN", "CLOSE", "WALK"})
+    _single_object_target_verbs = frozenset({"PICK", "DROP", "THROW", "OPEN", "CLOSE"})
     _implemented_player_verbs = frozenset({"SPEAK", "HIT"}) | _r002_player_verbs
     _supported_event_types = frozenset(
         {
@@ -249,6 +250,28 @@ class SimulationEngine:
                 ResolutionStatus.RESOLVED_FAILURE,
                 "UNIMPLEMENTED_ACTION_FAMILY",
             )
+
+        if action.verb in self._single_object_target_verbs:
+            if len(action.target_ids) != 1:
+                return self._reject(
+                    action,
+                    ResolutionStatus.REJECTED_PRECONDITION,
+                    "EXACTLY_ONE_OBJECT_TARGET_REQUIRED",
+                )
+            if action.target_ids[0] not in world.objects:
+                return self._reject(
+                    action,
+                    ResolutionStatus.REJECTED_PRECONDITION,
+                    "OBJECT_TARGET_REQUIRED",
+                )
+
+        if action.verb == "WALK":
+            if len(action.target_ids) != 1 or action.target_ids[0] not in world.zone_scene_bindings:
+                return self._reject(
+                    action,
+                    ResolutionStatus.REJECTED_PRECONDITION,
+                    "EXACTLY_ONE_ZONE_TARGET_REQUIRED",
+                )
 
         precondition_failure = self._evaluate_preconditions(action, world)
         if precondition_failure is not None:
@@ -752,6 +775,7 @@ class SimulationEngine:
             return
 
         if event.event_type == "ACTOR_MOVED":
+            world._validate_spatial_integrity()
             actor_id = str(payload.get("actor_id", ""))
             actor = world.actors.get(actor_id)
             from_zone_id = payload.get("from_zone_id")
@@ -767,6 +791,7 @@ class SimulationEngine:
             return
 
         if event.event_type == "OBJECT_PICKED_UP":
+            world._validate_spatial_integrity()
             object_id = str(payload.get("object_id", ""))
             actor_id = str(payload.get("actor_id", ""))
             actor = world.actors.get(actor_id)
@@ -786,6 +811,7 @@ class SimulationEngine:
             return
 
         if event.event_type in {"OBJECT_DROPPED", "OBJECT_THROWN"}:
+            world._validate_spatial_integrity()
             object_id = str(payload.get("object_id", ""))
             actor_id = str(payload.get("actor_id", ""))
             actor = world.actors.get(actor_id)
@@ -807,6 +833,7 @@ class SimulationEngine:
             return
 
         if event.event_type in {"OBJECT_OPENED", "OBJECT_CLOSED"}:
+            world._validate_spatial_integrity()
             object_id = str(payload.get("object_id", ""))
             actor_id = str(payload.get("actor_id", ""))
             actor = world.actors.get(actor_id)
