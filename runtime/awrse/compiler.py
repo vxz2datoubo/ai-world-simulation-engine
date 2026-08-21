@@ -7,7 +7,7 @@ from .model import Action, AuthorityScope, ResolutionStatus, SourceChannel, Worl
 
 
 class ActionCompiler:
-    """Small deterministic R001 compiler with an explicit principal/actor trust boundary."""
+    """Deterministic compiler with explicit principal/actor trust and R002 symbolic interaction verbs."""
 
     _counter = itertools.count(1)
 
@@ -16,7 +16,8 @@ class ActionCompiler:
         ("OPEN", ("打开", "推开", "open")),
         ("CLOSE", ("关上", "关闭", "close")),
         ("HIT", ("打", "揍", "砸", "击", "punch", "hit", "strike")),
-        ("THROW", ("扔", "丢", "投掷", "throw")),
+        ("DROP", ("放下", "丢下", "drop")),
+        ("THROW", ("扔", "投掷", "throw")),
         ("PICK", ("捡", "拿起", "拾起", "pick", "grab")),
         ("WALK", ("走", "过去", "walk")),
         ("RUN", ("跑", "冲", "run")),
@@ -77,6 +78,9 @@ class ActionCompiler:
         for npc_id in world.npc_minds:
             if npc_id.lower() in lowered and npc_id not in matches:
                 matches.append(npc_id)
+        for zone_id in world.zone_scene_bindings:
+            if zone_id.lower() in lowered and zone_id not in matches:
+                matches.append(zone_id)
         return matches
 
     @staticmethod
@@ -84,10 +88,40 @@ class ActionCompiler:
         conditions: list[str] = []
         if targets:
             conditions.append("TARGET_EXISTS")
+
         if verb == "HIT":
             conditions.extend(("TARGET_REACHABLE", "CAPABILITY_PRESENT"))
         elif verb == "SPEAK":
             conditions.append("CAPABILITY_PRESENT")
+        elif verb == "PICK":
+            conditions.extend(
+                (
+                    "TARGET_REACHABLE",
+                    "CAPABILITY_PRESENT",
+                    "AFFORDANCE_PRESENT",
+                    "TARGET_GRASPABLE",
+                    "FREE_HAND_AVAILABLE",
+                    "TARGET_UNPOSSESSED",
+                )
+            )
+        elif verb in {"DROP", "THROW"}:
+            conditions.extend(
+                (
+                    "CAPABILITY_PRESENT",
+                    "AFFORDANCE_PRESENT",
+                    "POSSESSION_REQUIRED",
+                )
+            )
+        elif verb in {"OPEN", "CLOSE"}:
+            conditions.extend(
+                (
+                    "TARGET_REACHABLE",
+                    "CAPABILITY_PRESENT",
+                    "AFFORDANCE_PRESENT",
+                )
+            )
+        elif verb == "WALK":
+            conditions.extend(("CAPABILITY_PRESENT", "ADJACENT_ZONE"))
         return conditions
 
 
@@ -96,5 +130,8 @@ def declared_superhuman_effect(text: str) -> bool:
 
     lowered = text.lower()
     chinese = re.search(r"一拳.*(?:五|5|六|6|七|7|八|8|九|9|十|10).*?(?:飞|倒)", lowered)
-    english = re.search(r"one punch.*(?:five|5|six|6|seven|7|eight|8|nine|9|ten|10).*?(?:flying|meters)", lowered)
+    english = re.search(
+        r"one punch.*(?:five|5|six|6|seven|7|eight|8|nine|9|ten|10).*?(?:flying|meters)",
+        lowered,
+    )
     return bool(chinese or english)

@@ -597,7 +597,6 @@ def test_b14_live_graph_is_read_only_but_authorized_engine_projection_still_work
     assert not compile_action(
         world, "砸碎窗户", "GUARD_001"
     ).authority_scope.may_control_actor
-
     engine = SimulationEngine()
     engine.resolve_and_commit(compile_action(world, "砸碎窗户"), world)
     engine.resolve_and_commit(compile_action(world, "骂守卫是蠢货"), world)
@@ -714,7 +713,10 @@ def test_b15_damage_and_contamination_alignment_are_both_fail_closed():
 
 
 def test_b16_causal_order_rejects_future_source_and_accepts_earlier_or_existing_source():
-    baseline = capture_pristine_baseline(make_world())
+    world = make_world()
+    world.audible_pairs.add(("PLAYER", "GUARD_001"))
+    world.audible_pairs.add(("GUARD_001", "BYSTANDER_001"))
+    baseline = capture_pristine_baseline(world)
     source = Event(
         "E-SOURCE",
         "SPEECH_UTTERED",
@@ -737,6 +739,7 @@ def test_b16_causal_order_rejects_future_source_and_accepts_earlier_or_existing_
             "npc_id": "GUARD_001",
             "mode": "HEARD",
             "source_event_id": "E-SOURCE",
+            "speaker_id": "PLAYER",
         },
     )
     engine = SimulationEngine()
@@ -753,13 +756,14 @@ def test_b16_causal_order_rejects_future_source_and_accepts_earlier_or_existing_
     later = Event(
         "E-LATER-KNOWLEDGE",
         "NPC_KNOWLEDGE_ACQUIRED",
-        "PLAYER",
+        "GUARD_001",
         "STREET_001",
         baseline.baseline_version,
         {
             "npc_id": "BYSTANDER_001",
             "mode": "WAS_TOLD",
             "source_event_id": "E-SOURCE",
+            "source_npc_id": "GUARD_001",
         },
     )
     engine._SimulationEngine__commit_events(replayed, (later,))
