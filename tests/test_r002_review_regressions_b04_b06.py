@@ -224,3 +224,221 @@ def test_b06_valid_pick_walk_drop_and_replay_consistent():
     assert replayed.objects["BOTTLE"].owner_actor_id is None
     assert replayed.objects["BOTTLE"].zone_id == "BACK"
     assert replayed.actors["PLAYER"].inventory_refs == ()
+
+
+def make_b07_social_world(*, audible_pairs=None):
+    world = make_world()
+    world.actors["SOURCE"] = ActorState("SOURCE", "消息源", "STREET", zone_id="FRONT")
+    world.actors["RECIPIENT"] = ActorState("RECIPIENT", "接收者", "STREET", zone_id="FRONT")
+    world.npc_minds["SOURCE"] = NPCMindState("SOURCE", "SOURCE")
+    world.npc_minds["RECIPIENT"] = NPCMindState("RECIPIENT", "RECIPIENT")
+    world.audible_pairs.clear()
+    if audible_pairs:
+        world.audible_pairs.update(audible_pairs)
+    return world
+
+
+def b07_speech_event(world, event_id="B07-SPEECH", actor_id="PLAYER"):
+    return Event(
+        event_id,
+        "SPEECH_UTTERED",
+        actor_id,
+        "STREET",
+        world.baseline_version,
+        {
+            "literal_content": "message",
+            "trust_class": "UNTRUSTED_DATA",
+            "authority": "NONE_OVER_TARGET_INTERNAL_STATE",
+        },
+    )
+
+
+def b07_heard_event(world, source, *, npc_id="NPC", speaker_id="PLAYER", actor_id="PLAYER"):
+    return Event(
+        f"{source.event_id}-HEARD-{npc_id}",
+        "NPC_KNOWLEDGE_ACQUIRED",
+        actor_id,
+        "STREET",
+        world.baseline_version,
+        {
+            "npc_id": npc_id,
+            "mode": "HEARD",
+            "source_event_id": source.event_id,
+            "speaker_id": speaker_id,
+        },
+    )
+
+
+def test_b07_object_event_cannot_forge_heard_even_with_actor_claim():
+    world = make_world()
+    baseline = capture_pristine_baseline(world)
+    source = Event(
+        "B07-PICK",
+        "OBJECT_PICKED_UP",
+        "PLAYER",
+        "STREET",
+        world.baseline_version,
+        {
+            "object_id": "BOTTLE",
+            "actor_id": "PLAYER",
+            "from_zone_id": "FRONT",
+            "to_zone_id": "FRONT",
+        },
+    )
+    heard = b07_heard_event(world, source)
+    with pytest.raises(ValueError, match="INVALID_HEARD_SOURCE_EVENT_TYPE"):
+        SimulationEngine().replay(baseline, (source, heard))
+
+
+def test_b07_speech_heard_without_audible_pair_rejected():
+    world = make_world()
+    baseline = capture_pristine_baseline(world)
+    source = b07_speech_event(world)
+    heard = b07_heard_event(world, source)
+    with pytest.raises(ValueError, match="INVALID_HEARD_AUDIBILITY_PATH"):
+        SimulationEngine().replay(baseline, (source, heard))
+
+
+def test_b07_genuine_live_speech_with_explicit_audibility_replays():
+    world = make_world()
+    world.audible_pairs.add(("PLAYER", "NPC"))
+    baseline = capture_pristine_baseline(world)
+    resolution = SimulationEngine().resolve_and_commit(
+        compile_action(world, "我对路人说：你好"), world
+    )
+    assert [event.event_type for event in resolution.events] == [
+        "SPEECH_UTTERED",
+        "NPC_KNOWLEDGE_ACQUIRED",
+    ]
+    heard = resolution.events[1]
+    assert heard.payload["mode"] == "HEARD"
+    assert heard.payload["speaker_id"] == "PLAYER"
+    replayed = SimulationEngine().replay(baseline, resolution.events)
+    assert resolution.events[0].event_id in replayed.npc_minds["NPC"].knowledge_boundary_refs
+
+
+def test_b07_heard_speaker_must_bind_source_actor_and_telling_actor():
+    world = make_world()
+    world.audible_pairs.add(("PLAYER", "NPC"))
+    baseline = capture_pristine_baseline(world)
+    source = b07_speech_event(world)
+    wrong_speaker = b07_heard_event(world, source, speaker_id="NPC")
+    with pytest.raises(ValueError, match="INVALID_HEARD_SPEAKER"):
+        SimulationEngine().replay(baseline, (source, wrong_speaker))
+
+
+def test_b07_was_told_rejects_source_npc_without_source_knowledge():
+    world = make_b07_social_world(audible_pairs={("SOURCE", "RECIPIENT")})
+    baseline = capture_pristine_baseline(world)
+    source = b07_speech_event(world)
+    told = Event(
+        "B07-TOLD-FORGED",
+        "NPC_KNOWLEDGE_ACQUIRED",
+        "SOURCE",
+        "STREET",
+        world.baseline_version,
+        {
+            "npc_id": "RECIPIENT",
+            "mode": "WAS_TOLD",
+            "source_event_id": source.event_id,
+            "source_npc_id": "SOURCE",
+        },
+    )
+    with pytest.raises(ValueError, match="INVALID_WAS_TOLD_SOURCE_KNOWLEDGE"):
+        SimulationEngine().replay(baseline, (source, told))
+
+
+def test_b07_was_told_source_npc_must_match_telling_actor():
+    world = make_b07_social_world(audible_pairs={("SOURCE", "RECIPIENT")})
+    baseline = capture_pristine_baseline(world)
+    source = b07_speech_event(world)
+    forged = Event(
+        "B07-TOLD-WRONG-ACTOR",
+        "NPC_KNOWLEDGE_ACQUIRED",
+        "PLAYER",
+        "STREET",
+        world.baseline_version,
+        {
+            "npc_id": "RECIPIENT",
+            "mode": "WAS_TOLD",
+            "source_event_id": source.event_id,
+            "source_npc_id": "SOURCE",
+        },
+    )
+    with pytest.raises(ValueError, match="INVALID_WAS_TOLD_SOURCE_NPC"):
+        SimulationEngine().replay(baseline, (source, forged))
+
+
+def test_b07_genuine_sequential_source_knowledge_then_was_told_replays():
+    world = make_b07_social_world(
+        audible_pairs={("PLAYER", "SOURCE"), ("SOURCE", "RECIPIENT")}
+    )
+    baseline = capture_pristine_baseline(world)
+    engine = SimulationEngine()
+    speech_resolution = engine.resolve_and_commit(
+        compile_action(world, "我说：这是可传播的消息"), world
+    )
+    source = speech_resolution.events[0]
+    assert source.event_id in world.npc_minds["SOURCE"].knowledge_boundary_refs
+    propagated = engine.propagate_knowledge(
+        "SOURCE", "RECIPIENT", source.event_id, world
+    )
+    assert propagated is not None
+    assert propagated.payload["mode"] == "WAS_TOLD"
+    replayed = engine.replay(baseline, tuple(world.event_log))
+    assert source.event_id in replayed.npc_minds["SOURCE"].knowledge_boundary_refs
+    assert source.event_id in replayed.npc_minds["RECIPIENT"].knowledge_boundary_refs
+
+
+@pytest.mark.parametrize("mode", ["INFERRED", "RUMORED", "DOCUMENTED", "UNKNOWN"])
+def test_b07_unimplemented_knowledge_modes_fail_closed(mode):
+    world = make_world()
+    baseline = capture_pristine_baseline(world)
+    source = b07_speech_event(world)
+    forged = Event(
+        f"B07-{mode}",
+        "NPC_KNOWLEDGE_ACQUIRED",
+        "PLAYER",
+        "STREET",
+        world.baseline_version,
+        {
+            "npc_id": "NPC",
+            "mode": mode,
+            "source_event_id": source.event_id,
+        },
+    )
+    with pytest.raises(ValueError, match=f"UNSUPPORTED_KNOWLEDGE_PROVENANCE_MODE:{mode}"):
+        SimulationEngine().replay(baseline, (source, forged))
+
+
+def test_b07_valid_saw_replay_remains_green():
+    world = make_world(visible_pairs={("BOTTLE", "NPC")})
+    baseline = capture_pristine_baseline(world)
+    source = Event(
+        "B07-PICK-SAW",
+        "OBJECT_PICKED_UP",
+        "PLAYER",
+        "STREET",
+        world.baseline_version,
+        {
+            "object_id": "BOTTLE",
+            "actor_id": "PLAYER",
+            "from_zone_id": "FRONT",
+            "to_zone_id": "FRONT",
+        },
+    )
+    saw = Event(
+        "B07-SAW",
+        "NPC_KNOWLEDGE_ACQUIRED",
+        "PLAYER",
+        "STREET",
+        world.baseline_version,
+        {
+            "npc_id": "NPC",
+            "mode": "SAW",
+            "source_event_id": source.event_id,
+            "observed_entity_id": "BOTTLE",
+        },
+    )
+    replayed = SimulationEngine().replay(baseline, (source, saw))
+    assert source.event_id in replayed.npc_minds["NPC"].knowledge_boundary_refs
