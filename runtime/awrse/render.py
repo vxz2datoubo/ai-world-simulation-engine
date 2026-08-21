@@ -64,6 +64,26 @@ def _canonical_confirmed_events(world: WorldState, events: Iterable[Event]) -> t
     return tuple(confirmed)
 
 
+def _object_render_state(world: WorldState, obj: Any) -> dict[str, Any]:
+    state: dict[str, Any] = {
+        "kind": "OBJECT_STATE",
+        "object_id": obj.object_id,
+        "damage_state": obj.damage_state,
+        "contamination_state": obj.contamination_state,
+    }
+    # R001 worlds remain contract-compatible with the historical two-field object
+    # claim. R002 symbolic worlds project the additional persistent canonical truth.
+    if world.has_symbolic_spatial_substrate:
+        state.update(
+            {
+                "is_open": obj.is_open,
+                "owner_actor_id": obj.owner_actor_id,
+                "zone_id": obj.zone_id,
+            }
+        )
+    return state
+
+
 def build_render_packet(world: WorldState, events: Iterable[Event]) -> WorldRenderPacket:
     world.seal_live()
     scene = world.scenes[world.active_scene_id]
@@ -74,14 +94,7 @@ def build_render_packet(world: WorldState, events: Iterable[Event]) -> WorldRend
         if actor.scene_id == world.active_scene_id
     )
     object_deltas = tuple(
-        freeze_value(
-            {
-                "kind": "OBJECT_STATE",
-                "object_id": obj.object_id,
-                "damage_state": obj.damage_state,
-                "contamination_state": obj.contamination_state,
-            }
-        )
+        freeze_value(_object_render_state(world, obj))
         for obj in sorted(world.objects.values(), key=lambda item: item.object_id)
         if obj.scene_id == world.active_scene_id
     )
@@ -125,7 +138,7 @@ def build_render_packet(world: WorldState, events: Iterable[Event]) -> WorldRend
 def validate_render_claims(
     packet: WorldRenderPacket,
     rendered_event_ids: set[str],
-    rendered_object_states: Mapping[str, Mapping[str, str]] | None = None,
+    rendered_object_states: Mapping[str, Mapping[str, Any]] | None = None,
     rendered_scene_id: str | None = None,
     rendered_actor_state_refs: Iterable[str] | None = None,
     rendered_camera: Mapping[str, Any] | None = None,
@@ -160,8 +173,9 @@ def validate_render_claims(
 
     canonical_object_states = {
         str(delta["object_id"]): {
-            "damage_state": str(delta["damage_state"]),
-            "contamination_state": str(delta["contamination_state"]),
+            key: delta[key]
+            for key in delta
+            if key not in {"kind", "object_id"}
         }
         for delta in packet.environment_delta
         if delta.get("kind") == "OBJECT_STATE"
@@ -181,7 +195,7 @@ def validate_render_claims(
                 if field_name not in rendered_state:
                     contradictions.append(f"MISSING_OBJECT_FIELD:{object_id}:{field_name}")
                     continue
-                rendered_value = str(rendered_state[field_name])
+                rendered_value = rendered_state[field_name]
                 if rendered_value != canonical_value:
                     contradictions.append(
                         f"OBJECT_STATE:{object_id}:{field_name}:{rendered_value}!={canonical_value}"
