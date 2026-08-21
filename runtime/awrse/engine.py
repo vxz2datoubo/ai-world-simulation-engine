@@ -118,6 +118,16 @@ class SimulationEngine:
     _event_counter = itertools.count(1)
     _r002_player_verbs = frozenset({"PICK", "DROP", "THROW", "OPEN", "CLOSE", "WALK"})
     _single_object_target_verbs = frozenset({"PICK", "DROP", "THROW", "OPEN", "CLOSE"})
+    _visual_witness_object_event_types = frozenset(
+        {
+            "OBJECT_DAMAGED",
+            "OBJECT_PICKED_UP",
+            "OBJECT_DROPPED",
+            "OBJECT_THROWN",
+            "OBJECT_OPENED",
+            "OBJECT_CLOSED",
+        }
+    )
     _implemented_player_verbs = frozenset({"SPEAK", "HIT"}) | _r002_player_verbs
     _supported_event_types = frozenset(
         {
@@ -655,7 +665,7 @@ class SimulationEngine:
 
         batch_by_id: dict[str, Event] = {}
         candidates: list[Event] = []
-        available_event_ids = set(existing_by_id)
+        available_events: dict[str, Event] = dict(existing_by_id)
         semantic_world = _clone_world_state(world)
 
         for event in events:
@@ -683,11 +693,11 @@ class SimulationEngine:
             self.__validate_event_semantics(
                 semantic_world,
                 event,
-                available_event_ids,
+                available_events,
             )
             batch_by_id[event.event_id] = event
             candidates.append(event)
-            available_event_ids.add(event.event_id)
+            available_events[event.event_id] = event
             self.__apply_prevalidated_events(semantic_world, (event,))
 
         return tuple(candidates)
@@ -696,7 +706,7 @@ class SimulationEngine:
         self,
         world: WorldState,
         event: Event,
-        available_event_ids: set[str],
+        available_events: Mapping[str, Event],
     ) -> None:
         payload: Mapping[str, object] = event.payload
 
@@ -737,7 +747,8 @@ class SimulationEngine:
                 or npc_actor.scene_id != event.scene_id
             ):
                 raise ValueError("INVALID_NPC_KNOWLEDGE_EVENT")
-            if payload.get("mode") not in {
+            mode = payload.get("mode")
+            if mode not in {
                 "SAW",
                 "HEARD",
                 "WAS_TOLD",
@@ -748,11 +759,24 @@ class SimulationEngine:
             }:
                 raise ValueError("INVALID_KNOWLEDGE_MODE")
             source_event_id = str(payload.get("source_event_id", ""))
-            if (
-                source_event_id not in available_event_ids
-                or source_event_id == event.event_id
-            ):
+            source_event = available_events.get(source_event_id)
+            if source_event is None or source_event_id == event.event_id:
                 raise ValueError("INVALID_KNOWLEDGE_SOURCE_EVENT")
+
+            if mode == "SAW":
+                if source_event.event_type not in self._visual_witness_object_event_types:
+                    raise ValueError("INVALID_SAW_SOURCE_EVENT_TYPE")
+                if source_event.scene_id != event.scene_id:
+                    raise ValueError("INVALID_SAW_SOURCE_SCENE")
+                observed_entity_id = str(payload.get("observed_entity_id", ""))
+                source_object_id = str(source_event.payload.get("object_id", ""))
+                if not observed_entity_id or observed_entity_id != source_object_id:
+                    raise ValueError("INVALID_SAW_OBSERVED_ENTITY")
+                observed_object = world.objects.get(observed_entity_id)
+                if observed_object is None or observed_object.scene_id != event.scene_id:
+                    raise ValueError("INVALID_SAW_OBSERVED_OBJECT_SCENE")
+                if not world.can_see(observed_entity_id, npc_id):
+                    raise ValueError("INVALID_SAW_VISIBILITY_PATH")
             return
 
         if event.event_type == "RELATIONSHIP_CHANGED":
@@ -792,6 +816,7 @@ class SimulationEngine:
 
         if event.event_type == "OBJECT_PICKED_UP":
             world._validate_spatial_integrity()
+            world._validate_possession_integrity()
             object_id = str(payload.get("object_id", ""))
             actor_id = str(payload.get("actor_id", ""))
             actor = world.actors.get(actor_id)
@@ -808,10 +833,22 @@ class SimulationEngine:
                 raise ValueError("INVALID_OBJECT_PICKED_UP_AFFORDANCE")
             if not world.is_reachable(actor_id, object_id):
                 raise ValueError("INVALID_OBJECT_PICKED_UP_REACHABILITY")
+
+            from_zone_id = payload.get("from_zone_id")
+            to_zone_id = payload.get("to_zone_id")
+            if from_zone_id != obj.zone_id:
+                raise ValueError("INVALID_OBJECT_PICKED_UP_FROM_ZONE")
+            if to_zone_id != actor.zone_id:
+                raise ValueError("INVALID_OBJECT_PICKED_UP_TO_ZONE")
+            if not world._zone_matches_scene(obj.zone_id, obj.scene_id):
+                raise ValueError("INVALID_OBJECT_PICKED_UP_FROM_ZONE_BINDING")
+            if not world._zone_matches_scene(actor.zone_id, actor.scene_id):
+                raise ValueError("INVALID_OBJECT_PICKED_UP_TO_ZONE_BINDING")
             return
 
         if event.event_type in {"OBJECT_DROPPED", "OBJECT_THROWN"}:
             world._validate_spatial_integrity()
+            world._validate_possession_integrity()
             object_id = str(payload.get("object_id", ""))
             actor_id = str(payload.get("actor_id", ""))
             actor = world.actors.get(actor_id)
