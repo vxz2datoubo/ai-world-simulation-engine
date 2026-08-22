@@ -1,0 +1,99 @@
+{
+  "eval_suite_id": "AWRSE-R003-I1A-SOLO-RESTART-REFERENCE",
+  "suite_version": "1.1.0-candidate",
+  "issue": 17,
+  "implementation_scope": "SOLO_RESTART_REFERENCE_ONLY",
+  "canonical_release_base": "21fd2feaa2d5e7a2aef7b0111d5535440d68d051",
+  "persistence_profile_id": "AWRSE_R003_I1A_SOLO_REPLAY_PACKAGE",
+  "persistence_profile_version": "1.0.0",
+  "event_profile_id": "LEGACY_R001_R002_EVENT_PROFILE",
+  "authority_law": "PRISTINE_BASELINE_PLUS_ORDERED_APPEND_PRESERVED_EVENTS_TO_REHYDRATED_CANONICAL_PROJECTION",
+  "projection_is_persistence_authority": false,
+  "backend_selected": false,
+  "vnext_event_migration_implemented": false,
+  "open_decisions_resolved": [],
+  "executable_cases": [
+    {
+      "case_id": "I1A-01-FRESH-BYTES-REHYDRATION",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_01_real_bytes_boundary_rehydrates_exact_canonical_state",
+      "asserts": "fresh bytes/file boundary and source-vs-rehydrated canonical domain equivalence"
+    },
+    {
+      "case_id": "I1A-02-DETERMINISTIC-EXPORT",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_02_export_is_deterministic_for_identical_canonical_evidence",
+      "asserts": "identical evidence emits identical canonical package bytes and preserves explicit order"
+    },
+    {
+      "case_id": "I1A-03-LEGACY-EVENT-ONLY",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_03_package_carries_legacy_events_only_and_no_materialized_truth",
+      "asserts": "legacy event profile remains exact and materialized projection is absent"
+    },
+    {
+      "case_id": "I1A-04-BASELINE-TAMPER",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_04_baseline_payload_tamper_fails_closed_even_with_refreshed_package_digest",
+      "asserts": "baseline payload integrity is independently bound"
+    },
+    {
+      "case_id": "I1A-05-EVENT-ORDER-PAYLOAD-TAMPER",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_05_event_payload_or_order_tamper_fails_event_integrity",
+      "asserts": "ordered event sequence digest detects payload/order corruption"
+    },
+    {
+      "case_id": "I1A-06-DUPLICATE-EVENT-ID",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_06_duplicate_event_ids_fail_closed_after_integrity_recomputed",
+      "asserts": "duplicate committed legacy event IDs fail closed after package integrity is internally recomputed"
+    },
+    {
+      "case_id": "I1A-07-WORLD-BASELINE-MISMATCH",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_07_world_and_baseline_identity_mismatch_fail_closed",
+      "asserts": "world and baseline identity are rebound to pristine baseline evidence"
+    },
+    {
+      "case_id": "I1A-08-UNSUPPORTED-PROFILES",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_08_unsupported_persistence_and_event_profiles_fail_closed",
+      "asserts": "unsupported persistence/event profiles fail closed without vNext fabrication"
+    },
+    {
+      "case_id": "I1A-09-COUNT-STATE-VERSION-MISMATCH",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_09_event_count_and_expected_state_version_mismatch_fail_closed",
+      "asserts": "event count and current legacy state-version contract remain consistent"
+    },
+    {
+      "case_id": "I1A-10-PROJECTION-INJECTION",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_10_materialized_projection_injection_is_rejected_not_trusted",
+      "asserts": "supplied materialized projection cannot become replay authority"
+    },
+    {
+      "case_id": "I1A-11-VNEXT-SHAPED-LEGACY-EVENT",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_11_malformed_or_vnext_shaped_event_record_is_rejected",
+      "asserts": "legacy Event records reject fabricated vNext fields"
+    },
+    {
+      "case_id": "I1A-12-FRESH-EVIDENCE-IDENTITY-KNOWLEDGE",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_12_imported_evidence_is_fresh_and_replay_preserves_knowledge_refs",
+      "asserts": "restart does not depend on prior Python object identity and preserves implemented knowledge references"
+    },
+    {
+      "case_id": "I1A-13-FRESH-PROCESS-CONTINUATION",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_13_fresh_process_allocator_reset_can_continue_without_id_collision",
+      "asserts": "fresh-process legacy action/event allocators are restored from canonical evidence so continued SOLO play does not collide with historical IDs"
+    },
+    {
+      "case_id": "I1A-14-SEMANTIC-EVENT-VALIDATION",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_14_semantically_unsupported_event_fails_replay_after_digests_recomputed",
+      "asserts": "internally self-consistent hashes cannot authorize an unsupported event type; existing replay authority still rejects it"
+    }
+  ],
+  "explicit_non_goals": [
+    "DATABASE_OR_EVENT_STORE_BACKEND_SELECTION",
+    "AF001_VNEXT_EVENT_MIGRATION",
+    "PLAYER_CHRONICLE_OR_PERSONA_RUNTIME",
+    "NPC_MEMORY_BELIEF_RELATIONSHIP_RUNTIME",
+    "CAPABILITY_INJURY_FATIGUE_RUNTIME",
+    "NARRATIVE_OPPORTUNITY_OR_WORLD_ECHO_RUNTIME",
+    "PX_OR_AI_DIRECTOR_RUNTIME",
+    "H3_OR_MATRIX_GAME_INTEGRATION",
+    "PARTY_OR_PUBLIC_CONCURRENCY",
+    "NEW_GAMEPLAY_ACTION_FAMILY"
+  ]
+}
