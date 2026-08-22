@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import hmac
+import itertools
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from .compiler import ActionCompiler
 from .engine import SimulationEngine
 from .model import Event, WorldBaseline, WorldState, _encode_world_snapshot, thaw_value
 
@@ -73,9 +76,23 @@ def _canonical_json_bytes(value: Any) -> bytes:
             ensure_ascii=False,
             sort_keys=True,
             separators=(",", ":"),
+            allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
         raise ValueError("PERSISTENCE_VALUE_NOT_CANONICAL_JSON") from exc
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"PERSISTENCE_JSON_DUPLICATE_KEY:{key}")
+        result[key] = value
+    return result
+
+
+def _reject_nonfinite_json_constant(value: str) -> None:
+    raise ValueError(f"PERSISTENCE_JSON_NONFINITE_NUMBER:{value}")
 
 
 def _sha256(data: bytes) -> str:
@@ -144,6 +161,66 @@ def _package_digest(data_without_digest: Mapping[str, Any]) -> str:
     return _sha256(_canonical_json_bytes(dict(data_without_digest)))
 
 
+def _next_legacy_counter_value(values: tuple[str, ...], prefix: str) -> int:
+    maximum = 0
+    for value in values:
+        if not value.startswith(prefix):
+            continue
+        suffix = value[len(prefix) :]
+        if suffix.isdigit():
+            maximum = max(maximum, int(suffix))
+    return maximum + 1
+
+
+def _synchronize_legacy_runtime_allocators(events: tuple[Event, ...]) -> None:
+    """Restore current legacy ID allocators from canonical SOLO evidence.
+
+    This is compatibility state for the accepted R001/R002 ID format, not a
+    vNext event cursor or event migration. The persisted authority remains the
+    existing event/action IDs already present in canonical evidence.
+    """
+
+    event_ids = tuple(event.event_id for event in events)
+    action_ids = tuple(
+        event.caused_by_action_id
+        for event in events
+        if event.caused_by_action_id is not None
+    )
+    SimulationEngine._event_counter = itertools.count(
+        _next_legacy_counter_value(event_ids, "E")
+    )
+    ActionCompiler._counter = itertools.count(
+        _next_legacy_counter_value(action_ids, "A")
+    )
+
+
+def _validate_replay_result(
+    rebuilt: WorldState,
+    *,
+    world_id: str,
+    baseline_version: str,
+    expected_state_version: int,
+    events: tuple[Event, ...],
+    prefix: str,
+) -> None:
+    if rebuilt.world_id != world_id:
+        raise ValueError(f"{prefix}_WORLD_ID_MISMATCH")
+    if rebuilt.baseline_version != baseline_version:
+        raise ValueError(f"{prefix}_BASELINE_VERSION_MISMATCH")
+    if rebuilt.state_version != expected_state_version:
+        raise ValueError(f"{prefix}_STATE_VERSION_MISMATCH")
+    if len(rebuilt.event_log) != len(events):
+        raise ValueError(f"{prefix}_EVENT_COUNT_MISMATCH")
+    if tuple(event.event_id for event in rebuilt.event_log) != tuple(
+        event.event_id for event in events
+    ):
+        raise ValueError(f"{prefix}_EVENT_ORDER_MISMATCH")
+    if set(rebuilt.committed_event_ids) != {event.event_id for event in events}:
+        raise ValueError(f"{prefix}_EVENT_INDEX_MISMATCH")
+    if not rebuilt.is_live:
+        raise ValueError(f"{prefix}_STATE_MUST_BE_LIVE_AND_READ_ONLY")
+
+
 def export_solo_replay_package(baseline: WorldBaseline, world: WorldState) -> bytes:
     """Export authoritative replay evidence, never the current projection itself."""
 
@@ -204,12 +281,16 @@ def export_solo_replay_package(baseline: WorldBaseline, world: WorldState) -> by
 
 
 def import_solo_replay_package(package: bytes | bytearray | memoryview) -> SoloReplayEvidence:
-    """Decode and integrity-check replay evidence without trusting projection state."""
+    """Decode and validate replay evidence without trusting projection state."""
 
     if not isinstance(package, (bytes, bytearray, memoryview)):
         raise TypeError("PERSISTENCE_PACKAGE_BYTES_REQUIRED")
     try:
-        decoded = json.loads(bytes(package).decode("utf-8"))
+        decoded = json.loads(
+            bytes(package).decode("utf-8"),
+            object_pairs_hook=_reject_duplicate_json_keys,
+            parse_constant=_reject_nonfinite_json_constant,
+        )
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("PERSISTENCE_PACKAGE_JSON_INVALID") from exc
     if not isinstance(decoded, dict) or set(decoded) != _ENVELOPE_FIELDS:
@@ -249,7 +330,7 @@ def import_solo_replay_package(package: bytes | bytearray | memoryview) -> SoloR
         baseline_payload = base64.b64decode(
             baseline_payload_text.encode("ascii"), validate=True
         )
-    except (UnicodeEncodeError, ValueError) as exc:
+    except (UnicodeEncodeError, ValueError, binascii.Error) as exc:
         raise ValueError("BASELINE_PAYLOAD_ENCODING_INVALID") from exc
     if not hmac.compare_digest(_sha256(baseline_payload), baseline_digest):
         raise ValueError("BASELINE_SNAPSHOT_INTEGRITY_FAILURE")
@@ -295,6 +376,21 @@ def import_solo_replay_package(package: bytes | bytearray | memoryview) -> SoloR
     if len(set(event_ids)) != len(event_ids):
         raise ValueError("DUPLICATE_COMMITTED_EVENT_ID")
 
+    # Import validates the sequence through the same authorized replay/projector
+    # path. It still returns evidence, not the replayed projection.
+    try:
+        validated = SimulationEngine().replay(baseline, events)
+    except (KeyError, TypeError, IndexError) as exc:
+        raise ValueError("LEGACY_EVENT_REPLAY_VALIDATION_FAILURE") from exc
+    _validate_replay_result(
+        validated,
+        world_id=world_id,
+        baseline_version=baseline_version,
+        expected_state_version=expected_state_version,
+        events=events,
+        prefix="IMPORTED_REPLAY",
+    )
+
     return SoloReplayEvidence(
         world_id=world_id,
         baseline_version=baseline_version,
@@ -316,23 +412,19 @@ def rehydrate_solo_replay_package(
     evidence = import_solo_replay_package(package)
     replay_engine = SimulationEngine() if engine is None else engine
     rebuilt = replay_engine.replay(evidence.baseline, evidence.events)
+    _validate_replay_result(
+        rebuilt,
+        world_id=evidence.world_id,
+        baseline_version=evidence.baseline_version,
+        expected_state_version=evidence.expected_state_version,
+        events=evidence.events,
+        prefix="REHYDRATED",
+    )
 
-    if rebuilt.world_id != evidence.world_id:
-        raise ValueError("REHYDRATED_WORLD_ID_MISMATCH")
-    if rebuilt.baseline_version != evidence.baseline_version:
-        raise ValueError("REHYDRATED_BASELINE_VERSION_MISMATCH")
-    if rebuilt.state_version != evidence.expected_state_version:
-        raise ValueError("REHYDRATED_STATE_VERSION_MISMATCH")
-    if len(rebuilt.event_log) != len(evidence.events):
-        raise ValueError("REHYDRATED_EVENT_COUNT_MISMATCH")
-    if tuple(event.event_id for event in rebuilt.event_log) != tuple(
-        event.event_id for event in evidence.events
-    ):
-        raise ValueError("REHYDRATED_EVENT_ORDER_MISMATCH")
-    if set(rebuilt.committed_event_ids) != {
-        event.event_id for event in evidence.events
-    }:
-        raise ValueError("REHYDRATED_EVENT_INDEX_MISMATCH")
-    if not rebuilt.is_live:
-        raise ValueError("REHYDRATED_STATE_MUST_BE_LIVE_AND_READ_ONLY")
+    # Current R001/R002 IDs are legacy process counters. A real restart must not
+    # rely on the previous process remembering their position. For this bounded
+    # SOLO reference only, restore the next counter positions from accepted
+    # canonical evidence without rewriting any existing ID or inventing vNext
+    # provenance/cursor fields.
+    _synchronize_legacy_runtime_allocators(evidence.events)
     return rebuilt
