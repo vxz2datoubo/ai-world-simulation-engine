@@ -129,7 +129,12 @@ def _field_ref_resolves(contract, ref):
 def _state_ownership_reference_errors(contract):
     errors = []
     external = set(contract["governed_reference_semantics"]["external_foundation_refs"])
-    ref_pattern = re.compile(r"([A-Z][A-Za-z0-9-]*\.[A-Za-z_][A-Za-z0-9_]*)")
+    # Rebuild-direction prose uses explicit _TO_/_AND_/_OR_/_BY_ connectors.
+    # The lazy field matcher must stop before those connectors so every Type.field
+    # operand is validated independently instead of swallowing the connector text.
+    ref_pattern = re.compile(
+        r"([A-Z][A-Za-z0-9-]*\.[A-Za-z_][A-Za-z0-9_]*?)(?=_TO_|_AND_|_OR_|_BY_|$)"
+    )
     governed_keys = {
         "canonical_owner", "projection_or_index_copies", "projection_owner", "rebuild_direction"
     }
