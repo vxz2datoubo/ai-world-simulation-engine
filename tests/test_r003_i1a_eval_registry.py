@@ -20,8 +20,8 @@ def test_r003_i1a_eval_registry_is_bounded_and_points_to_real_executable_cases()
     assert data["open_decisions_resolved"] == []
 
     cases = data["executable_cases"]
-    assert len(cases) == 12
-    assert len({case["case_id"] for case in cases}) == 12
+    assert len(cases) == 14
+    assert len({case["case_id"] for case in cases}) == 14
     for case in cases:
         node = case["pytest_node"]
         assert node.startswith("tests/test_r003_i1a_persistence_restart.py::")
