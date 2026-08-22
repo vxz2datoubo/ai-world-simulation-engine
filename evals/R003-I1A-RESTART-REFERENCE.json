@@ -1,6 +1,6 @@
 {
   "eval_suite_id": "AWRSE-R003-I1A-SOLO-RESTART-REFERENCE",
-  "suite_version": "1.0.0-candidate",
+  "suite_version": "1.1.0-candidate",
   "issue": 17,
   "implementation_scope": "SOLO_RESTART_REFERENCE_ONLY",
   "canonical_release_base": "21fd2feaa2d5e7a2aef7b0111d5535440d68d051",
@@ -72,6 +72,16 @@
       "case_id": "I1A-12-FRESH-EVIDENCE-IDENTITY-KNOWLEDGE",
       "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_12_imported_evidence_is_fresh_and_replay_preserves_knowledge_refs",
       "asserts": "restart does not depend on prior Python object identity and preserves implemented knowledge references"
+    },
+    {
+      "case_id": "I1A-13-FRESH-PROCESS-CONTINUATION",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_13_fresh_process_allocator_reset_can_continue_without_id_collision",
+      "asserts": "fresh-process legacy action/event allocators are restored from canonical evidence so continued SOLO play does not collide with historical IDs"
+    },
+    {
+      "case_id": "I1A-14-SEMANTIC-EVENT-VALIDATION",
+      "pytest_node": "tests/test_r003_i1a_persistence_restart.py::test_r003_i1a_14_semantically_unsupported_event_fails_replay_after_digests_recomputed",
+      "asserts": "internally self-consistent hashes cannot authorize an unsupported event type; existing replay authority still rejects it"
     }
   ],
   "explicit_non_goals": [
