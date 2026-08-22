@@ -1,0 +1,297 @@
+{
+  "eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
+  "suite_version": "1.0.0-candidate",
+  "status": "ARCHITECTURE_FREEZE_EXECUTABLE_SPEC_CANDIDATE",
+  "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
+  "foundation_eval_registry": "evals/AWRSE-CORE-EVALS.yaml",
+  "required_fields_per_scenario": [
+    "initial_canonical_state",
+    "allowed_player_intents",
+    "required_contracts",
+    "expected_canonical_events",
+    "projection_changes",
+    "knowledge_consequences",
+    "narrative_consequences",
+    "presentation_requirements",
+    "forbidden_outcomes",
+    "replay_restart_expectations",
+    "adversarial_variants",
+    "acceptance_criteria"
+  ],
+  "scenarios": {
+    "WILDERNESS_NEWS_TRAP": {
+      "purpose": "Prove that important information reaches a remote player only through plausible world channels, while rescue outcome, injury and visible treatment remain authority-separated and persistent.",
+      "initial_canonical_state": [
+        "World event E_CAPITAL_ASSASSINATION is committed in the capital.",
+        "The wilderness player has no perception, document or communication path to E_CAPITAL_ASSASSINATION.",
+        "A traveler/merchant candidate may exist only if route, travel time, identity and motivation pass PlausibilityGate.",
+        "A hunting trap and any rescue tools are canonical objects with location/ownership state.",
+        "Player actor capability/injury/equipment state is referenced but AF-001 does not implement the resolver."
+      ],
+      "allowed_player_intents": [
+        "help or attempt rescue by force",
+        "inspect or use a real tool",
+        "seek assistance",
+        "ask questions",
+        "ignore or leave",
+        "threaten, rob or attack if otherwise legal under world rules",
+        "invent another method subject to authority/affordance/capability checks"
+      ],
+      "required_contracts": ["AF-A", "AF-B", "AF-C", "AF-D", "AF-E", "AF-F", "AF-G", "AF-H"],
+      "expected_canonical_events": [
+        "No information-acquisition event occurs merely because the assassination is important.",
+        "If a carrier encounter is realized, actor/encounter introduction and location provenance are committed before interaction.",
+        "If speech occurs, canonical speech/perception/knowledge events preserve speaker and source provenance.",
+        "If rescue is attempted, future capability runtime must emit an ActionResolutionReceipt-backed result before physical/injury events.",
+        "Any injury, treatment, dressing or equipment changes are separate canonical transitions."
+      ],
+      "projection_changes": [
+        "Player knowledge changes only after a legal information path.",
+        "Functional injury projection changes only from injury/status events.",
+        "Appearance projection changes from dressing/outfit/surface transitions independently of functional injury.",
+        "EncounterCandidate expires or closes without becoming permanent world truth if unused."
+      ],
+      "knowledge_consequences": [
+        "The player may remain UNKNOWN about the capital event if all carriers/channels are missed.",
+        "Rumor and documented/confirmed knowledge remain distinguishable by provenance and confidence.",
+        "A carrier cannot state hidden facts they do not validly know."
+      ],
+      "narrative_consequences": [
+        "NarrativeOpportunityBroker may search for another plausible channel only while relevance, causality and anti-contrivance policy permit.",
+        "Failure to rescue does not force information delivery or quest success.",
+        "No-twist genuine traveler remains a valid outcome."
+      ],
+      "presentation_requirements": [
+        "If the actor is visibly injured or dressed, ActorPresentationRequirements must preserve body region and visible treatment state.",
+        "Director/publication must not reveal the assassination to the player-facing channel before allowed knowledge exists.",
+        "Scene/view/asset identity must remain consistent with the canonical wilderness location."
+      ],
+      "forbidden_outcomes": [
+        "Direct Player Chronicle injection of E_CAPITAL_ASSASSINATION.",
+        "Teleporting a carrier or fabricating impossible travel time.",
+        "Secretly lowering rescue difficulty because narrative wants success.",
+        "Treating generated bandage pixels as proof a treatment event occurred.",
+        "Forcing every isolated traveler to be a trap or main-plot carrier."
+      ],
+      "replay_restart_expectations": [
+        "Rehydration preserves whether information was never learned, rumored or confirmed.",
+        "Injury/treatment/appearance projections rebuild from canonical events and exact cursor/version provenance.",
+        "A model upgrade may regenerate presentation language but not change source facts or outcomes."
+      ],
+      "adversarial_variants": [
+        "Player kills the carrier before conversation.",
+        "Carrier knows only a distorted rumor.",
+        "Travel time is insufficient for the carrier to possess fresh news.",
+        "Player has a hand injury that invalidates one rescue method.",
+        "Renderer shows clean unbandaged arm after canonical dressing is visible."
+      ],
+      "acceptance_criteria": [
+        "No illegal knowledge injection path exists.",
+        "Opportunity can resolve to NO_VALID_OPPORTUNITY.",
+        "Capability, injury and presentation authority remain distinct.",
+        "Every material consequence is provenance-bearing and replay/restart stable.",
+        "Presentation cannot leak forbidden knowledge or contradict visible treatment state."
+      ]
+    },
+    "BROKEN_DOOR_WORLD_ECHO": {
+      "purpose": "Prove persistent environmental state, provenance-bounded attribution and different valid callbacks for culprit, witness and uninformed observer.",
+      "initial_canonical_state": [
+        "A door damage event is committed and persists across scene leave/revisit.",
+        "Player A caused the damage and has valid self-history.",
+        "NPC Witness perceived the causal event.",
+        "Player B/Newcomer sees only the current broken door and has no culprit knowledge.",
+        "A later repair event may occur as a separate canonical transition."
+      ],
+      "allowed_player_intents": ["try to open/use the door", "inspect damage", "comment", "ignore", "repair if later capability/rules allow"],
+      "required_contracts": ["AF-A", "AF-B", "AF-D", "AF-E", "AF-F", "AF-G", "AF-H"],
+      "expected_canonical_events": [
+        "Existing damage remains canonical until repair/replacement transition.",
+        "A diegetic bark becomes speech only if speaker/risk policy authorizes it.",
+        "Repair creates new state/event history without deleting the original damage event."
+      ],
+      "projection_changes": [
+        "Scene/object projection shows broken then repaired states according to event cursor.",
+        "WorldEchoOpportunity is derived from current delta + valid memory/knowledge, not a second truth ledger.",
+        "Echo anti-repeat/callback metadata may update as derived projection."
+      ],
+      "knowledge_consequences": [
+        "Culprit may know self-causation through valid personal history.",
+        "Witness may attribute culprit if memory remains valid.",
+        "Newcomer may know damage exists but must keep culprit UNKNOWN absent a path.",
+        "Rumored attribution must remain hedged/non-canonical."
+      ],
+      "narrative_consequences": [
+        "Callback may be humor, annoyance, nostalgia, silence or another permitted ResponseConcept.",
+        "Repair may later close an earlier callback/promise without erasing history.",
+        "Echo opportunity can be suppressed by urgency, repetition budget or tone risk."
+      ],
+      "presentation_requirements": [
+        "Broken/open/repair state must match canonical object projection.",
+        "Player-private inner commentary must not be audible to NPCs.",
+        "Diegetic bark must be represented as actual speech if selected."
+      ],
+      "forbidden_outcomes": [
+        "Newcomer names Player A because simulator globally knows the culprit.",
+        "Renderer silently repairs the door.",
+        "World Echo line invents a memory or prior pristine-state observation.",
+        "Repeated identical bark on every revisit without budget policy."
+      ],
+      "replay_restart_expectations": [
+        "Damage, repair, knowledge and echo eligibility rebuild from source events/projections.",
+        "Derived commentary wording may change after model upgrade without changing attribution truth."
+      ],
+      "adversarial_variants": [
+        "Culprit is another player unknown to current observer.",
+        "Witness heard a rumor but did not see the event.",
+        "Door repaired between encounters.",
+        "Current scene is combat/high urgency and commentary should suppress."
+      ],
+      "acceptance_criteria": [
+        "Object truth is persistent and replayable.",
+        "Attribution never exceeds speaker knowledge provenance.",
+        "Private vs diegetic commentary authority is preserved.",
+        "Repair creates superseding current state without deleting causal history."
+      ]
+    },
+    "FIGHTER_VS_SCHOLAR": {
+      "purpose": "Prove same physical challenge can resolve differently from persistent actor capability, method, equipment and condition without LLM improvising stats.",
+      "initial_canonical_state": [
+        "Fighter and Scholar face equivalent restraint/trap state.",
+        "They have different ActorBaseProfile/SkillLedger/ConditionState evidence.",
+        "Any tools are canonical objects whose possession/reachability is explicit.",
+        "No runtime capability implementation is claimed by AF-001."
+      ],
+      "allowed_player_intents": ["force escape", "technical escape", "use reachable tool", "seek help", "wait", "attempt another legal method"],
+      "required_contracts": ["AF-A", "AF-B", "AF-C", "AF-D"],
+      "expected_canonical_events": [
+        "Future runtime must bind chosen method to ActionDemandProfile before outcome.",
+        "Impossible method fails before stochastic resolution.",
+        "Outcome and hazard/injury are separately recorded.",
+        "Any partial physical progress is canonical if it changes restraint/world state."
+      ],
+      "projection_changes": [
+        "DerivedCapability reflects base + skills + condition + equipment under versioned rules.",
+        "Injury/fatigue/status update independently from base profile.",
+        "Visible treatment changes only through presentation/treatment transitions."
+      ],
+      "knowledge_consequences": ["No actor or LLM may infer hidden skill ranks as fact without the capability ledger.", "Observers learn outcomes only through perception/information paths."],
+      "narrative_consequences": ["Narrative may value either success or failure but cannot change difficulty/outcome authority.", "Failure may create later opportunities without converting failure into success."],
+      "presentation_requirements": ["Narration/render depicts the resolved outcome band only.", "Visible injury or dressing state must follow canonical presentation requirements."],
+      "forbidden_outcomes": ["Universal combat score directly resolves all methods.", "LLM invents a technique or stat boost.", "Impossible action succeeds from lucky roll.", "Failure automatically implies injury or success automatically implies no injury."],
+      "replay_restart_expectations": ["Same event/ruleset/seed provenance reproduces stochastic outcome if randomness exists.", "Base profile and current condition remain distinct after restart."],
+      "adversarial_variants": ["Fighter has severe hand injury.", "Scholar possesses the right tool and skill.", "Repeated attempts increase fatigue/hazard.", "Equipment claimed in text is not actually possessed."],
+      "acceptance_criteria": ["Method-specific capability contract controls future resolution.", "Outcome and hazard axes remain separate.", "Equipment/condition claims require canonical evidence.", "Replay provenance is sufficient for deterministic reconstruction."]
+    },
+    "PROMISE_RETURN_CALLBACK": {
+      "purpose": "Prove long-horizon promises and callbacks remain evidence-backed rather than freeform LLM memory.",
+      "initial_canonical_state": [
+        "Player makes an explicit in-world promise to an NPC through valid speech/action semantics.",
+        "NPC perceives the promise.",
+        "NarrativePromise and relevant choice-memory projections reference source events.",
+        "World may later make promise fulfillment possible, impossible or materially changed."
+      ],
+      "allowed_player_intents": ["return and fulfill", "return and refuse", "break/ignore promise", "explain", "take another legal action"],
+      "required_contracts": ["AF-A", "AF-E", "AF-F", "AF-G", "AF-H"],
+      "expected_canonical_events": ["Original promise speech/action remains in history.", "Later fulfillment/breach actions are independent events.", "Relationship consequences reference actual interactions rather than a freeform summary."],
+      "projection_changes": ["NarrativePromise advances through explicit lifecycle states.", "Relationship and episodic-memory projections may change with source refs.", "Summary/cache may regenerate without altering source promise history."],
+      "knowledge_consequences": ["Only characters who perceived/learned the promise may knowingly reference it.", "Third parties require rumor/document/telling provenance."],
+      "narrative_consequences": ["Callback may manifest immediately or after long delay.", "World change may invalidate a planned payoff with an explicit reason rather than forcing it.", "Branch quality accepts broken promises as live story consequences."],
+      "presentation_requirements": ["Callback line/reaction cannot assert a promise the speaker never knew.", "Publication may summarize history only within audience knowledge policy."],
+      "forbidden_outcomes": ["LLM invents prior promise from thematic convenience.", "Promise is silently marked paid because intended story beat needs closure.", "NPC remembers hidden player-local intent without perception."],
+      "replay_restart_expectations": ["Promise lifecycle rebuilds from source events/cursors.", "Model upgrade may rewrite derived summary text only."],
+      "adversarial_variants": ["NPC dies before promised return.", "Player returns after world conditions changed.", "Promise was private but another NPC is asked about it.", "Player's exact wording was ambiguous and should not be upgraded to a stronger commitment."],
+      "acceptance_criteria": ["Promise source is auditable.", "Callback eligibility obeys knowledge and world state.", "Invalidation is explicit and non-retconning.", "Relationship consequences are provenance-bearing."]
+    },
+    "PERSONA_SPEECH_BOUNDARY": {
+      "purpose": "Prove personalization can shape low-risk expression without stealing player agency or creating high-risk speech acts.",
+      "initial_canonical_state": [
+        "Player has optional explicit CharacterCore/auto-expression policy.",
+        "EnactedPersonaHypothesis may exist only as private derived evidence-backed projection.",
+        "A WorldEchoOpportunity offers a possible comment.",
+        "Nearby NPCs may be able to hear diegetic speech but never private inner commentary."
+      ],
+      "allowed_player_intents": ["remain silent", "explicitly speak", "opt in/out of low-risk bark policy", "provide current roleplay instruction"],
+      "required_contracts": ["AF-E", "AF-G", "AF-H"],
+      "expected_canonical_events": ["Private inner commentary creates no speech/world/social event.", "Authorized low-risk bark creates canonical speech only if actually selected/spoken.", "High-risk speech requires explicit player action before canonical speech event."],
+      "projection_changes": ["Persona hypothesis may influence tone/ranking but not factual attribution.", "Auto-expression policy changes only through explicit player policy transition."],
+      "knowledge_consequences": ["NPCs cannot hear private commentary.", "Diegetic bark may propagate only through hearing/perception rules.", "Private persona model is not NPC knowledge."],
+      "narrative_consequences": ["Reserved persona may choose silence; sarcastic persona may choose low-risk private quip.", "Current explicit intent outranks historical persona hypothesis."],
+      "presentation_requirements": ["Private commentary must be visually/audibly marked as private/non-diegetic.", "Diegetic speech must be distinguishable and perception-eligible."],
+      "forbidden_outcomes": ["Auto-generated confession, threat, agreement or binding promise without explicit player action.", "One unusual action permanently rewrites persona.", "Persona tone changes factual causation/knowledge."],
+      "replay_restart_expectations": ["Explicit policy and source evidence rehydrate by ID/version.", "Derived persona may be recomputed under new model without changing historical player actions."],
+      "adversarial_variants": ["Suggested line confesses a crime.", "Suggested line promises payment.", "Persona inference conflicts with current explicit roleplay intent.", "NPC is within hearing range during private inner commentary."],
+      "acceptance_criteria": ["Private commentary has zero canonical social side effects.", "High-risk speech always requires explicit action.", "Explicit current intent outranks inferred persona.", "Knowledge/perception boundaries remain intact."]
+    },
+    "ASSET_APPEARANCE_REVISIT": {
+      "purpose": "Prove scene/view/media identity and actor clothing/shoes/bandage continuity survive revisit, storage/model changes and render regeneration.",
+      "initial_canonical_state": [
+        "Scene has stable Scene/WorldFrame identity and valid spatial graph refs.",
+        "CameraAnchor and View are explicit rather than inferred from filename.",
+        "Actor has canonical outfit slots, visible equipment and a right-forearm dressing.",
+        "MediaAsset, MediaVersion and Locator are separate identities."
+      ],
+      "allowed_player_intents": ["leave and revisit", "change/remove clothing through legal actions", "replace/remove treatment through legal actions", "move through valid portal"],
+      "required_contracts": ["AF-B", "AF-D", "AF-H"],
+      "expected_canonical_events": ["Outfit/treatment changes require explicit state transitions.", "Locator migration or media-version promotion does not change Scene/View/MediaAsset identity.", "Scene revisit references accumulated world state rather than regenerated visual guess."],
+      "projection_changes": ["ActorAppearanceSnapshot rebuilds from canonical presentation events.", "Current verified MediaVersion/Locator may change without changing logical asset identity.", "Text/image maps remain projections of canonical spatial graph."],
+      "knowledge_consequences": ["Visual appearance itself does not grant hidden injury cause knowledge.", "Perception of visible treatment may create only the knowledge supported by what is observable."],
+      "narrative_consequences": ["Persistent scar/outfit/treatment may become callback material only through valid knowledge/context."],
+      "presentation_requirements": ["If exposed in shot, right-forearm dressing remains visible with correct side/region policy.", "If feet slot is empty, renderer cannot invent boots when feet are visible.", "Requested View preserves anchor/facing semantics and scene identity."],
+      "forbidden_outcomes": ["Filename parsed as authoritative direction.", "New model output silently changes clothes, shoes or bandage side.", "Generated broken asset changes canonical object state.", "Locator move creates a new logical asset identity."],
+      "replay_restart_expectations": ["Appearance snapshot rebuilds from event cursor/schema/ruleset versions.", "Model/provider replacement can regenerate pixels without changing canonical appearance state."],
+      "adversarial_variants": ["Storage locator changes.", "New MediaVersion promoted after verification.", "Garment covers the dressing and changes visibility policy.", "Generated top map puts north in wrong screen direction."],
+      "acceptance_criteria": ["Scene/View/Media identity separations are preserved.", "Canonical outfit/treatment continuity survives revisit.", "Render contradiction is detected rather than normalized into truth.", "Map mismatch cannot rewrite spatial graph."
+      ]
+    },
+    "HOSTILE_PLAYER_BREAKS_PLOT": {
+      "purpose": "Prove narrative remains live when player ignores mainline, kills a key NPC or discovers information early without resurrection, retcon or forced reconvergence.",
+      "initial_canonical_state": [
+        "StoryDNA/StoryBible define dramatic constraints and one or more HardCausalAnchors/SoftDramaticAttractors.",
+        "A key NPC has canonical identity, location, goals and mortal state.",
+        "Storylets/roles are conditional opportunities rather than guaranteed scenes."
+      ],
+      "allowed_player_intents": ["ignore mainline", "leave region", "attack or kill key NPC if world rules genuinely permit", "reveal/solve mystery early", "ally with antagonist", "invent another valid action"],
+      "required_contracts": ["AF-A", "AF-B", "AF-E", "AF-F", "AF-G", "AF-H"],
+      "expected_canonical_events": ["Valid hostile/early-solving action commits normally if it passes world authority.", "Death or destroyed cause invalidates dependent anchors/opportunities with explicit refs.", "Replacement narrative role may appear only when role is substitutable and eligibility is satisfied."],
+      "projection_changes": ["Storylet/anchor/promise eligibility recomputes from current world facts.", "Branch-quality projection records invalidated/available routes without changing committed truth."],
+      "knowledge_consequences": ["Early discovery becomes knowledge only through legal evidence/perception path.", "Other actors do not automatically know the player's discovery or crime."],
+      "narrative_consequences": ["Narrative may promote emergent consequences, institutional response, successor conflict or new storylet routes.", "Soft attractor may be realized differently or dropped with reason.", "No-good authored branch is not repaired by falsifying history."],
+      "presentation_requirements": ["Director depicts actual resulting branch and cannot resurrect dead key NPC for shot convenience.", "Publication must not conceal causal consequence by presenting obsolete canonical state as current truth."],
+      "forbidden_outcomes": ["Plot armor silently rejects an otherwise valid action solely to preserve story.", "Dead key NPC returns without canonical cause.", "Mystery clue is deleted/retconned because player solved early.", "Forced branch welding erases real world consequences."],
+      "replay_restart_expectations": ["Dead/alive state, anchor invalidation and branch eligibility rebuild from events.", "Narrative recomputation after restart may choose new legal opportunities but cannot alter source history."],
+      "adversarial_variants": ["Player kills intended messenger.", "Player destroys the physical clue.", "Player never visits the authored hub.", "Substitute role candidate conflicts with identity/history constraints."],
+      "acceptance_criteria": ["Valid agency can permanently alter story world.", "Narrative gracefully returns alternative opportunity or NO_VALID_OPPORTUNITY.", "No resurrection/retcon/forced-success bypass exists.", "All substitute roles are eligibility- and identity-safe."
+      ]
+    },
+    "MULTIPLAYER_DIFFERENT_KNOWLEDGE": {
+      "purpose": "Prove multiple players share one physical truth while maintaining distinct valid knowledge, memories and presentation boundaries.",
+      "initial_canonical_state": [
+        "Players A and B inhabit the same shared instance.",
+        "A witnesses Player C take a unique object; B is elsewhere and does not perceive it.",
+        "Shared object possession/location changes once in canonical world state.",
+        "Player Chronicles/knowledge projections are separate."
+      ],
+      "allowed_player_intents": ["inspect missing object", "ask another player/NPC", "accuse", "search", "take another shared-world action"],
+      "required_contracts": ["AF-A", "AF-B", "AF-E", "AF-F", "AF-G", "AF-H"],
+      "expected_canonical_events": ["Unique object transfer commits once in shared world state.", "A receives valid perception/knowledge event if perception path exists.", "B receives no culprit knowledge until a later legal channel.", "Any later telling/speech uses provenance-bearing communication semantics."],
+      "projection_changes": ["Both players see object absent when they later observe the location.", "A and B can have different knowledge projections for the same shared world version.", "Player-local summaries/caches bind to their own evidence without duplicating object truth."],
+      "knowledge_consequences": ["A may know C took the object.", "B may know only that the object is missing.", "B can learn C's involvement later through SAW/HEARD/WAS_TOLD/DOCUMENTED/RUMORED/INFERRED only when that mode has implemented valid provenance."],
+      "narrative_consequences": ["PX may surface different legal opportunities to A and B based on their knowledge while preserving shared world facts.", "A spectator/publication view may differ only under explicit audience policy."],
+      "presentation_requirements": ["Player B's player-facing render/caption cannot leak C's identity before B knows it.", "Shared physical state, scene identity and object absence must align for all players after observation."],
+      "forbidden_outcomes": ["Per-player cloned world lets the unique object exist twice.", "B learns culprit because simulator or publication knows it.", "A's private Chronicle is copied wholesale into B or an NPC.", "Spectator knowledge flows backward into player/NPC knowledge."],
+      "replay_restart_expectations": ["Shared object truth reconstructs once from canonical events.", "Each player knowledge projection reconstructs from their own perception/information evidence.", "Restart/model upgrade cannot merge player identities or knowledge streams."],
+      "adversarial_variants": ["A tells B a lie about culprit.", "B hears a rumor from an NPC.", "Object is later dropped in another zone.", "Publication audience is allowed broader knowledge than either player avatar."],
+      "acceptance_criteria": ["One shared canonical physical truth exists.", "Player-local knowledge remains evidence-separated.", "Presentation is knowledge-aware per audience.", "No cross-player or publication knowledge leakage occurs."
+      ]
+    }
+  },
+  "suite_acceptance": [
+    "ALL_EIGHT_SCENARIOS_PRESENT",
+    "ALL_REQUIRED_FIELDS_PRESENT_PER_SCENARIO",
+    "ALL_REQUIRED_CONTRACT_REFS_EXIST",
+    "FORBIDDEN_OUTCOMES_ARE_NON_EMPTY",
+    "ADVERSARIAL_VARIANTS_ARE_NON_EMPTY",
+    "REPLAY_RESTART_EXPECTATIONS_ARE_NON_EMPTY",
+    "NO_SCENARIO_CLAIMS_RUNTIME_IMPLEMENTATION_BEYOND_ACCEPTED_R001_R002_FOUNDATION"
+  ]
+}
