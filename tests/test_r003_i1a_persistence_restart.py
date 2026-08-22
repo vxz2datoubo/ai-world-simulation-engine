@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import itertools
 import json
 
 import pytest
@@ -12,6 +13,7 @@ from awrse import (
     ObjectState,
     PERSISTENCE_PROFILE_ID,
     PERSISTENCE_PROFILE_VERSION,
+    ResolutionStatus,
     SceneState,
     SimulationEngine,
     WorldState,
@@ -351,3 +353,45 @@ def test_r003_i1a_12_imported_evidence_is_fresh_and_replay_preserves_knowledge_r
         source.npc_minds["GUARD_001"].knowledge_boundary_refs
     )
     assert rebuilt.state_version == source.state_version
+
+
+def test_r003_i1a_13_fresh_process_allocator_reset_can_continue_without_id_collision():
+    baseline, source = build_source_world()
+    package = export_solo_replay_package(baseline, source)
+    historical_event_ids = {event.event_id for event in source.event_log}
+    historical_action_ids = {
+        event.caused_by_action_id
+        for event in source.event_log
+        if event.caused_by_action_id is not None
+    }
+
+    # Simulate a fresh process where legacy class-global counters have forgotten
+    # their prior positions. Rehydration must restore them from canonical evidence.
+    SimulationEngine._event_counter = itertools.count(1)
+    ActionCompiler._counter = itertools.count(1)
+
+    rebuilt = rehydrate_solo_replay_package(package, engine=SimulationEngine())
+    before_version = rebuilt.state_version
+    next_action = ActionCompiler().compile(
+        "走到ZONE_FRONT", "PLAYER", rebuilt, PRINCIPAL
+    )
+    result = SimulationEngine().resolve_and_commit(next_action, rebuilt)
+
+    assert result.action.resolution_status == ResolutionStatus.RESOLVED_SUCCESS
+    assert result.events
+    assert result.action.action_id not in historical_action_ids
+    assert all(event.event_id not in historical_event_ids for event in result.events)
+    assert all(
+        event.caused_by_action_id == result.action.action_id for event in result.events
+    )
+    assert rebuilt.state_version == before_version + len(result.events)
+    assert rebuilt.actors["PLAYER"].zone_id == "ZONE_FRONT"
+
+
+def test_r003_i1a_14_semantically_unsupported_event_fails_replay_after_digests_recomputed():
+    baseline, source = build_source_world()
+    decoded = decode_package(export_solo_replay_package(baseline, source))
+    decoded["ordered_events"][0]["event_type"] = "FUTURE_UNAUTHORIZED_EVENT"
+
+    with pytest.raises(ValueError, match="UNSUPPORTED_EVENT_TYPE"):
+        import_solo_replay_package(refresh_digests(decoded, refresh_events=True))
