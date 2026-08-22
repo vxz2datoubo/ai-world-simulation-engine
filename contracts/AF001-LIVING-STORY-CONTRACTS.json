@@ -1,6 +1,6 @@
 {
   "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-  "contract_version": "1.2.0-candidate",
+  "contract_version": "1.3.0-candidate",
   "status": "ARCHITECTURE_FREEZE_CANDIDATE",
   "implementation_state": "INTERFACE_ONLY_EXCEPT_ACCEPTED_R001_R002_FOUNDATIONS",
   "artifact_roles": {
@@ -48,6 +48,9 @@
       "PX_RANKING",
       "AWRSE_PRESENTATION_STATE_AUTHORITY",
       "AWRSE_KNOWLEDGE_VISIBILITY_POLICY_AUTHORITY",
+      "ASSET_REGISTRY_AUTHORITY",
+      "ASSET_VERIFICATION_PROMOTION_AUTHORITY",
+      "ASSET_LOCATOR_REGISTRY_AUTHORITY",
       "AWRSE_AF_B_CONTRACT_STEWARD",
       "AWRSE_AF_C_CONTRACT_STEWARD",
       "AWRSE_AF_D_CONTRACT_STEWARD",
@@ -60,6 +63,13 @@
       "AWRSE_KNOWLEDGE_PROJECTION_BUILDER",
       "AWRSE_NARRATIVE_DESIGN_LOADER",
       "AWRSE_NARRATIVE_OPPORTUNITY_PRODUCER",
+      "AWRSE_INFORMATION_PACKET_ASSEMBLER",
+      "AWRSE_PROMISE_LIFECYCLE_PROJECTOR",
+      "AWRSE_SPATIAL_VIEW_REGISTRY",
+      "AWRSE_ASSET_REGISTRY",
+      "AWRSE_ASSET_VERSION_REGISTRAR",
+      "MEDIA_GENERATION_OR_CAPTURE_PIPELINE",
+      "AWRSE_ASSET_LOCATOR_RESOLVER",
       "AWRSE_PX_RANKER",
       "AWRSE_DIRECTOR_PACKET_ASSEMBLER",
       "AWRSE_PRESENTATION_REQUIREMENTS_ASSEMBLER",
@@ -91,7 +101,39 @@
         "producer_or_assembler": ["AWRSE_WORLD_STATE_PROJECTOR"],
         "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
         "staging_authority": ["NONE"],
-        "mutation_constraint": "GENERATED_PIXELS_OR_DIRECTOR_CHOICES_CANNOT_CREATE_OR_REWRITE_CANONICAL_APPEARANCE_ASSET_OR_TREATMENT_FACTS"
+        "mutation_constraint": "GENERATED_PIXELS_OR_DIRECTOR_CHOICES_CANNOT_CREATE_OR_REWRITE_CANONICAL_DYNAMIC_APPEARANCE_OR_TREATMENT_FACTS"
+      },
+      "SPATIAL_VIEW_DEFINITION_REGISTRY": {
+        "canonical_data_authority": ["WORLD_RULES_AUTHORITY"],
+        "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_SPATIAL_VIEW_REGISTRY"],
+        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_ASSET_REGISTRY", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "DIRECTOR_RENDERER_OR_GENERATED_MEDIA_CANNOT_REDEFINE_CANONICAL_CAMERA_ANCHOR_OR_VIEW_SPATIAL_SEMANTICS"
+      },
+      "ASSET_LOGICAL_IDENTITY_REGISTRY": {
+        "canonical_data_authority": ["ASSET_REGISTRY_AUTHORITY"],
+        "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_ASSET_REGISTRY"],
+        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_ASSET_VERSION_REGISTRAR", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "MEDIA_BYTES_MEDIA_VERSION_OR_LOCATOR_CHANGES_CANNOT_REDEFINE_STABLE_MEDIA_ASSET_IDENTITY_AND_WORLD_STATE_PROJECTOR_CANNOT_CREATE_ASSET_IDENTITY"
+      },
+      "ASSET_IMMUTABLE_VERSION_REGISTRY": {
+        "canonical_data_authority": ["ASSET_REGISTRY_AUTHORITY", "ASSET_VERIFICATION_PROMOTION_AUTHORITY"],
+        "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
+        "producer_or_assembler": ["MEDIA_GENERATION_OR_CAPTURE_PIPELINE", "AWRSE_ASSET_VERSION_REGISTRAR"],
+        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_ASSET_LOCATOR_RESOLVER", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "MEDIA_VERSION_CONTENT_HASH_AND_GENERATION_OR_CAPTURE_PROVENANCE_ARE_IMMUTABLE_AFTER_REGISTRATION; ONLY_ASSET_VERIFICATION_PROMOTION_AUTHORITY_MAY_ADVANCE_VERIFICATION_STATE; WORLD_STATE_PROJECTOR_CANNOT_CREATE_OR_PROMOTE_MEDIA_VERSIONS"
+      },
+      "ASSET_LOCATOR_RESOLUTION": {
+        "canonical_data_authority": ["ASSET_LOCATOR_REGISTRY_AUTHORITY"],
+        "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_ASSET_LOCATOR_RESOLVER"],
+        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "LOCATOR_MIGRATION_MAY_CHANGE_RETRIEVAL_LOCATION_PROVIDER_OR_STATUS_BUT_CANNOT_CHANGE_MEDIA_ASSET_OR_MEDIA_VERSION_IDENTITY; WORLD_STATE_PROJECTOR_CANNOT_AUTHOR_LOCATOR_REGISTRY_TRUTH"
       },
       "KNOWLEDGE_DERIVED_PROJECTION": {
         "canonical_data_authority": ["PROVENANCE_BEARING_SOURCE_EVIDENCE"],
@@ -132,6 +174,22 @@
         "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
         "staging_authority": ["NONE"],
         "mutation_constraint": "AUTHORED_NARRATIVE_CONSTRAINTS_MAY_PROPOSE_OR_FILTER_BUT_CANNOT_RETCON_CANONICAL_WORLD_TRUTH"
+      },
+      "INFORMATION_PROVENANCE_LIFECYCLE": {
+        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_INFORMATION_PACKET_ASSEMBLER"],
+        "downstream_consumer": ["KNOWLEDGE_MEMORY", "NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "NARRATIVE_DESIGN_NARRATIVE_OPPORTUNITY_PX_DIRECTOR_AND_KNOWLEDGE_PROJECTIONS_MAY_CONSUME_OR_REQUEST_DELIVERY_BUT_CANNOT_INVENT_SOURCE_FACTS_SOURCE_OR_WITNESS_PROVENANCE_VERIFICATION_CONFIDENCE_OR_RECIPIENT_KNOWLEDGE_EVIDENCE"
+      },
+      "EVIDENCE_DERIVED_PROMISE_LIFECYCLE": {
+        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_PROMISE_LIFECYCLE_PROJECTOR"],
+        "downstream_consumer": ["KNOWLEDGE_MEMORY", "NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "UNDERLYING_PROMISE_TRUTH_REQUIRES_EXPLICIT_SPEECH_ACTION_OR_OTHER_SOURCE_EVENT_EVIDENCE; AUTHORED_NARRATIVE_CANNOT_INVENT_A_PROMISE; NARRATIVE_MAY_EVALUATE_CALLBACK_OR_PAYOFF_ELIGIBILITY_AND_WORLD_DRIVEN_INVALIDATION_ONLY_FROM_BOUND_SOURCE_HISTORY"
       },
       "NARRATIVE_OPPORTUNITY_NON_CANONICAL": {
         "canonical_data_authority": ["NONE"],
@@ -357,11 +415,11 @@
     "OutfitState": {"type_id":"AF001.OutfitState","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE","fields":["actor_id","slot_bindings","source_event_refs","state_version"]},
     "DressingState": {"type_id":"AF001.DressingState","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE","fields":["dressing_id","actor_id","body_region","side","material_ref","appearance_state","source_treatment_event_ref","covered_by_refs"]},
     "SurfaceState": {"type_id":"AF001.SurfaceState","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE","fields":["surface_state_id","target_ref","surface_type","intensity","source_event_refs"]},
-    "CameraAnchor": {"type_id":"AF001.CameraAnchor","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["camera_anchor_id","scene_id","position_semantics","coordinates_optional","height_optional"]},
-    "View": {"type_id":"AF001.View","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["view_id","scene_id","camera_anchor_id","facing_cardinal_optional","screen_top_cardinal_optional","projection_class","visible_landmark_refs"]},
-    "MediaAsset": {"type_id":"AF001.MediaAsset","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["media_asset_id","logical_role","view_ref_optional","rights_policy_ref_optional"]},
-    "MediaVersion": {"type_id":"AF001.MediaVersion","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["media_version_id","media_asset_id","content_hash","generation_or_capture_provenance","verification_state"]},
-    "Locator": {"type_id":"AF001.Locator","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["locator_id","media_version_id","location","provider_or_store","status"]},
+    "CameraAnchor": {"type_id":"AF001.CameraAnchor","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"SPATIAL_VIEW_DEFINITION_REGISTRY","implementation_state":"INTERFACE_ONLY","definition_semantics":"STABLE_SPATIAL_CAMERA_ANCHOR_DEFINITION","fields":["camera_anchor_id","scene_id","position_semantics","coordinates_optional","height_optional"]},
+    "View": {"type_id":"AF001.View","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"SPATIAL_VIEW_DEFINITION_REGISTRY","implementation_state":"INTERFACE_ONLY","definition_semantics":"STABLE_SPATIAL_VIEW_DEFINITION_NOT_RENDERER_CAMERA_CHOICE","fields":["view_id","scene_id","camera_anchor_id","facing_cardinal_optional","screen_top_cardinal_optional","projection_class","visible_landmark_refs"]},
+    "MediaAsset": {"type_id":"AF001.MediaAsset","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"ASSET_LOGICAL_IDENTITY_REGISTRY","implementation_state":"INTERFACE_ONLY","identity_semantics":"STABLE_LOGICAL_ASSET_IDENTITY","creation_authority":"ASSET_REGISTRY_AUTHORITY","fields":["media_asset_id","logical_role","view_ref_optional","rights_policy_ref_optional"]},
+    "MediaVersion": {"type_id":"AF001.MediaVersion","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"ASSET_IMMUTABLE_VERSION_REGISTRY","implementation_state":"INTERFACE_ONLY","identity_semantics":"IMMUTABLE_MEDIA_REVISION","version_creation_authority":"ASSET_REGISTRY_AUTHORITY","verification_promotion_authority":"ASSET_VERIFICATION_PROMOTION_AUTHORITY","fields":["media_version_id","media_asset_id","content_hash","generation_or_capture_provenance","verification_state"]},
+    "Locator": {"type_id":"AF001.Locator","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"ASSET_LOCATOR_RESOLUTION","implementation_state":"INTERFACE_ONLY","identity_semantics":"REPLACEABLE_RETRIEVAL_OR_STORAGE_LOCATION","migration_authority":"ASSET_LOCATOR_REGISTRY_AUTHORITY","migration_identity_effect":"DOES_NOT_CHANGE_MEDIA_ASSET_OR_MEDIA_VERSION_IDENTITY","fields":["locator_id","media_version_id","location","provider_or_store","status"]},
     "ActorAppearanceSnapshot": {"type_id":"AF001.ActorAppearanceSnapshot","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_REBUILDABLE_PROJECTION","fields":["actor_id","presentation_state_ref","world_event_cursor","schema_version","ruleset_version"]},
     "PlayerChronicle": {"type_id":"AF001.PlayerChronicle","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_DERIVED_PROJECTION","fields":["player_id","world_instance_id","source_acquisition_refs","source_event_cursor","knowledge_refs","choice_or_promise_refs","schema_version"]},
     "PlayerSnapshot": {"type_id":"AF001.PlayerSnapshot","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_REBUILDABLE_CACHE","fields":["player_id","chronicle_ref","world_cursor","snapshot_version","source_schema_versions"]},
@@ -382,8 +440,8 @@
     "SoftDramaticAttractor": {"type_id":"AF001.SoftDramaticAttractor","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["attractor_id","dramatic_function","eligibility_predicates","expiry_policy","status"]},
     "Storylet": {"type_id":"AF001.Storylet","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["storylet_id","preconditions","eligible_roles","knowledge_constraints","dramatic_purpose","forbidden_contradictions","consequence_templates","repeat_policy","version"]},
     "EventDeckEntry": {"type_id":"AF001.EventDeckEntry","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"ALIAS_INTERFACE_ONLY","alias_of":"Storylet","alias_semantics":"DECK_SELECTION_METADATA_MAY_WRAP_A_STORYLET_BUT_CANNOT_CREATE_SEPARATE_WORLD_TRUTH","fields":["storylet_ref","deck_ref","selection_metadata","cooldown_or_weight_metadata"]},
-    "InformationPacket": {"type_id":"AF001.InformationPacket","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["info_id","source_fact_or_event_refs","classification","source_refs","verification_state","confidence","distortion_policy","created_world_time","propagation_scope","expiry_policy"]},
-    "NarrativePromise": {"type_id":"AF001.NarrativePromise","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_DERIVED_LIFECYCLE","fields":["promise_id","source_refs","promise_type","status","callback_eligibility","payoff_refs","invalidation_reason_optional"]},
+    "InformationPacket": {"type_id":"AF001.InformationPacket","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"INFORMATION_PROVENANCE_LIFECYCLE","implementation_state":"INTERFACE_ONLY","lifecycle":"WORLD_EVENT_TO_SOURCE_WITNESS_TO_INFORMATION_PACKET_TO_CARRIER_CHANNEL_TO_PERCEPTION_COMMUNICATION_TO_PLAYER_NPC_KNOWLEDGE","source_authority_requirements":["source_fact_or_event_refs","source_refs","verification_state","confidence"],"fields":["info_id","source_fact_or_event_refs","classification","source_refs","verification_state","confidence","distortion_policy","created_world_time","propagation_scope","expiry_policy"]},
+    "NarrativePromise": {"type_id":"AF001.NarrativePromise","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"EVIDENCE_DERIVED_PROMISE_LIFECYCLE","implementation_state":"INTERFACE_ONLY_DERIVED_LIFECYCLE","authored_creation_allowed":false,"lifecycle":"EXPLICIT_SPEECH_OR_ACTION_SOURCE_EVENT_TO_PROMISE_LIFECYCLE_TO_CALLBACK_OR_PAYOFF_OPPORTUNITY","lifecycle_source_requirements":["source_refs"],"fields":["promise_id","source_refs","promise_type","status","callback_eligibility","payoff_refs","invalidation_reason_optional"]},
     "NarrativeOpportunityBroker": {"type_id":"AF001.NarrativeOpportunityBroker","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["broker_contract_version","input_refs","candidate_policy_ref","plausibility_gate_ref"]},
     "PlausibilityGate": {"type_id":"AF001.PlausibilityGate","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["gate_version","spatial_checks","temporal_checks","identity_history_checks","motivation_checks","information_provenance_checks","density_checks","asset_availability_checks","anti_repeat_checks"]},
     "EncounterCandidate": {"type_id":"AF001.EncounterCandidate","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["encounter_id","source_goal_refs","world_scope","time_window","actor_candidate_refs","motivation_refs","known_information_refs","affordance_refs","forbidden_inventions","eligibility_evidence","expiry_policy"]},
@@ -399,9 +457,9 @@
     "AF-A": {"name":"Identity / Event / Authority","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":[],"invariants":["DOWNSTREAM_CANNOT_REWRITE_UPSTREAM_TRUTH","EVENT_ID_IS_STABLE_AND_IMMUTABLE","PROJECTION_NEWNESS_DOES_NOT_OUTRANK_EVENT_EVIDENCE","BREAKING_EVENT_SEMANTICS_REQUIRE_MIGRATION"]},
     "AF-B": {"name":"Actor / Object / Spatial State","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_R002_FOUNDATION","type_refs":["WorldInstance","WorldFrame","Scene","Zone","Portal","ActorAggregate","ObjectAggregate","PlayerIdentity"],"state_separations":["OWNERSHIP_NE_POSSESSION","POSSESSION_NE_INVENTORY_INDEX","POSSESSION_NE_WORN","SHARED_WORLD_TRUTH_NE_PLAYER_LOCAL_PROJECTION"],"open_decision_refs":["OD-CONCURRENCY-001"]},
     "AF-C": {"name":"Capability / Injury","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["ActorBaseProfile","SkillLedger","DerivedCapability","ActionDemandProfile","ActionResolutionReceipt","InjuryState","FatigueState","StatusEffect","EquipmentModifier","EquipmentLoadout"],"invariants":["IMPOSSIBLE_ACTION_FAILS_BEFORE_PROBABILITY","SUCCESS_AND_INJURY_ARE_INDEPENDENT_AXES","EQUIPMENT_EFFECT_REQUIRES_CANONICAL_AVAILABILITY","RANDOMNESS_REQUIRES_DETERMINISTIC_REPLAY_PROVENANCE"],"open_decision_refs":["OD-CAPABILITY-ATTR-001","OD-CAPABILITY-MATH-001"]},
-    "AF-D": {"name":"Appearance / Asset","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["ActorPresentationState","OutfitState","DressingState","SurfaceState","CameraAnchor","View","MediaAsset","MediaVersion","Locator","ActorAppearanceSnapshot"],"invariants":["FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT","CAMERA_POSITION_NE_CAMERA_FACING","MEDIA_ASSET_IDENTITY_NE_MEDIA_VERSION_NE_LOCATOR","GENERATED_PIXELS_CANNOT_CREATE_CANONICAL_STATE","INVENTORY_OWNED_NE_WORN"]},
+    "AF-D": {"name":"Appearance / Asset","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["ActorPresentationState","OutfitState","DressingState","SurfaceState","CameraAnchor","View","MediaAsset","MediaVersion","Locator","ActorAppearanceSnapshot"],"invariants":["FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT","CAMERA_POSITION_NE_CAMERA_FACING","MEDIA_ASSET_IDENTITY_NE_MEDIA_VERSION_NE_LOCATOR","DYNAMIC_PRESENTATION_STATE_NE_ASSET_REGISTRY_TRUTH","LOCATOR_MIGRATION_NE_ASSET_OR_VERSION_IDENTITY_CHANGE","GENERATED_PIXELS_CANNOT_CREATE_CANONICAL_STATE","INVENTORY_OWNED_NE_WORN"]},
     "AF-E": {"name":"Perception / Memory / Knowledge / Relationship","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_R002_PROVENANCE_FOUNDATION","type_refs":["PlayerChronicle","PlayerSnapshot","IntentBelief","CharacterCore","EnactedPersonaHypothesis","NPCPerceptionEvent","NPCPerceptionStream","NPCEpisodicMemory","BeliefState","NPCPlayerRelationshipState","NPCContextBundle"],"knowledge_modes":["SAW","HEARD","WAS_TOLD","DOCUMENTED","RUMORED","INFERRED","UNKNOWN"],"runtime_rule":"EACH_IMPLEMENTED_MODE_REQUIRES_EXECUTABLE_MODE_SPECIFIC_PROVENANCE_OR_FAILS_CLOSED","invariants":["PLAYER_KNOWLEDGE_NE_NPC_KNOWLEDGE","RECIPIENT_PROJECTION_CANNOT_CREATE_ACQUISITION_EVIDENCE","PRIVATE_PLAYER_PERSONA_NE_NPC_MODEL_OF_PLAYER","EXPLICIT_CHARACTER_CORE_NE_DERIVED_PERSONA_HYPOTHESIS","SUMMARY_REFLECTION_IS_DERIVED_CACHE"],"open_decision_refs":["OD-MEMORY-STORE-001","OD-MEMORY-DECAY-001","OD-RELATIONSHIP-MATH-001"]},
-    "AF-F": {"name":"Story / Information","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["StoryDNA","StoryBible","GenreEngine","CharacterDramaticCore","HardCausalAnchor","SoftDramaticAttractor","Storylet","EventDeckEntry","InformationPacket","NarrativePromise"],"invariants":["STORY_STRUCTURE_IS_NOT_WORLD_TRUTH","HARD_CAUSAL_ANCHOR_MUST_REVALIDATE_CAUSES","SOFT_DRAMATIC_ATTRACTOR_DOES_NOT_DEFINE_FACTS","IMPORTANT_INFORMATION_CANNOT_BYPASS_PROPAGATION","BRANCH_QUALITY_CANNOT_JUSTIFY_RETCON_OR_RESURRECTION"],"open_decision_refs":["OD-GENRE-REGISTRY-001","OD-CLUE-QUALITY-001"]},
+    "AF-F": {"name":"Story / Information","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["StoryDNA","StoryBible","GenreEngine","CharacterDramaticCore","HardCausalAnchor","SoftDramaticAttractor","Storylet","EventDeckEntry","InformationPacket","NarrativePromise"],"invariants":["STORY_STRUCTURE_IS_NOT_WORLD_TRUTH","AUTHORED_NARRATIVE_NE_INFORMATION_PROVENANCE_LIFECYCLE","AUTHORED_NARRATIVE_NE_PROMISE_HISTORY","INFORMATION_PACKET_REQUIRES_SOURCE_AND_PROVENANCE_EVIDENCE","NARRATIVE_PROMISE_REQUIRES_SOURCE_EVENT_EVIDENCE","HARD_CAUSAL_ANCHOR_MUST_REVALIDATE_CAUSES","SOFT_DRAMATIC_ATTRACTOR_DOES_NOT_DEFINE_FACTS","IMPORTANT_INFORMATION_CANNOT_BYPASS_PROPAGATION","BRANCH_QUALITY_CANNOT_JUSTIFY_RETCON_OR_RESURRECTION"],"open_decision_refs":["OD-GENRE-REGISTRY-001","OD-CLUE-QUALITY-001"]},
     "AF-G": {"name":"Opportunity / World Echo / PX","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["NarrativeOpportunityBroker","PlausibilityGate","EncounterCandidate","WorldEchoOpportunity","ResponseConcept","PlayerAutoExpressionPolicy","PXRankingReceipt"],"invariants":["NO_VALID_OPPORTUNITY_IS_VALID","PX_MAY_RANK_ONLY_LEGAL_CANDIDATES","PX_CANNOT_INVENT_FACTS_OR_INJECT_KNOWLEDGE","NARRATIVE_CANNOT_SECRETLY_LOWER_CAPABILITY_DIFFICULTY","COMMENTARY_REQUIRES_PROVENANCE_AND_ANTI_REPEAT_POLICY"],"open_decision_refs":["OD-PX-SCORING-001","OD-COMMENTARY-BUDGET-001","OD-ENCOUNTER-DENSITY-001"]},
     "AF-H": {"name":"AI Director / Renderer / Publication","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_WORLD_RENDER_PACKET_FOUNDATION","type_refs":["DIRECTOR-BEAT-PACKET","ActorPresentationRequirements","PublicationProjection"],"invariants":["AWRSE_OWNS_PACKET_FACTS_KNOWLEDGE_VISIBILITY_AND_PRESENTATION_CONSTRAINTS","AI_DIRECTOR_OWNS_ONLY_STAGING_INSIDE_VALID_ENVELOPE","AI_DIRECTOR_IS_DOWNSTREAM_READ_ONLY","RENDERER_CANNOT_RESOLVE_WORLD_OUTCOMES","PUBLICATION_KNOWLEDGE_DOES_NOT_FLOW_BACK_INTO_PLAYER_OR_NPC_KNOWLEDGE","MATERIAL_RENDER_CONTRADICTION_IS_FAILURE_NOT_WORLD_MUTATION"],"open_decision_refs":["OD-PUBLICATION-POLICY-001","OD-DIRECTOR-ADAPTER-001"]}
   },
