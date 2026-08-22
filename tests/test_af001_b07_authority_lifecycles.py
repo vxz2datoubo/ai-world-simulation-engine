@@ -57,16 +57,24 @@ def test_b07_narrative_promise_is_evidence_derived_not_authored_truth():
     assert "SOURCE_HISTORY" in profile["mutation_constraint"]
 
 
-def test_b07_authored_narrative_types_stay_noncanonical_but_evidence_types_do_not():
+def test_b07_authored_narrative_types_stay_noncanonical_but_derived_and_mixed_types_do_not():
     contract = load_contract()
     registry = contract["type_registry"]
 
-    authored = {
-        "StoryDNA", "StoryBible", "GenreEngine", "CharacterDramaticCore",
-        "HardCausalAnchor", "SoftDramaticAttractor", "Storylet", "EventDeckEntry",
+    purely_authored = {
+        "StoryDNA", "StoryBible", "GenreEngine", "Storylet", "EventDeckEntry",
     }
-    for type_name in authored:
+    for type_name in purely_authored:
         assert registry[type_name]["authority_profile_ref"] == "NARRATIVE_DESIGN_NON_CANONICAL"
+
+    mixed_lifecycle = {
+        "CharacterDramaticCore", "HardCausalAnchor", "SoftDramaticAttractor",
+    }
+    for type_name in mixed_lifecycle:
+        assert registry[type_name]["authority_profile_ref"] == "NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW"
+        field_profiles = registry[type_name]["field_authority_profiles"]
+        assert field_profiles["authored_definition"]["profile_ref"] == "NARRATIVE_DESIGN_NON_CANONICAL"
+        assert field_profiles["derived_lifecycle"]["profile_ref"] != "NARRATIVE_DESIGN_NON_CANONICAL"
 
     assert registry["InformationPacket"]["authority_profile_ref"] != "NARRATIVE_DESIGN_NON_CANONICAL"
     assert registry["NarrativePromise"]["authority_profile_ref"] != "NARRATIVE_DESIGN_NON_CANONICAL"
