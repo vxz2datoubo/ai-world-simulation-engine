@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 from dataclasses import fields
@@ -117,6 +118,122 @@ def _iter_type_refs(value):
             yield from _iter_type_refs(item)
 
 
+def _field_ref_resolves(contract, ref):
+    if "." not in ref:
+        return False
+    type_name, field_name = ref.split(".", 1)
+    type_spec = contract["type_registry"].get(type_name)
+    return bool(type_spec and field_name in type_spec["fields"])
+
+
+def _state_ownership_reference_errors(contract):
+    errors = []
+    external = set(contract["governed_reference_semantics"]["external_foundation_refs"])
+    ref_pattern = re.compile(r"([A-Z][A-Za-z0-9-]*\.[A-Za-z_][A-Za-z0-9_]*)")
+    governed_keys = {
+        "canonical_owner", "projection_or_index_copies", "projection_owner", "rebuild_direction"
+    }
+    for relation, spec in contract["state_ownership_registry"].items():
+        for key in governed_keys & set(spec):
+            value = spec[key]
+            values = value if isinstance(value, list) else [value]
+            for item in values:
+                if item.startswith("EXTERNAL_FOUNDATION:"):
+                    target = item.split(":", 1)[1]
+                    if target not in external:
+                        errors.append(f"{relation}.{key}: unknown external foundation {target}")
+                    continue
+                for ref in ref_pattern.findall(item):
+                    if not _field_ref_resolves(contract, ref):
+                        errors.append(f"{relation}.{key}: unresolved field ref {ref}")
+    return errors
+
+
+def _assertion_rule_errors(contract, suite, type_ref, rule_ref):
+    errors = []
+    registry = suite["machine_semantics"]["assertion_rule_registry"]
+    rule = registry.get(rule_ref)
+    if rule is None:
+        return [f"unknown assertion rule {rule_ref}"]
+    if type_ref not in rule["allowed_type_refs"]:
+        errors.append(f"assertion {rule_ref} disallows type {type_ref}")
+    for field_ref in rule.get("field_refs", []):
+        if not _field_ref_resolves(contract, field_ref):
+            errors.append(f"assertion {rule_ref} unresolved field operand {field_ref}")
+    return errors
+
+
+def _golden_semantic_errors(contract, suite):
+    errors = []
+    semantics = suite["machine_semantics"]
+    operators = semantics["operator_registry"]
+    kinds = semantics["predicate_kind_registry"]
+    symbols = semantics["ordering_symbol_registry"]
+    type_registry = contract["type_registry"]
+
+    for symbol_id, symbol in symbols.items():
+        type_ref = symbol.get("type_ref")
+        if type_ref is not None and type_ref not in type_registry:
+            errors.append(f"ordering symbol {symbol_id} unresolved type {type_ref}")
+
+    for scenario_id, scenario in suite["scenarios"].items():
+        machine = scenario["machine_spec"]
+        for section in ("initial_state_predicates", "expected_event_state_predicates", "forbidden_predicates"):
+            for predicate in machine[section]:
+                kind = kinds.get(predicate["kind"])
+                if kind is None:
+                    errors.append(f"{scenario_id}:{predicate['predicate_id']} unknown kind {predicate['kind']}")
+                    continue
+                operator = predicate.get("operator_ref")
+                if operator not in operators:
+                    errors.append(f"{scenario_id}:{predicate['predicate_id']} unknown operator {operator}")
+                    continue
+                if operator not in kind["allowed_operator_refs"]:
+                    errors.append(f"{scenario_id}:{predicate['predicate_id']} operator {operator} invalid for {predicate['kind']}")
+                if predicate["type_ref"] not in type_registry:
+                    errors.append(f"{scenario_id}:{predicate['predicate_id']} unresolved type {predicate['type_ref']}")
+                errors.extend(
+                    f"{scenario_id}:{predicate['predicate_id']} {error}"
+                    for error in _assertion_rule_errors(contract, suite, predicate["type_ref"], predicate["assertion"])
+                )
+
+        for assertion in machine["provenance_authority_assertions"]:
+            operator = assertion.get("operator_ref")
+            if operator not in {"MUST_HOLD", "MUST_NOT_HOLD"} or operator not in operators:
+                errors.append(f"{scenario_id}:{assertion['assertion_id']} invalid authority operator {operator}")
+            rule_ref = assertion.get("must") or assertion.get("must_not")
+            errors.extend(
+                f"{scenario_id}:{assertion['assertion_id']} {error}"
+                for error in _assertion_rule_errors(
+                    contract, suite, assertion["subject_type_ref"], rule_ref
+                )
+            )
+
+        for ordering in machine["ordering_assertions"]:
+            if ordering.get("operator_ref") != "MUST_PRECEDE":
+                errors.append(f"{scenario_id}:{ordering['assertion_id']} invalid ordering operator")
+            if ordering.get("operator_ref") not in operators:
+                errors.append(f"{scenario_id}:{ordering['assertion_id']} unknown ordering operator")
+            for endpoint in ("before", "after"):
+                if ordering[endpoint] not in symbols:
+                    errors.append(
+                        f"{scenario_id}:{ordering['assertion_id']} unknown ordering endpoint {ordering[endpoint]}"
+                    )
+            if ordering["before"] == ordering["after"]:
+                errors.append(f"{scenario_id}:{ordering['assertion_id']} self ordering")
+
+        for assertion in machine["replay_restart_assertions"]:
+            if assertion.get("operator_ref") != "ASSERT_REPLAY_INVARIANT":
+                errors.append(f"{scenario_id}:{assertion['assertion_id']} invalid replay operator")
+            errors.extend(
+                f"{scenario_id}:{assertion['assertion_id']} {error}"
+                for error in _assertion_rule_errors(
+                    contract, suite, assertion["type_ref"], assertion["assertion"]
+                )
+            )
+    return errors
+
+
 def test_af001_artifact_authority_roles_are_structured_and_unique():
     contract = load_json(CONTRACT_PATH)
     roles = contract["artifact_roles"]
@@ -212,7 +329,7 @@ def test_b02_state_ownership_registry_has_single_truth_and_rebuild_direction():
     assert possession["canonical_owner"] == "ObjectAggregate.possessor_ref"
     assert possession["projection_or_index_copies"] == ["ActorAggregate.inventory_refs"]
     assert "owner_actor_id_MAPS_TO_ObjectAggregate.possessor_ref" in possession["legacy_r002_mapping"]
-    assert inventory["canonical_owner"] == "DERIVED_INDEX_FROM_ObjectAggregate.possessor_ref"
+    assert "ObjectAggregate.possessor_ref" in inventory["canonical_owner"]
     assert "NO_LOSSLESS_MAPPING" in ownership["legacy_r002_mapping"]
 
 
@@ -234,15 +351,16 @@ def test_b02_epistemic_projections_cannot_create_knowledge_evidence():
     contract = load_json(CONTRACT_PATH)
     knowledge = contract["state_ownership_registry"]["knowledge_acquisition_evidence"]
     assert knowledge["canonical_owner"] == "PROVENANCE_BEARING_ACQUISITION_OR_PERCEPTION_EVENT_PATH"
-    assert "PlayerChronicle" in knowledge["projection_or_index_copies"]
-    assert "NPCEpisodicMemory" in knowledge["projection_or_index_copies"]
+    assert "PlayerChronicle.source_acquisition_refs" in knowledge["projection_or_index_copies"]
+    assert "NPCEpisodicMemory.source_perception_refs" in knowledge["projection_or_index_copies"]
     assert "MAY_NOT_CREATE_NEW_KNOWLEDGE_EVIDENCE" in knowledge["consistency_invariant"]
     assert knowledge["rebuild_direction"] == "ACQUISITION_EVIDENCE_TO_RECIPIENT_LOCAL_PROJECTIONS"
 
 
-def test_b03_required_freeze_surface_types_resolve_with_owner_version_and_state():
+def test_b03_required_freeze_surface_types_resolve_with_profile_version_and_state():
     contract = load_json(CONTRACT_PATH)
     registry = contract["type_registry"]
+    profiles = contract["authority_semantics"]["profiles"]
     missing = REQUIRED_FREEZE_TYPES - set(registry)
     assert not missing, f"missing freeze types: {sorted(missing)}"
     for name in REQUIRED_FREEZE_TYPES:
@@ -250,7 +368,8 @@ def test_b03_required_freeze_surface_types_resolve_with_owner_version_and_state(
         assert spec["type_id"]
         assert spec["version"]
         assert spec["domain"] in EXPECTED_DOMAINS
-        assert spec["authority_owner"]
+        assert spec["authority_profile_ref"] in profiles
+        assert "authority_owner" not in spec, f"ambiguous authority_owner survived on {name}"
         assert spec["implementation_state"]
         assert spec["fields"], name
     for domain in contract["freeze_domains"].values():
@@ -331,23 +450,136 @@ def test_b04_scenario_open_decision_dependencies_are_explicit_and_resolve():
         assert actual <= available
 
 
-def test_b04_authority_and_ordering_assertions_are_not_empty_placeholders():
+def test_b05_authority_profiles_are_structured_and_actor_refs_resolve():
+    contract = load_json(CONTRACT_PATH)
+    semantics = contract["authority_semantics"]
+    required = set(semantics["required_profile_fields"])
+    actor_registry = set(semantics["authority_actor_registry"])
+    for profile_id, profile in semantics["profiles"].items():
+        assert required == set(profile), profile_id
+        for field in required - {"mutation_constraint"}:
+            value = profile[field]
+            values = value if isinstance(value, list) else [value]
+            assert values, f"{profile_id}.{field} empty"
+            assert set(values) <= actor_registry, f"{profile_id}.{field} unknown actor refs {set(values) - actor_registry}"
+        assert profile["mutation_constraint"], profile_id
+
+
+def test_b05_high_risk_authority_mappings_preserve_frozen_boundaries():
+    contract = load_json(CONTRACT_PATH)
+    registry = contract["type_registry"]
+    profiles = contract["authority_semantics"]["profiles"]
+
+    expected_profile = {
+        "CharacterCore": "PLAYER_EXPLICIT_CHARACTER_CORE",
+        "EnactedPersonaHypothesis": "EVIDENCE_DERIVED_PERSONA_HYPOTHESIS",
+        "PlayerAutoExpressionPolicy": "PLAYER_EXPLICIT_AUTO_EXPRESSION_POLICY",
+        "DIRECTOR-BEAT-PACKET": "AWRSE_DIRECTOR_HANDOFF",
+        "ActorPresentationRequirements": "AWRSE_PRESENTATION_REQUIREMENTS",
+        "PublicationProjection": "PUBLICATION_DERIVED_PROJECTION",
+        "NarrativeOpportunityBroker": "NARRATIVE_OPPORTUNITY_NON_CANONICAL",
+        "PXRankingReceipt": "PX_RANKING_NON_CANONICAL",
+    }
+    for type_name, profile_id in expected_profile.items():
+        assert registry[type_name]["authority_profile_ref"] == profile_id
+
+    character = profiles["PLAYER_EXPLICIT_CHARACTER_CORE"]
+    persona = profiles["EVIDENCE_DERIVED_PERSONA_HYPOTHESIS"]
+    policy = profiles["PLAYER_EXPLICIT_AUTO_EXPRESSION_POLICY"]
+    packet = profiles["AWRSE_DIRECTOR_HANDOFF"]
+    requirements = profiles["AWRSE_PRESENTATION_REQUIREMENTS"]
+    publication = profiles["PUBLICATION_DERIVED_PROJECTION"]
+    broker = profiles["NARRATIVE_OPPORTUNITY_NON_CANONICAL"]
+    px = profiles["PX_RANKING_NON_CANONICAL"]
+
+    assert character["canonical_data_authority"] == ["PLAYER_EXPLICIT_AUTHORITY"]
+    assert persona["canonical_data_authority"] == ["PROVENANCE_BEARING_SOURCE_EVIDENCE"]
+    assert "KNOWLEDGE_MEMORY" in persona["producer_or_assembler"]
+    assert policy["canonical_data_authority"] == ["PLAYER_EXPLICIT_AUTHORITY"]
+
+    assert "AI_DIRECTOR" not in packet["canonical_data_authority"]
+    assert packet["producer_or_assembler"] == ["AWRSE_DIRECTOR_PACKET_ASSEMBLER"]
+    assert packet["staging_authority"] == ["AI_DIRECTOR"]
+    assert "MAY_NOT_REWRITE_PACKET_FACTS_KNOWLEDGE_VISIBILITY" in packet["mutation_constraint"]
+
+    assert "AI_DIRECTOR" not in requirements["canonical_data_authority"]
+    assert requirements["producer_or_assembler"] == ["AWRSE_PRESENTATION_REQUIREMENTS_ASSEMBLER"]
+    assert requirements["staging_authority"] == ["NONE"]
+    assert "CANNOT_AUTHOR_OR_REWRITE_IDENTITY_OUTFIT_DRESSING" in requirements["mutation_constraint"]
+
+    assert "RENDERER_PUBLICATION" not in publication["canonical_data_authority"]
+    assert publication["producer_or_assembler"] == ["RENDERER_PUBLICATION"]
+    assert publication["staging_authority"] == ["RENDERER_PUBLICATION"]
+
+    assert broker["canonical_data_authority"] == ["NONE"]
+    assert px["canonical_data_authority"] == ["NONE"]
+
+
+def test_b05_cross_order_material_interfaces_use_semantic_profiles_not_owner_labels():
+    contract = load_json(CONTRACT_PATH)
+    high_risk = {
+        "CharacterCore", "EnactedPersonaHypothesis", "PlayerAutoExpressionPolicy",
+        "DIRECTOR-BEAT-PACKET", "ActorPresentationRequirements", "PublicationProjection",
+        "NarrativeOpportunityBroker", "PXRankingReceipt",
+    }
+    for type_name in high_risk:
+        spec = contract["type_registry"][type_name]
+        assert "authority_owner" not in spec
+        assert spec["authority_profile_ref"] in contract["authority_semantics"]["profiles"]
+
+
+def test_b06_governed_contract_internal_field_references_all_resolve():
+    contract = load_json(CONTRACT_PATH)
+    assert _state_ownership_reference_errors(contract) == []
+    assert "SceneAggregate" not in json.dumps(contract["state_ownership_registry"])
+    assert _field_ref_resolves(contract, "Scene.occupancy_index_refs")
+    assert contract["state_ownership_registry"]["location"]["projection_owner"] == "Scene.occupancy_index_refs"
+
+
+def test_b06_governed_reference_validator_rejects_unknown_internal_ref():
+    contract = load_json(CONTRACT_PATH)
+    mutated = copy.deepcopy(contract)
+    mutated["state_ownership_registry"]["location"]["projection_or_index_copies"][0] = "SceneAggregate.occupancy_indexes"
+    errors = _state_ownership_reference_errors(mutated)
+    assert any("SceneAggregate.occupancy_indexes" in error for error in errors)
+
+
+def test_b06_machine_predicate_assertion_operator_and_ordering_semantics_all_resolve():
+    contract = load_json(CONTRACT_PATH)
     suite = load_json(GOLDEN_PATH)
-    for scenario_id, scenario in suite["scenarios"].items():
-        machine = scenario["machine_spec"]
-        for assertion in machine["provenance_authority_assertions"]:
-            assert assertion.get("assertion_id")
-            assert assertion.get("subject_type_ref")
-            assert assertion.get("must") or assertion.get("must_not")
-        for assertion in machine["ordering_assertions"]:
-            assert assertion.get("assertion_id")
-            assert assertion.get("before")
-            assert assertion.get("after")
-            assert assertion["before"] != assertion["after"], scenario_id
-        for assertion in machine["replay_restart_assertions"]:
-            assert assertion.get("assertion_id")
-            assert assertion.get("type_ref")
-            assert assertion.get("assertion")
+    assert _golden_semantic_errors(contract, suite) == []
+
+
+def test_b06_machine_semantic_validator_rejects_typos_and_unknown_ordering_endpoint():
+    contract = load_json(CONTRACT_PATH)
+    suite = load_json(GOLDEN_PATH)
+
+    bad_kind = copy.deepcopy(suite)
+    bad_kind["scenarios"]["WILDERNESS_NEWS_TRAP"]["machine_spec"]["initial_state_predicates"][0]["kind"] = "KNOWLEDGE_ABSENT_WITHOUT_ACQUISITON"
+    assert any("unknown kind" in error for error in _golden_semantic_errors(contract, bad_kind))
+
+    bad_assertion = copy.deepcopy(suite)
+    bad_assertion["scenarios"]["FIGHTER_VS_SCHOLAR"]["machine_spec"]["forbidden_predicates"][0]["assertion"] = "hard_prerequisite_failure_precedes_probabilty"
+    assert any("unknown assertion rule" in error for error in _golden_semantic_errors(contract, bad_assertion))
+
+    bad_order = copy.deepcopy(suite)
+    bad_order["scenarios"]["MULTIPLAYER_DIFFERENT_KNOWLEDGE"]["machine_spec"]["ordering_assertions"][0]["after"] = "SHARED_OBJECT_PROJETION"
+    assert any("unknown ordering endpoint" in error for error in _golden_semantic_errors(contract, bad_order))
+
+    bad_operator = copy.deepcopy(suite)
+    bad_operator["scenarios"]["PERSONA_SPEECH_BOUNDARY"]["machine_spec"]["forbidden_predicates"][0]["operator_ref"] = "ALLOW_IF_CONVENIENT"
+    assert any("unknown operator" in error for error in _golden_semantic_errors(contract, bad_operator))
+
+
+def test_b06_assertion_registry_field_operands_resolve_to_contract_fields():
+    contract = load_json(CONTRACT_PATH)
+    suite = load_json(GOLDEN_PATH)
+    for rule_id, rule in suite["machine_semantics"]["assertion_rule_registry"].items():
+        assert rule["allowed_type_refs"], rule_id
+        for type_ref in rule["allowed_type_refs"]:
+            assert type_ref in contract["type_registry"], f"{rule_id} unresolved allowed type {type_ref}"
+        for field_ref in rule.get("field_refs", []):
+            assert _field_ref_resolves(contract, field_ref), f"{rule_id} unresolved field {field_ref}"
 
 
 def test_af001_traceability_covers_design_inputs_governance_and_single_registries():
