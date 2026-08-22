@@ -2,102 +2,136 @@
 
 Status: `ARCHITECTURE_FREEZE_CANDIDATE / SINGLE_TRACEABILITY_ENTRYPOINT`
 
-This is the single AF-001 traceability/dependency/open-decision registry. It does not compete with `ARCHITECTURE.md`, which remains the canonical architecture master. Machine-readable interface contracts are in `contracts/AF001-LIVING-STORY-CONTRACTS.json`; Golden Scenario executable specifications are in `evals/AF001-GOLDEN-SCENARIOS.json`.
+This is the single AF-001 traceability/dependency/open-decision registry. It does not compete with `ARCHITECTURE.md`, which is the canonical architecture master. Machine contracts live in `contracts/AF001-LIVING-STORY-CONTRACTS.json`; Golden executable specifications live in `evals/AF001-GOLDEN-SCENARIOS.json`.
 
 ## 1. Fresh source baseline
 
-AF-001 branch base:
+AF-001 base: `ebd2ca2bad948b737f967ae09c000643ec2f9929`.
 
-`ebd2ca2bad948b737f967ae09c000643ec2f9929`
+That `main` is the Control Tower merge of accepted R002 PR #4. AF-001 preserves R001/R002 and does not reopen their runtime semantics.
 
-That canonical `main` is the Control Tower merge of accepted R002 PR #4. AF-001 does not reopen R001/R002 semantics except to preserve them as mandatory foundations.
+## 2. Structured artifact authority roles
 
-## 2. Authority matrix
+The machine contract is authoritative for this registry and must contain exactly this role allocation:
 
-| Plane / artifact | May create canonical world truth? | May mutate upstream truth? | May create recipient knowledge? | May choose presentation? | Notes |
-|---|---:|---:|---:|---:|---|
-| Player input | No | No | No | Intent only | Untrusted free text; controls only authorized attempted actions |
-| World/rules/affordance authority | Yes, through authorized resolution/event path | N/A | No direct epistemic injection | No | Owns legality/world transition boundaries |
-| Capability/state resolution | Yes, only through authorized resolution receipts/events | No | No | No | Interface frozen; runtime not implemented by AF-001 |
-| Canonical event store | System of record | No rewrite-in-place | Evidence source only | No | Append-preserved causal evidence |
-| Materialized world state | Projection only | No | No | No | Rebuildable from source evidence/rules |
-| Player knowledge/chronicle | Player-local projection | No | Yes, only through valid paths | May constrain player-facing presentation | Never duplicates shared physical truth |
-| NPC memory/belief/relationship | NPC-local projections | No | Yes, only from valid perception/information | May constrain NPC behavior/presentation later | Summary/reflection is derived cache |
-| Story/Narrative design | No | No | No | Proposes dramatic structures | Hard anchors must revalidate real causes |
-| Narrative Opportunity / World Echo | No | No | No direct injection | Proposes/ranks legal candidates | `NO_VALID_OPPORTUNITY` is valid |
-| PX | No | No | No | Ranks/surfaces legal candidates | Cannot lower difficulty, invent facts or force action |
-| AI Director | No | No | No | Yes, within packet | Downstream read-only staging/performance/editorial authority |
-| Renderer | No | No | No | Generates pixels/audio | Contradiction => render failure |
-| Publication/spectator projection | No | No | No flow-back | Yes, audience-specific | May expose only policy-authorized information |
+```json
+{
+  "ARCHITECTURE.md": "CANONICAL_ARCHITECTURE_MASTER",
+  "contracts/AF001-LIVING-STORY-CONTRACTS.json": "MACHINE_CONTRACT_REGISTRY",
+  "evals/AF001-GOLDEN-SCENARIOS.json": "GOLDEN_EXECUTABLE_SPEC_REGISTRY",
+  "docs/AF001-TRACEABILITY.md": "TRACEABILITY_OPEN_DECISION_REGISTRY"
+}
+```
+
+There must be exactly one `CANONICAL_ARCHITECTURE_MASTER` role. Textual claims do not establish authority by themselves.
+
+## 3. Authority matrix
+
+| Plane / artifact | May create canonical world truth? | May independently create knowledge evidence? | Projection role | Notes |
+|---|---:|---:|---|---|
+| Player input | No | No | intent/request only | raw text is untrusted |
+| World/rules/affordance authority | Yes through authorized transitions/events | No | canonical resolution | owns legality/world transition boundary |
+| Capability/state resolution | Yes through authorized receipts/events when implemented | No | current capability/state projections | AF-001 freezes interface only |
+| Canonical event store | system of record | evidence carrier | none | append-preserved; no rewrite-in-place |
+| Materialized world state | No independent truth | No | rebuildable current projection | derives from evidence/rules |
+| Provenance-bearing acquisition/perception path | No new physical truth | **Yes, as acquisition evidence only after a valid channel** | feeds recipient-local projections | SAW/HEARD/WAS_TOLD etc. require mode-specific semantics |
+| PlayerChronicle / PlayerSnapshot | No | **No** | recipient-local projection/cache | may materialize knowledge only from acquisition evidence |
+| NPCPerceptionStream | No | No independent creation | recipient-local ordered index | references provenance-bearing perception events |
+| NPCEpisodicMemory / BeliefState / relationship | No | **No** | recipient-local projections | cannot upgrade inference/summary into source evidence |
+| Story/Narrative design | No | No | authored constraints/opportunities | not world truth |
+| Narrative Opportunity / World Echo | No | No | proposes legal candidates | `NO_VALID_OPPORTUNITY` is valid |
+| PX | No | No | ranks/surfaces legal candidates | cannot invent facts/knowledge/success |
+| AI Director | No | No | staging/presentation | downstream read-only |
+| Renderer | No | No | pixels/audio | contradiction is render failure |
+| Publication/spectator | No | No | audience projection | no flow-back into player/NPC knowledge |
 
 Frozen order:
 
 `WORLD/RULES > CAPABILITY/STATE > KNOWLEDGE/MEMORY > NARRATIVE OPPORTUNITY > PX > AI DIRECTOR > RENDERER/PUBLICATION`
 
-## 3. Dependency graph
+## 4. State ownership matrix
+
+| Material fact | Canonical owner | Projection/index copy | Authorized mutation source | Rebuild direction / invariant |
+|---|---|---|---|---|
+| legal/social ownership | `ObjectAggregate.owner_ref` | social/UI views | future ownership-transfer event | ownership events -> `owner_ref`; never infer from possession |
+| physical possession | `ObjectAggregate.possessor_ref` | `ActorAggregate.inventory_refs` | PICK/DROP/THROW or other authorized possession transition | object possession -> actor inventory; exactly one possessor |
+| inventory | derived from possession truth | `ActorAggregate.inventory_refs` | no independent mutation | scan `possessor_ref`; inventory is not second truth |
+| worn state | `OutfitState.slot_bindings` | presentation snapshot | wear/unwear/outfit event | possession does not imply worn |
+| equipped state | `EquipmentLoadout.equipped_object_refs` | capability/presentation views | equip/unequip event | inventory does not imply equipped |
+| actor/object location | each aggregate `scene_id/zone_id` | scene/query/render indexes | movement/transfer event | carried object location agrees with possessor |
+| knowledge acquisition evidence | provenance-bearing acquisition/perception event path | PlayerChronicle/NPC memory/belief/relationship | valid mode-specific acquisition | evidence -> recipient-local projection, never reverse |
+
+### R002 legacy possession compatibility
+
+Accepted runtime uses `ObjectState.owner_actor_id` as the current physical holder/inventory actor. Therefore:
+
+`ObjectState.owner_actor_id -> ObjectAggregate.possessor_ref`
+
+It does **not** map to `ObjectAggregate.owner_ref`. R002 has no lossless legal/social ownership field, so legacy legal ownership is `UNKNOWN / NOT_MODELED` absent separate evidence. `ActorState.inventory_refs` is the accepted validated index side and rebuilds from physical possession truth in the AF-B model.
+
+## 5. Event compatibility profile
+
+Accepted source event profile:
+
+`LEGACY_R001_R002_EVENT_PROFILE = {event_id, event_type, actor_id, scene_id, baseline_version, payload, caused_by_action_id}`
+
+Future profile:
+
+`AF001_VNEXT_EVENT_ENVELOPE = {event_id, event_type, schema_version, ruleset_version, world_id, authority_scope_ref, ordering_or_version_cursor, payload, ...optional compatibility fields}`
+
+Only evidence-backed mappings are legal. `baseline_version` remains legacy baseline provenance and is not schema/ruleset provenance. Missing vNext fields remain `UNKNOWN/NOT_APPLICABLE` unless authentic external replay context proves them. Existing source events are never rewritten. Legacy history remains replayable under its accepted profile. vNext becomes mandatory only for new events after a later bounded runtime migration task + independent review + Control Tower release.
+
+## 6. Cross-module type-reference inventory
+
+The unified contract registry resolves the current Freeze surface. At minimum the following must exist with version, domain, authority owner and implementation state:
+
+- AF-B: `WorldInstance`, `WorldFrame`, `Scene`, `Zone`, `Portal`, `ActorAggregate`, `ObjectAggregate`, `PlayerIdentity`.
+- AF-C: `ActorBaseProfile`, `SkillLedger`, `DerivedCapability`, `ActionDemandProfile`, `ActionResolutionReceipt`, `InjuryState`, `EquipmentLoadout`.
+- AF-D: `ActorPresentationState`, `OutfitState`, `DressingState`, `ActorAppearanceSnapshot`, `View`, `MediaAsset`, `MediaVersion`.
+- AF-E: `PlayerChronicle`, `PlayerSnapshot`, `IntentBelief`, `CharacterCore`, `EnactedPersonaHypothesis`, `NPCPerceptionEvent`, `NPCPerceptionStream`, `NPCEpisodicMemory`, `BeliefState`, `NPCPlayerRelationshipState`.
+- AF-F: `StoryDNA`, `StoryBible`, `HardCausalAnchor`, `SoftDramaticAttractor`, `Storylet`, `EventDeckEntry`, `InformationPacket`, `NarrativePromise`.
+- AF-G: `NarrativeOpportunityBroker`, `EncounterCandidate`, `WorldEchoOpportunity`, `ResponseConcept`, `PlayerAutoExpressionPolicy`.
+- AF-H: `DIRECTOR-BEAT-PACKET`, `PublicationProjection`.
+
+`EventDeckEntry` is explicitly an alias/wrapper of `Storylet` plus deck-selection metadata. It is not an independent world-truth type.
+
+## 7. Dependency graph
 
 ```text
 R001/R002 accepted foundations
-  |
-  +--> AF-A Identity/Event/Authority
-        |
-        +--> AF-B Actor/Object/Spatial
-        |      |
-        |      +--> AF-C Capability/Injury
-        |      +--> AF-D Appearance/Asset
-        |
-        +--> AF-E Perception/Memory/Knowledge/Relationship
-        |
-        +--> AF-F Story/Information
-               |
-               +--> AF-G Opportunity/World Echo/PX
-                       |
-                       +--> AF-H AI Director/Renderer/Publication
-
-Cross-links:
-AF-B -> AF-D (spatial/view/asset binding)
-AF-C -> AF-D (functional injury vs visible treatment)
-AF-E -> AF-F (information becomes recipient knowledge only through provenance)
-AF-E -> AF-G (echo/response attribution and player speech boundary)
-AF-F -> AF-G (story goals become legal opportunity candidates)
-AF-D + AF-E + AF-G -> AF-H (presentation and knowledge-safe director packet)
+  -> AF-A Identity/Event/Authority
+      -> AF-B Actor/Object/Spatial
+          -> AF-C Capability/Injury
+          -> AF-D Appearance/Asset
+      -> AF-E Perception/Memory/Knowledge/Relationship
+      -> AF-F Story/Information
+          -> AF-G Opportunity/World Echo/PX
+              -> AF-H AI Director/Renderer/Publication
 ```
 
-No post-freeze runtime task may depend on an unresolved lower-layer `OPEN_DECISION` unless the task explicitly excludes that mechanism.
+Cross-links: AF-B->AF-D, AF-C->AF-D, AF-E->AF-F, AF-E->AF-G, AF-F->AF-G, AF-D+AF-E+AF-G->AF-H.
 
-## 4. Design-source traceability
+No post-freeze runtime task may silently depend on an unresolved lower-layer `OPEN_DECISION`.
 
-| Source | Design role | AF destinations | Golden Scenario coverage | Freeze disposition |
-|---|---|---|---|---|
-| Issue #5 `PX-DESIGN-001` | consolidated product/authority/PX/world-topology candidate master | AF-A, AF-B, AF-G, AF-H | all, especially multiplayer/plot-breaking | consolidated; no direct implementation authority |
-| Issue #6 `ASSET-DESIGN-001` | asset identity, spatial graph, camera/view/media separation | AF-B, AF-D, AF-H | `ASSET_APPEARANCE_REVISIT`, `BROKEN_DOOR_WORLD_ECHO` | interfaces frozen; storage/tool adapters not selected |
-| Issue #7 `REACT-DESIGN-001` | World Echo, attribution, response concepts, player-expression risk | AF-E, AF-G, AF-H | `BROKEN_DOOR_WORLD_ECHO`, `PERSONA_SPEECH_BOUNDARY` | interfaces frozen; runtime/scoring not implemented |
-| Issue #8 `NARRATIVE-DESIGN-001` | choice memory, persona hypothesis, promises, storylets | AF-E, AF-F, AF-G | `PROMISE_RETURN_CALLBACK`, `PERSONA_SPEECH_BOUNDARY`, `HOSTILE_PLAYER_BREAKS_PLOT` | authority/evidence boundaries frozen; model/scoring details open |
-| Issue #9 `MEMORY-DESIGN-001` | NPC episodic memory, beliefs, relationships, rehydration | AF-E | `BROKEN_DOOR_WORLD_ECHO`, `PROMISE_RETURN_CALLBACK`, `MULTIPLAYER_DIFFERENT_KNOWLEDGE` | data ownership/provenance frozen; backend/decay math open |
-| Issue #10 `GOV-DESIGN-001` | landing register / freeze governance | all | all | AF-001 becomes current freeze artifact set; no runtime release |
-| Issue #11 `STORY-DESIGN-001` | StoryDNA, genre engines, narrative gravity, branch quality | AF-F, AF-G | `HOSTILE_PLAYER_BREAKS_PLOT`, `WILDERNESS_NEWS_TRAP` | narrative authority boundaries frozen; registry/scoring details open |
-| Issue #12 `CAPABILITY-DESIGN-001` | attributes/skills/injury/action resolution | AF-C, AF-D | `FIGHTER_VS_SCHOLAR`, `WILDERNESS_NEWS_TRAP` | interfaces/order/provenance frozen; math/attributes open |
-| Issue #13 `ENCOUNTER-STATE-DESIGN-001` | opportunity broker, information propagation, persistent actor presentation | AF-C, AF-D, AF-F, AF-G, AF-H | `WILDERNESS_NEWS_TRAP`, `ASSET_APPEARANCE_REVISIT` | candidate lifecycles/authority frozen; density/scoring open |
-| Issue #14 `INTEGRATION-DESIGN-001` | integrated state planes / cross-module composition / Golden Scenarios | AF-A through AF-H | all eight | consolidated into canonical master + machine contracts |
-| Issue #15 `AF-001` | active architecture-freeze authorization | AF-A through AF-H | all eight | current authorized task; architecture only |
+## 8. Design-source traceability
 
-## 5. Candidate-skill landing coverage
+| Source | AF destinations | Freeze disposition |
+|---|---|---|
+| Issue #5 `PX-DESIGN-001` | AF-A/B/G/H | consolidated, no implementation authority |
+| Issue #6 `ASSET-DESIGN-001` | AF-B/D/H | interfaces frozen |
+| Issue #7 `REACT-DESIGN-001` | AF-E/G/H | interfaces frozen, runtime not implemented |
+| Issue #8 `NARRATIVE-DESIGN-001` | AF-E/F/G | player continuity/persona/storylet boundaries frozen |
+| Issue #9 `MEMORY-DESIGN-001` | AF-E | evidence/projection boundary frozen; backend/math open |
+| Issue #10 `GOV-DESIGN-001` | all | governance/landing authority |
+| Issue #11 `STORY-DESIGN-001` | AF-F/G | narrative authority boundary frozen |
+| Issue #12 `CAPABILITY-DESIGN-001` | AF-C/D | interface/order/provenance frozen; math open |
+| Issue #13 `ENCOUNTER-STATE-DESIGN-001` | AF-C/D/F/G/H | opportunity/presentation interfaces frozen |
+| Issue #14 `INTEGRATION-DESIGN-001` | AF-A..H | integrated into single master/registry |
+| Issue #15 `AF-001` | AF-A..H | current authorized architecture-only task |
 
-Issue #10 tracks candidate skill ranges. AF-001 does **not** promote them to formal skills. It freezes the interfaces/evals they must later satisfy.
+Candidate skills S13-S61 remain `CANDIDATE / NOT_PROMOTED`.
 
-| Candidate skill range | Design family | AF contract coverage | Promotion state |
-|---|---|---|---|
-| S13-S34 | player continuity / PX / world topology / concurrency / publication / director federation | AF-A, AF-B, AF-G, AF-H | `CANDIDATE / NOT_PROMOTED` |
-| S35-S40 | story asset / spatial graph / view / media / continuity | AF-B, AF-D, AF-H | `CANDIDATE / NOT_PROMOTED` |
-| S41-S46 | World Echo / attribution / response concept / player auto-expression | AF-E, AF-G, AF-H | `CANDIDATE / NOT_PROMOTED` |
-| S47-S54 | choice memory / character arc / persona / storylets / branch guard | AF-E, AF-F, AF-G | `CANDIDATE / NOT_PROMOTED` |
-| S55-S61 | NPC memory / belief / relationship / retrieval / integrity | AF-E | `CANDIDATE / NOT_PROMOTED` |
-
-Required future chain remains:
-
-`CONTRACT_FROZEN -> EVALS_DEFINED -> BOUNDED_TASK_RELEASED -> IMPLEMENTED -> INDEPENDENT_REVIEW -> MERGED -> RUNTIME_VALIDATED -> REAL_WORLD_VALIDATED(if applicable) -> FORMAL_SKILL_PROMOTED`.
-
-## 6. Golden Scenario coverage matrix
+## 9. Golden Scenario coverage matrix
 
 | Scenario | A | B | C | D | E | F | G | H |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -110,157 +144,118 @@ Required future chain remains:
 | `HOSTILE_PLAYER_BREAKS_PLOT` | ✓ | ✓ |  |  | ✓ | ✓ | ✓ | ✓ |
 | `MULTIPLAYER_DIFFERENT_KNOWLEDGE` | ✓ | ✓ |  |  | ✓ | ✓ | ✓ | ✓ |
 
-All AF domains are covered by at least one scenario; high-risk authority/knowledge planes are covered by multiple adversarial scenarios.
+Human-readable scenario prose remains in the eval registry. Each scenario also has a machine `machine_spec` whose type refs and OPEN_DECISION dependencies must resolve.
 
-## 7. Migration/versioning obligations
+## 10. Migration/versioning obligations
 
-Frozen obligations:
+Breaking authority/identity/event/ownership/provenance changes require explicit migration spec, replay/rebuild impact analysis, affected Golden updates and fresh independent review. Source events never change in place. Snapshots/caches may be rebuilt from exact source cursor/version.
 
-1. Every AF contract carries an explicit version.
-2. Changes to authority order, identity semantics, canonical event meaning, canonical ownership, required provenance or fail-closed boundaries are breaking.
-3. Breaking changes require:
-   - explicit migration specification;
-   - replay/rebuild impact analysis;
-   - updated affected Golden Scenarios;
-   - fresh independent review.
-4. Snapshots/caches carry source cursor + schema/ruleset version and may be invalidated/rebuilt.
-5. Source events are never edited merely to migrate a projection.
-6. Model/provider upgrades create new derived output versions and cannot silently rewrite history.
+## 11. Historical R001/R002 non-regression map
 
-## 8. Historical R001/R002 non-regression map
+- R001 authority: raw user text untrusted; player cannot control target internal state/world rules.
+- R001 event sourcing: append-preserved evidence and replay for implemented domains.
+- R001 live-state seal remains fail-closed.
+- R001 renderer remains projection-only.
+- R002 spatial zone/scene/adjacency/reachability integrity remains fail-closed.
+- R002 possession graph remains bidirectionally consistent.
+- R002 SAW/HEARD/WAS_TOLD provenance remains mode-specific; unsupported modes fail closed.
+- R002 render projection remains contradiction-checked.
 
-AF-001 must preserve these accepted foundation invariants:
+## 12. OPEN_DECISION registry
 
-| Foundation | Required preservation |
-|---|---|
-| R001 authority | raw user text untrusted; player cannot control target internal state/world rules |
-| R001 event sourcing | canonical events append-preserved; current state is projection; replay remains authoritative for implemented domains |
-| R001 live-state seal | public direct live mutation/deletion remains rejected |
-| R001 renderer | render mismatch cannot mutate world truth |
-| R002 spatial | zone/scene binding, adjacency, reachability and malformed spatial graphs fail closed |
-| R002 possession | owner/inventory graph integrity, possession transitions and held-object movement stay consistent |
-| R002 perception | SAW/HEARD/WAS_TOLD mode-specific provenance; unsupported modes fail closed until implemented |
-| R002 render projection | persistent object state fields remain contradiction-checked |
-
-Existing foundation contract/schema/eval files are referenced, not shadow-copied into AF-001.
-
-## 9. OPEN_DECISION registry
+Each section below is independently bounded. Validator must inspect only the text between one `### OD-...` heading and the next `### OD-...` or next level-2 heading.
 
 ### OD-CONCURRENCY-001 — canonical concurrency/arbitration algorithm
-- **Competing options:** per-aggregate single-writer optimistic versioning; deterministic tick resolver; ordered DecisionWindow scheduler; hybrid by WorldScope.
-- **Evidence:** Issue #5 requires deterministic ordering/conflict handling but current R001/R002 does not exercise multiplayer concurrency load.
-- **Dependency:** future PARTY/PUBLIC shared-object conflicts and interruptible activities.
-- **Risk:** freezing the wrong scheduler may bake platform latency assumptions into world semantics or permit nondeterministic replay.
-- **Required experiment/research:** workload model + two-player same-object conflict Golden extension + replay determinism benchmark across asynchronous/live inputs.
+- **Competing options:** per-aggregate optimistic versioning; deterministic tick resolver; ordered DecisionWindow scheduler; hybrid by WorldScope.
+- **Evidence:** current contracts require deterministic ordering but R001/R002 do not exercise multiplayer conflict load.
+- **Dependency:** shared-object conflicts and interruptible activities.
+- **Risk:** wrong scheduler can bake latency assumptions into semantics or break replay determinism.
+- **Required experiment/research:** two-player same-object conflict corpus plus deterministic replay benchmark.
 
 ### OD-CAPABILITY-ATTR-001 — final core attribute vector
-- **Competing options:** small mundane core from Issue #12; richer genre-neutral vector; minimal action-demand-only primitives.
-- **Evidence:** Issue #12 proposes candidate attributes but explicitly says exact list requires eval.
-- **Dependency:** ActionDemandProfile authoring, progression and genre extension packs.
-- **Risk:** over-broad vector becomes arbitrary stat soup; under-broad vector pushes hidden judgment back into LLM prompts.
-- **Required experiment/research:** task corpus across physical/technical/social actions; ablation for predictive/useful distinction; designer usability review.
+- **Competing options:** small mundane core; richer genre-neutral vector; action-demand-only primitives.
+- **Evidence:** Issue #12 proposes candidates but does not validate a final list.
+- **Dependency:** ActionDemandProfile, progression and genre extensions.
+- **Risk:** stat soup or hidden LLM judgment.
+- **Required experiment/research:** cross-domain task corpus, ablation and designer usability study.
 
 ### OD-CAPABILITY-MATH-001 — modifier stacking and stochastic curve
-- **Competing options:** additive-then-multiplicative stack; tagged priority stack; bounded rules per demand profile; deterministic margin-only resolution for some classes.
-- **Evidence:** Issue #12 gives candidate equations/IRT-style sigmoid only as research models.
+- **Competing options:** additive/multiplicative stack; tagged priority; per-demand rules; deterministic margin for some actions.
+- **Evidence:** Issue #12 equations are research candidates only.
 - **Dependency:** DerivedCapability and ActionResolutionReceipt runtime.
-- **Risk:** fake precision, balance instability, replay mismatch or hidden order-dependence.
-- **Required experiment/research:** sensitivity tests, monotonicity/property tests, replay receipts and fighter-vs-scholar parameter sweeps before code release.
+- **Risk:** fake precision, non-monotonicity or replay mismatch.
+- **Required experiment/research:** property/sensitivity tests and fighter-vs-scholar parameter sweeps.
 
 ### OD-MEMORY-STORE-001 — persistent backend/event-store technology
-- **Competing options:** embedded relational/SQLite for MVP; server relational store; append/event store + materialized projections; hybrid tiers.
-- **Evidence:** Issue #9 freezes structured persistence requirements but explicitly selects no backend.
-- **Dependency:** NPC memory, player continuity, long-running worlds, privacy/operations.
-- **Risk:** premature vendor/schema coupling or inability to rebuild/audit history.
-- **Required experiment/research:** expected data volume/query shapes, retention/privacy requirements, restart/rebuild benchmarks, backup/migration tests.
+- **Competing options:** SQLite/embedded; server relational; event store + projections; hybrid tiers.
+- **Evidence:** Issue #9 requires structured persistence but chooses no backend.
+- **Dependency:** memory, player continuity, privacy and operations.
+- **Risk:** premature coupling or inability to rebuild/audit.
+- **Required experiment/research:** volume/query model, restart benchmarks, backup/migration tests.
 
 ### OD-MEMORY-DECAY-001 — memory accessibility/forgetting model
-- **Competing options:** rule-based decay bands; retrieval-strength model; salience/relationship-aware decay; no ordinary decay for MVP except explicit policy.
-- **Evidence:** Issue #9 distinguishes durable evidence from accessibility but does not validate weights/equations.
-- **Dependency:** NPC retrieval bundle and long-horizon callback quality.
-- **Risk:** accidental forgetting becomes lore drift, or no decay floods context/retrieval.
-- **Required experiment/research:** long-history synthetic replay + retrieval precision/recall + contradiction/callback human evaluation.
+- **Competing options:** rule bands; retrieval strength; salience/relationship-aware decay; no ordinary MVP decay.
+- **Evidence:** Issue #9 separates durable evidence from accessibility but has no validated weights.
+- **Dependency:** NPC retrieval and long-horizon callback quality.
+- **Risk:** lore drift or context flooding.
+- **Required experiment/research:** long-history replay plus retrieval precision/recall and human callback evaluation.
 
 ### OD-RELATIONSHIP-MATH-001 — relationship projection dimensions/weights
-- **Competing options:** categorical state machine; bounded multidimensional numeric projection; event-rule deltas; hybrid qualitative+numeric.
-- **Evidence:** Issue #9 rejects one morality score and proposes dimensions without final update math.
-- **Dependency:** NPC behavior, social callbacks, memory retrieval.
-- **Risk:** opaque numeric drift or oversimplified social behavior.
-- **Required experiment/research:** adversarial social histories, rebuild equivalence, sensitivity tests and designer interpretability review.
+- **Competing options:** categorical state machine; bounded multidimensional numeric; event-rule deltas; hybrid.
+- **Evidence:** Issue #9 rejects a single morality score but does not finalize update math.
+- **Dependency:** NPC behavior/social callbacks.
+- **Risk:** opaque drift or oversimplification.
+- **Required experiment/research:** adversarial social histories, rebuild equivalence and sensitivity review.
 
 ### OD-GENRE-REGISTRY-001 — GenreEngine registry governance
-- **Competing options:** fixed core registry with extensions; fully data-driven pack registry; hierarchical dramatic-engine ontology.
-- **Evidence:** Issue #11 states genre is multi-axis and candidate list is extensible.
-- **Dependency:** StoryDNA validation and story authoring tools.
-- **Risk:** mutually-exclusive genre enum or uncontrolled synonym explosion.
-- **Required experiment/research:** encode representative mystery/romance/wuxia/xianxia/crime/humanist hybrids and test query/validation ergonomics.
+- **Competing options:** fixed core + extensions; data-driven packs; hierarchical ontology.
+- **Evidence:** Issue #11 defines multi-axis extensible genres.
+- **Dependency:** StoryDNA validation/authoring.
+- **Risk:** rigid enum or synonym explosion.
+- **Required experiment/research:** encode representative mixed-genre stories and test query/validation ergonomics.
 
 ### OD-CLUE-QUALITY-001 — clue/reveal/branch-quality metrics
-- **Competing options:** authored invariant checks; graph coverage/solvability metrics; player-model-informed evidence sufficiency; hybrid human+automated eval.
-- **Evidence:** Issues #11/#14 require mystery/branch quality but no validated universal metric exists.
-- **Dependency:** future Storylet/RevealScheduler implementation.
-- **Risk:** optimizing a simplistic score can make stories predictable or falsely certify unsolvable branches.
-- **Required experiment/research:** authored mystery corpus, hostile early-solve variants, clue graph solvability tests and human playtest comparison.
+- **Competing options:** authored invariants; graph solvability; evidence sufficiency; hybrid human+automated eval.
+- **Evidence:** Issues #11/#14 require branch quality without a validated universal metric.
+- **Dependency:** future Storylet/reveal scheduling.
+- **Risk:** simplistic metrics falsely certify bad/unsolvable branches.
+- **Required experiment/research:** mystery corpus, early-solve variants, graph tests and human playtests.
 
 ### OD-PX-SCORING-001 — PX ranking objective/weights
-- **Competing options:** constrained multi-objective ranking; per-context rule packs; learned ranking from opted-in player feedback; hybrid.
-- **Evidence:** Issue #5 explicitly rejects collapsing experience into one `fun_score`.
+- **Competing options:** constrained multi-objective; context rule packs; learned opt-in ranking; hybrid.
+- **Evidence:** Issue #5 rejects one universal fun score.
 - **Dependency:** PXRankingReceipt/runtime.
-- **Risk:** hidden manipulation, brittle personalization or optimizing engagement over meaningful agency.
-- **Required experiment/research:** define transparent dimensions, offline scenario rankings, opt-in real-player study and guardrail review before learned scoring.
+- **Risk:** hidden manipulation or engagement optimization over agency.
+- **Required experiment/research:** transparent dimensions, offline rankings, opt-in player study and guardrail review.
 
-### OD-COMMENTARY-BUDGET-001 — World Echo commentary thresholds/cooldowns
-- **Competing options:** per-scene/per-speaker fixed budgets; salience-adaptive budget; director-paced budget; hybrid.
-- **Evidence:** Issue #7 mandates anti-repeat but no threshold has real-player evidence.
-- **Dependency:** World Echo runtime and ResponseConcept realization.
+### OD-COMMENTARY-BUDGET-001 — World Echo thresholds/cooldowns
+- **Competing options:** fixed scene/speaker budgets; salience adaptive; director paced; hybrid.
+- **Evidence:** Issue #7 requires anti-repeat without validated thresholds.
+- **Dependency:** World Echo runtime.
 - **Risk:** chatter spam or silent world memory.
-- **Required experiment/research:** repeated-revisit simulations + semantic duplicate tests + player evaluation across combat/quiet/grief/humor contexts.
+- **Required experiment/research:** repeated-revisit simulations and human evaluation across context types.
 
-### OD-ENCOUNTER-DENSITY-001 — opportunity/encounter density and contrivance budget
-- **Competing options:** region/world-rule density tables; narrative-pressure-adjusted caps; ecology/schedule-derived encounter rates; hybrid.
-- **Evidence:** Issue #13 requires regional density plausibility and non-obviousness.
-- **Dependency:** NarrativeOpportunityBroker.
-- **Risk:** wilderness becomes theme park of plot carriers or important information becomes implausibly unavailable.
-- **Required experiment/research:** world-route simulations, carrier travel models, anti-pattern frequency tests and player contrivance ratings.
+### OD-ENCOUNTER-DENSITY-001 — opportunity density/contrivance budget
+- **Competing options:** region density rules; adaptive pacing budget; story-critical capped retries; hybrid.
+- **Evidence:** Issue #13 requires plausibility and anti-pattern constraints but no production density is validated.
+- **Dependency:** NarrativeOpportunityBroker/EncounterCandidate runtime.
+- **Risk:** contrived encounters or a barren world.
+- **Required experiment/research:** route/population simulations, encounter-pattern analysis and player plausibility study.
 
-### OD-PUBLICATION-POLICY-001 — audience knowledge/redaction policy
-- **Competing options:** strict player-knowledge-only publication; spectator omniscient channel with explicit redaction classes; episode-specific policy profiles.
-- **Evidence:** Issues #5/#14 require spectator/publication separation but do not freeze one audience product.
-- **Dependency:** PublicationProjection and AI Director packet.
-- **Risk:** spoilers/privacy leaks can flow into player-facing output or canonical knowledge.
-- **Required experiment/research:** define audience classes, privacy threat model, spoiler test cases and multiplayer-different-knowledge publication variants.
+### OD-PUBLICATION-POLICY-001 — spectator/public audience knowledge policy
+- **Competing options:** strict player-equivalent view; omniscient spectator classes; delayed reveal tiers; per-project policy.
+- **Evidence:** Issues #5/#14 require player/public knowledge separation without final product policy.
+- **Dependency:** PublicationProjection and spectator recap.
+- **Risk:** spoilers/privacy leak or accidental flow-back into gameplay knowledge.
+- **Required experiment/research:** audience-class threat model, spoiler/privacy tests and product-format evaluation.
 
-### OD-DIRECTOR-ADAPTER-001 — AWRSE ↔ AI Film director integration protocol
-- **Competing options:** repository-neutral JSON packet API; versioned file/queue bridge; service API; future plugin/connector.
-- **Evidence:** design freezes `DIRECTOR-BEAT-PACKET` semantics but explicitly forbids H3/AI Film runtime integration in AF-001.
-- **Dependency:** future cinematic presentation slice.
-- **Risk:** implementation transport accidentally becomes authority or forks director knowledge.
-- **Required experiment/research:** packet round-trip mock, forbidden-invention validation, version negotiation and failure isolation without renderer access.
+### OD-DIRECTOR-ADAPTER-001 — AWRSE to AI Director transport/adapter
+- **Competing options:** in-process typed call; versioned file/message packet; service API; queue/event bridge.
+- **Evidence:** AF-H freezes semantic packet authority but no runtime integration is authorized.
+- **Dependency:** future AI Director federation.
+- **Risk:** transport-specific assumptions leak into canonical semantics.
+- **Required experiment/research:** contract serialization round-trip, version skew tests and failure-isolation prototype after freeze acceptance.
 
-## 10. OPEN_DECISION governance
+## 13. Governance
 
-`OPEN_DECISION` means the boundary/interface is known but the concrete mechanism lacks enough evidence to freeze safely.
-
-Rules:
-- no worker may silently choose one option in runtime code;
-- any future task depending on an OPEN_DECISION must either resolve it through approved research/eval or explicitly exclude it from scope;
-- resolution is additive history: record decision evidence and replacement, do not erase competing-option history;
-- low-confidence options do not become formal skills or canonical runtime rules.
-
-## 11. AF-001 acceptance checklist
-
-A candidate exact head is ready for Independent Reviewer only when all are true:
-
-- one canonical `ARCHITECTURE.md` master;
-- one AF contract registry covering AF-A through AF-H;
-- one Golden Scenario registry containing all eight required scenarios and all mandatory fields;
-- one traceability/dependency/OPEN_DECISION entrypoint;
-- no new gameplay runtime files/features;
-- existing R001/R002 foundation files remain present and are not shadow-replaced;
-- architecture consistency validator is non-vacuous and green;
-- full historical pytest suite remains green;
-- Python 3.11 and 3.13 exact-head CI binds `EXPECTED_HEAD == EXACT_HEAD`;
-- Draft PR remains unmerged;
-- Worker publishes Issue #15 + PR handoff and stops.
-
-Final acceptance still belongs to Independent Reviewer + Control Tower.
+Final Architecture Freeze requires **Independent Reviewer + Control Tower**. Worker may implement this architecture-only remediation and provide exact-head evidence, but may not self-review, ACCEPT, merge or release R003.
