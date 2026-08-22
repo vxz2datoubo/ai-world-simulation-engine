@@ -2,282 +2,269 @@
 
 Status: `AF001_ARCHITECTURE_FREEZE_CANDIDATE / NOT_YET_INDEPENDENTLY_ACCEPTED`
 
-Canonical authority: this file is the single current architecture master for AWRSE. Detailed machine-readable freeze contracts live in `contracts/AF001-LIVING-STORY-CONTRACTS.json`; executable-spec Golden Scenarios live in `evals/AF001-GOLDEN-SCENARIOS.json`; dependency, traceability and unresolved decisions live in `docs/AF001-TRACEABILITY.md`. Those files refine this master and must not create competing architecture authority.
+Authority role: `CANONICAL_ARCHITECTURE_MASTER`.
 
-AF-001 is architecture/contracts/eval work only. It does **not** authorize new gameplay runtime features. R001 and R002 merged runtime behavior remains canonical implementation truth until a later bounded task is explicitly released after Architecture Freeze acceptance.
+This file is the single current architecture master for AWRSE. `contracts/AF001-LIVING-STORY-CONTRACTS.json` is the machine contract registry, `evals/AF001-GOLDEN-SCENARIOS.json` is the Golden executable-spec registry, and `docs/AF001-TRACEABILITY.md` is the traceability/dependency/OPEN_DECISION registry. Supporting artifacts refine this master and do not compete with it.
+
+AF-001 is architecture/contracts/eval work only. It does **not** authorize gameplay runtime expansion. R001 and R002 merged runtime behavior remains canonical implementation truth until a later bounded task is explicitly released after Architecture Freeze acceptance.
 
 ## 1. Product law
 
 **Maximum Valid Freedom** means a player may attempt broad natural-language actions while the world remains authoritative about what is physically, socially, causally and role-consistently possible.
 
-The central composition law is:
-
 `AUTHORIAL_INTENT -> LEGAL_OPPORTUNITY -> PLAYER_INTENT -> WORLD_RESOLUTION -> CANONICAL_EVENT -> PERSISTENT_PROJECTION -> PERCEPTION/KNOWLEDGE -> CALLBACK/OPPORTUNITY -> PRESENTATION`
 
-No downstream stage may silently rewrite an upstream fact.
-
-The system preserves four conceptual views without collapsing authority:
-
-1. **Semantic World** — identities, ownership, roles, relationships, rules and meanings.
-2. **Physical World** — symbolic/physical position, reachability, topology, affordances, capability, injury and constraints.
-3. **Epistemic/Social World** — perception, knowledge, memory, belief, relationship, reputation and information propagation.
-4. **Presentation World** — assets, appearance, camera, director packets, audio/video rendering and publication.
-
-Generated pixels, prose summaries, LLM plans, narrative candidates and caches are never canonical world truth merely because they are plausible.
+No downstream stage may silently rewrite an upstream fact. Generated pixels, prose summaries, LLM plans, narrative candidates and caches are never canonical world truth merely because they are plausible.
 
 ## 2. Frozen authority order
 
-The candidate AF-001 invariant is:
-
 `WORLD/RULES AUTHORITY > CAPABILITY/STATE RESOLUTION > KNOWLEDGE/MEMORY > NARRATIVE OPPORTUNITY > PX RANKING > AI DIRECTOR > RENDERER/PUBLICATION`
 
-Expanded rules:
-
 1. Player controls only authorized attempted actions for their actor(s).
-2. World/rules/affordance/topology decide what is legal and possible.
-3. Capability/state resolution decides feasible uncertain outcomes and side effects when such systems are later implemented.
-4. Canonical events are the append-preserved evidence of committed truth.
-5. Materialized state, snapshots, summaries, relationship projections and caches derive from evidence and are rebuildable unless explicitly classified otherwise.
-6. NPC/player knowledge can advance only through provenance-bearing perception/information paths.
-7. Narrative systems may request or rank opportunities; they may return `NO_VALID_OPPORTUNITY` and may not inject facts, knowledge, success or forced actions.
-8. AI Director chooses staging/presentation of already-valid beats inside knowledge/privacy/presentation constraints.
-9. Renderer/publication outputs are read-only projections. Contradictions are render/publication failures, never authority to edit canonical truth.
+2. World/rules/affordance/topology decide legality and possible transitions.
+3. Capability/state resolution, when later implemented, resolves feasible uncertain outcomes and side effects.
+4. Canonical events are append-preserved evidence of committed truth.
+5. Materialized state, snapshots, summaries, relationship projections and indexes derive from evidence and remain rebuildable according to their contracts.
+6. Player/NPC knowledge advances only through provenance-bearing acquisition/perception/information paths.
+7. Narrative systems request/rank opportunities and may return `NO_VALID_OPPORTUNITY`; they cannot inject facts, knowledge, success or forced actions.
+8. AI Director stages already-valid beats inside knowledge/privacy/presentation constraints.
+9. Renderer/publication outputs are read-only projections; contradiction is output failure, never authority to edit canonical truth.
 
-Hard invariant:
+Hard invariant: `NARRATIVE_NEED != PERMISSION_TO_CHANGE_WORLD_TRUTH`.
 
-`NARRATIVE_NEED != PERMISSION_TO_CHANGE_WORLD_TRUTH`.
-
-## 3. Canonical event and identity law — AF-A
+## 3. AF-A — identity, event and compatibility law
 
 ### 3.1 Stable identity
 
-Every material aggregate/event/contract entity uses a stable machine ID. Human display names, filenames, model-generated labels and storage locators are metadata, not identity authority.
+Material aggregates/events/contracts use stable machine IDs. Human names, filenames, model labels and storage locators are metadata, not identity authority.
 
-Identity families are contract namespaces, not promises that every runtime family already exists. IDs must survive display-name localization, media relocation and projection rebuilds.
+### 3.2 Canonical events are profile-versioned
 
-### 3.2 Canonical events
+AF-001 does **not** retroactively impose a new envelope on accepted R001/R002 history.
 
-A canonical event must be immutable/append-preserved evidence and carry at least:
+Two explicit profiles are frozen in the machine registry:
+
+#### `LEGACY_R001_R002_EVENT_PROFILE`
+
+This is the accepted runtime `runtime.awrse.model.Event` shape:
+- `event_id`
+- `event_type`
+- `actor_id`
+- `scene_id`
+- `baseline_version`
+- `payload`
+- `caused_by_action_id`
+
+Those events remain fully legal canonical evidence and replay/rebuild inputs. `baseline_version` is its accepted legacy meaning; it is **not** silently reinterpreted as a vNext `schema_version` or `ruleset_version`.
+
+#### `AF001_VNEXT_EVENT_ENVELOPE`
+
+Future newly emitted events, only after a separately authorized runtime migration task, are expected to carry the stronger envelope:
 - `event_id`
 - `event_type`
 - `schema_version`
 - `ruleset_version`
 - `world_id`
-- authoritative aggregate/scene scope
-- causal/action provenance where applicable
-- event/world version or ordering cursor
-- actor/source identity where applicable
-- payload constrained by a versioned event contract
+- `authority_scope_ref`
+- `ordering_or_version_cursor`
+- `payload`
 
-Random resolution, when later authorized, must carry deterministic replay provenance rather than hidden nondeterminism.
+Compatibility fields may preserve actor/scene/action/baseline references.
 
-### 3.3 Truth vs projection
+### 3.3 Non-fabricating compatibility bridge
+
+The bridge `LEGACY_R001_R002_EVENT_PROFILE -> AF001_VNEXT_EVENT_ENVELOPE` is a **non-mutating compatibility view**, not a source-event migration.
+
+Lossless direct mappings are allowed only where evidence exists: event ID/type, actor, scene, payload, caused action and legacy baseline. Missing `schema_version`, `ruleset_version`, `world_id`, `authority_scope_ref` or ordering provenance remain `UNKNOWN`, `NOT_APPLICABLE`, or externally supplied only when authentic replay context explicitly proves them.
+
+Hard rules:
+- never fabricate missing provenance;
+- never treat `baseline_version` as schema/ruleset provenance;
+- never renumber or rewrite old source events;
+- old history continues replaying under the accepted legacy profile;
+- the vNext envelope becomes mandatory only for **new** events after a later bounded implementation + independent review + Control Tower release.
+
+### 3.4 Truth vs projection
 
 - Event stream: authoritative causal evidence.
-- Materialized state: current deterministic projection.
-- Snapshot/checkpoint: performance optimization bound to an event cursor and schema/ruleset version.
-- Summary/reflection: derived cache with source refs and model/version provenance.
+- Materialized state: current authorized projection.
+- Snapshot/checkpoint: rebuildable performance optimization bound to source cursor/version.
+- Summary/reflection: derived cache with source/model provenance.
 - Renderer output: non-authoritative projection.
 
-A snapshot, summary or render cannot silently become a new causal source merely because it is newer than the events it summarizes.
+A newer projection never outranks the evidence it summarizes.
 
-## 4. World / actor / object / spatial state — AF-B
+## 4. AF-B — world, actor, object and spatial state ownership
 
-### 4.1 Aggregate boundaries
+### 4.1 Minimal identity boundary
 
-Candidate aggregate families:
-- `WorldAggregate`
-- `SceneAggregate`
-- `ActorAggregate`
-- `ObjectAggregate`
-- optional later `PlayerWorldAggregate`, `PartyAggregate`, `StoryInstanceAggregate`, `PublicationAggregate`
+`WorldInstance` freezes the identity of a shared truth scope through `world_instance_id`, `world_id`, `instance_class`, `shared_truth_scope` and `state_version`. Multiple player-local projections may refer to one `WorldInstance`; they do not clone its shared physical truth.
 
-Aggregate ownership does not permit duplicate facts. A fact has one canonical owner and other planes store refs/projections.
+`WorldFrame`, `Scene`, `Zone` and `Portal` define stable spatial identity/topology interfaces. Camera/DCC/engine axes are adapters and cannot redefine world-cardinal truth.
 
-### 4.2 Spatial vocabulary
+### 4.2 One canonical owner per material fact
 
-- `WorldFrame` owns canonical world-cardinal orientation and optional unit basis.
-- `Scene` is a stable spatial identity.
-- `Zone` is a scene-bound symbolic interaction area.
-- `Portal` / adjacency edge records explicit connectivity/traversal semantics.
-- Camera/DCC/engine axes are adapters and cannot redefine world-cardinal truth.
+The machine registry freezes owner, projection/index copies, authorized mutation source, consistency invariant and rebuild direction for every material relation below.
 
-Text maps and image maps are projections of the same canonical spatial graph. A generated map mismatch is `MAP_PROJECTION_MISMATCH`, not permission to rewrite topology.
+#### Legal/social ownership
 
-### 4.3 Location / ownership / possession
+Canonical truth: `ObjectAggregate.owner_ref` when that domain is modeled. It must arise from authorized ownership-transfer evidence. It is never inferred from possession.
 
-Canonical semantics distinguish:
-- world/scene/zone location
-- legal/social ownership where modeled
-- actor possession/inventory
-- worn/equipped state
+Accepted R002 has **no lossless legal/social ownership field**. Therefore legacy legal ownership remains `UNKNOWN / NOT_MODELED` unless separate evidence exists.
 
-`OWNED != POSSESSED != WORN` unless an explicit transition proves equivalence for a specific domain.
+#### Physical possession
 
-R002 possession/inventory and symbolic zone invariants remain binding foundation behavior.
+Canonical truth: `ObjectAggregate.possessor_ref`.
 
-### 4.4 Shared truth vs player-local state
+`ActorAggregate.inventory_refs` is a derived/rebuildable index of objects whose `possessor_ref` is that actor. It is not a second possession authority.
 
-Shared world facts exist once per shared world/instance. Player Chronicle/knowledge/persona projections may differ per player but cannot fork shared physical truth.
+Accepted R002 compatibility is explicit:
 
-Concurrency hooks must bind commands to expected world/scene/aggregate versions and a deterministic canonical ordering policy. Exact arbitration algorithm remains an `OPEN_DECISION` until workload/eval evidence exists.
+`ObjectState.owner_actor_id -> ObjectAggregate.possessor_ref`
 
-## 5. Capability / injury / status — AF-C
+Despite the legacy field name, accepted R002 semantics use `owner_actor_id` as the current physical holder/inventory actor. It must **not** be mapped to future `owner_ref`.
 
-Capability contracts are frozen as architecture interfaces, not implemented by AF-001.
+The accepted R002 invariant remains binding: one object has at most one possessor; the actor inventory index and object possession truth agree exactly; carried object scene/zone follows the possessor.
 
-Required separations:
-- `ActorBaseProfile` — durable baseline traits.
-- `SkillLedger` — event-backed trained proficiency.
-- `DerivedCapability` — current computed capability/read model.
-- `ActionDemandProfile` — versioned requirements for one action/method.
-- `InjuryState`, `FatigueState`, `StatusEffect`, `EquipmentModifier` — current modifiers with source provenance.
-- `ActionResolutionReceipt` — feasibility/method/ruleset/input evidence/outcome/side-effect provenance.
+#### Inventory
 
-Resolution order for future work:
+`inventory_refs` is query/materialized index state rebuilt from possession truth. It changes only as part of an authorized possession transition. No Worker may mutate it as an independent ownership source.
+
+#### Worn state
+
+Canonical truth: `OutfitState.slot_bindings`. Possession does not imply worn state.
+
+#### Mechanically equipped state
+
+Canonical truth: `EquipmentLoadout.equipped_object_refs`. Equipment must be canonically available; inventory does not automatically imply equipped. Capability/presentation consumers are projections of this fact.
+
+#### Location
+
+Each actor/object aggregate owns its canonical `scene_id`/`zone_id`. Scene occupancy/render/query structures are indexes/projections. Movement/transfer transitions are the mutation source. Accepted R002 scene/zone fail-closed rules remain binding.
+
+### 4.3 Shared world vs player-local state
+
+Shared world facts exist once per `WorldInstance`. `PlayerChronicle`, knowledge, persona hypotheses and snapshots are recipient/player-local projections and cannot fork physical truth.
+
+Concurrency hooks bind commands to expected world/aggregate versions and deterministic ordering evidence. The concrete arbitration algorithm remains `OD-CONCURRENCY-001`.
+
+## 5. AF-C — capability, injury and status
+
+These are frozen interfaces, not AF-001 runtime implementation:
+- `ActorBaseProfile`
+- `SkillLedger`
+- `DerivedCapability`
+- `ActionDemandProfile`
+- `ActionResolutionReceipt`
+- `InjuryState`
+- `EquipmentLoadout`
+
+Future resolution order:
 
 `Intent -> Method Candidate -> Authority -> Physics/Affordance -> Capability Feasibility -> Difficulty/Resistance -> Outcome -> Hazard/Side Effects -> Canonical Events`.
 
-Rules:
-- impossible actions fail before probability;
-- success and injury/hazard are independent axes;
-- repeated attempts may consume time/stamina/progress under explicit rules;
-- equipment contributes only when canonical possession/equip/reachability permits;
-- randomness must be deterministic-replayable from explicit seed/roll/ruleset provenance.
+Impossible actions fail before probability. Success and injury/hazard are separate axes. Equipment contributes only when canonical possession/equip/reachability permits. Randomness, if used, requires deterministic replay provenance.
 
-Exact attribute list, stacking formula and stochastic curve remain `OPEN_DECISION` pending targeted evals.
+Exact attribute vector and resolution/stacking mathematics remain `OPEN_DECISION`.
 
-## 6. Appearance / asset / presentation state — AF-D
-
-Functional state and visible treatment are different truths connected by events:
+## 6. AF-D — appearance and asset state
 
 `FunctionalInjury != VisibleTreatment`.
 
-Canonical presentation vocabulary:
-- `ActorPresentationState`
-- `OutfitState`
-- `DressingState`
-- `SurfaceState`
-- `ActorAppearanceSnapshot` as rebuildable read model
-
-Asset/spatial vocabulary:
-- `Scene`
-- `CameraAnchor`
-- `View`
-- `MediaAsset`
-- `MediaVersion`
-- `Locator`
+Canonical/frozen interfaces include `ActorPresentationState`, `OutfitState`, `DressingState`, `ActorAppearanceSnapshot`, `View`, `MediaAsset` and `MediaVersion`.
 
 Rules:
-- camera position and camera facing are separate variables;
+- visual treatment is not functional injury truth;
 - logical asset identity is separate from immutable media revision and mutable locator;
-- current media promotion requires verification, not generation success alone;
-- inventory possession does not imply visual wear;
-- renderers must preserve required visible state or fail contradiction validation;
-- generated pixels cannot create damage, clothing, treatment or topology facts.
+- inventory possession does not imply worn state;
+- generated pixels cannot create damage, clothing, treatment or topology facts;
+- renderer contradictions are failures, never state migration.
 
-## 7. Perception / memory / knowledge / relationship — AF-E
+## 7. AF-E — player continuity, perception, memory, knowledge and relationship
 
-Canonical knowledge-acquisition taxonomy remains:
-- `SAW`
-- `HEARD`
-- `WAS_TOLD`
-- `DOCUMENTED`
-- `RUMORED`
-- `INFERRED`
-- `UNKNOWN`
+Knowledge taxonomy remains `SAW / HEARD / WAS_TOLD / DOCUMENTED / RUMORED / INFERRED / UNKNOWN`. A mode name is not authority: every implemented mode requires executable mode-specific provenance or fails closed. R002 currently has strict runtime provenance for `SAW`, `HEARD`, `WAS_TOLD` and fails closed for unsupported modes.
 
-A mode name is not authority. Each implemented mode needs executable provenance semantics; unsupported modes fail closed in runtime. R002 currently implements strict provenance for `SAW`, `HEARD` and `WAS_TOLD` and fails closed for unimplemented modes.
+### 7.1 Acquisition evidence vs recipient projection
 
-Player knowledge and NPC knowledge are separate projections. Private player persona hypotheses are never NPC knowledge unless a legal observable/information path exists.
+Knowledge advancement authority belongs to a provenance-bearing acquisition/perception/information path. Recipient-local projections may materialize that evidence but **cannot create acquisition evidence themselves**.
 
-Future persistence contracts distinguish:
-- canonical world event evidence
-- NPC perception events/stream
-- `NPCEpisodicMemory`
-- `BeliefState` with support/refutation/confidence/status
-- sparse NPC↔player relationship projection with source refs
-- retrieval/index/cache layers
+- `NPCPerceptionEvent` represents a provenance-bearing recipient acquisition record.
+- `NPCPerceptionStream` is an ordered recipient-local index/stream of those records.
+- `NPCEpisodicMemory`, `BeliefState`, and `NPCPlayerRelationshipState` are evidence-backed projections/materialized views.
+- `PlayerChronicle` is a player-local evidence-backed chronicle/knowledge projection.
+- `PlayerSnapshot` is a rebuildable cache.
 
-Summaries/reflections are derived caches only. Model upgrades may create new derived versions but may not silently rewrite source history. Restart/rehydration must bind to exact IDs, event cursors and schema/ruleset versions.
+Thus neither Player Chronicle nor NPC memory/belief/relationship is allowed to invent knowledge merely because it owns its local projection.
 
-Exact storage backend, memory-decay equation and relationship weighting remain `OPEN_DECISION` pending scale/eval evidence.
+### 7.2 Player continuity interfaces
 
-## 8. Story / information architecture — AF-F
+- `PlayerIdentity`: stable player/principal/avatar/WorldInstance binding.
+- `CharacterCore`: explicit player-authored role/voice/boundary settings.
+- `EnactedPersonaHypothesis`: private, probabilistic, evidence-backed roleplay hypothesis.
+- `IntentBelief`: private derived hypothesis, never a declared action.
+- `PlayerAutoExpressionPolicy`: explicit opt-in policy for automatic expression.
 
-Authored narrative is a design plane, not event truth.
+Current explicit player intent outranks inferred persona. Private persona/intent models are not NPC knowledge.
 
-Frozen vocabulary:
-- `StoryDNA` — multi-axis dramatic engine/setting/tone/theme/interaction profile.
-- `StoryBible` — governed authored facts/constraints/roles for a story domain.
-- `GenreEngine` — genre-aware craft/rules/eval pack, not runtime authority over facts.
-- `CharacterDramaticCore` — authored goals, needs, fears, values, obligations, contradictions and arc constraints.
-- `HardCausalAnchor` — planned event/process whose real causes exist and must be revalidated.
-- `SoftDramaticAttractor` — desired dramatic function without fixed world fact.
-- `Storylet` / `EventDeckEntry` — conditional opportunity definition.
-- `NarrativePromise` — setup/callback/payoff lifecycle bound to evidence.
-- `InformationPacket` — provenance-bearing information object distinct from canonical truth and recipient knowledge.
+Summaries/reflections remain derived caches. Model upgrades may recompute derived outputs but cannot rewrite source events/acquisition history. Backend, decay and relationship math remain `OPEN_DECISION`.
+
+## 8. AF-F — story and information
+
+Frozen interfaces include:
+- `StoryDNA`
+- `StoryBible`
+- `HardCausalAnchor`
+- `SoftDramaticAttractor`
+- `Storylet`
+- `EventDeckEntry`
+- `InformationPacket`
+- `NarrativePromise`
+
+`EventDeckEntry` is an explicit **alias/wrapper around a `Storylet` for deck-selection metadata**. It is not a second narrative truth type and cannot create world facts independently of Storylet eligibility and world validation.
 
 Information lifecycle:
 
 `WORLD_EVENT -> SOURCE/WITNESS -> INFORMATION_PACKET -> CARRIER/CHANNEL -> PERCEPTION/COMMUNICATION -> PLAYER/NPC KNOWLEDGE`.
 
-No direct Chronicle injection because a story considers information important.
+No direct Chronicle injection because a story considers information important. Narrative quality cannot justify resurrection, retcon or forced branch welding.
 
-Clue/reveal/branch quality contracts must distinguish canonical truth, available evidence, recipient knowledge and presentation. Narrative quality cannot justify resurrection, retcon or branch welding that contradicts committed events.
+## 9. AF-G — opportunity, World Echo and PX
 
-## 9. Opportunity / World Echo / PX — AF-G
-
-Frozen candidate lifecycle:
+Frozen candidate flow:
 
 `NarrativeGoal/Attractor -> NarrativeOpportunityBroker -> PlausibilityGate -> EncounterCandidate|WorldEchoOpportunity|NO_VALID_OPPORTUNITY -> PX ranking -> world/action authority`.
 
-`PlausibilityGate` checks spatial, temporal, identity/history, motivation, information provenance, density/ecology, asset/object availability and anti-repeat constraints before a candidate may be surfaced.
+`NarrativeOpportunityBroker`, `EncounterCandidate`, `WorldEchoOpportunity` and `ResponseConcept` are interfaces only and are **not runtime-implemented by AF-001**.
 
-`EncounterCandidate` is temporary and non-authoritative. It may expire or be rejected.
+Player auto-expression:
+- private inner commentary is non-diegetic and has no world/social effect;
+- low-risk automatic bark requires `PlayerAutoExpressionPolicy` explicit opt-in;
+- high-risk confession/threat/agreement/promise/material identity claim requires explicit player action.
 
-World Echo obeys:
+PX may rank only legal candidates. It cannot invent facts, lower difficulty, inject knowledge or force action. Scoring, commentary budget and encounter density remain explicit OPEN_DECISION dependencies.
 
-`PERSISTENT_STATE + VALID_PERCEPTION + MEMORY/KNOWLEDGE + CONTEXT -> WORLD_ECHO_OPPORTUNITY`.
+## 10. AF-H — AI Director, renderer and publication
 
-A `ResponseConcept` describes a permitted communicative function before language realization. Commentary requires budget/cooldown/anti-repeat controls.
+`DIRECTOR-BEAT-PACKET` is a downstream read-only presentation interface. It separates canonical state/event refs, player-visible knowledge, public/spectator-visible knowledge, private forbidden knowledge, presentation requirements and forbidden inventions.
 
-Player auto-expression risk routing:
-- `PLAYER_PRIVATE_INNER_COMMENTARY` — non-diegetic/private, cannot change world/social state.
-- `PLAYER_AUTHORIZED_CHARACTER_BARK` — only inside explicit opt-in policy and low-risk envelope; becomes diegetic if actually spoken.
-- high-risk confession/threat/agreement/commitment/identity claim or other material speech requires explicit player action/authorization.
+AI Director can choose staging/camera/performance/edit/sound within the packet but cannot change event truth, capability result, knowledge provenance or current appearance. Renderer/publication remains downstream projection-only. Publication knowledge never flows backward into player/NPC knowledge.
 
-PX may rank or surface **legal** opportunities and presentation emphasis. It cannot fabricate facts, lower difficulty secretly, grant success, inject knowledge or force a player action.
+Existing `contracts/WORLD-RENDER-PACKET.yaml` remains the accepted R001/R002 render foundation and is not replaced.
 
-Exact PX scoring weights, commentary thresholds and encounter-density budgets remain `OPEN_DECISION` pending real-player evaluation.
+## 11. Cross-module type-resolution law
 
-## 10. AI Director / renderer / publication — AF-H
+Every material concept directly used by this master or a Golden acceptance gate must resolve in `contracts/AF001-LIVING-STORY-CONTRACTS.json` as one of:
+1. a versioned minimal type/interface with authority owner;
+2. an explicit alias with semantics; or
+3. a named `OPEN_DECISION / NOT_FROZEN / OUT_OF_CURRENT_FREEZE` dependency that prevents a scenario from pretending the mechanism is contract-bound.
 
-The frozen bridge object is `DIRECTOR-BEAT-PACKET`, a downstream, read-only presentation request containing only validated world/knowledge/presentation facts plus explicit dramatic/presentation intent.
+AF-001 specifically resolves `PlayerIdentity`, `PlayerChronicle`, `PlayerSnapshot`, `IntentBelief`, `CharacterCore`, `EnactedPersonaHypothesis`, `PlayerAutoExpressionPolicy`, `WorldInstance`, `NPCPerceptionEvent`, `NPCPerceptionStream`, and the `EventDeckEntry -> Storylet` alias.
 
-It must separate:
-- canonical confirmed events/state refs
-- player-visible knowledge
-- public/spectator-visible knowledge
-- private/forbidden knowledge
-- ActorPresentationRequirements
-- scene/view/asset refs
-- presentation goals
-- forbidden inventions
-- provenance/version refs
+A later Worker must not invent owner/version/schema semantics for these names ad hoc.
 
-AI Director may choose camera, performance, editing, sound and emphasis within the packet. It cannot change action outcomes, actor identity, capability result, knowledge provenance, current appearance or canonical event history.
+## 12. Golden Scenario acceptance surface
 
-Renderer validation must detect material contradictions, including confirmed-event, scene, object, actor identity/appearance, knowledge/privacy and camera/view requirements where contractually observable.
-
-Publication/spectator projection is distinct from player knowledge. A spectator recap may know facts the player avatar does not only if publication policy explicitly authorizes that audience view; it may never leak those facts back into player/NPC canonical knowledge.
-
-Existing `contracts/WORLD-RENDER-PACKET.yaml` remains the R001/R002 foundation render contract and is not replaced by AF-001.
-
-## 11. Golden Scenario acceptance surface
-
-Architecture Freeze is evaluated through eight executable-spec scenarios in `evals/AF001-GOLDEN-SCENARIOS.json`:
-
+The eight required scenarios remain:
 1. `WILDERNESS_NEWS_TRAP`
 2. `BROKEN_DOOR_WORLD_ECHO`
 3. `FIGHTER_VS_SCHOLAR`
@@ -287,59 +274,46 @@ Architecture Freeze is evaluated through eight executable-spec scenarios in `eva
 7. `HOSTILE_PLAYER_BREAKS_PLOT`
 8. `MULTIPLAYER_DIFFERENT_KNOWLEDGE`
 
-Every scenario defines initial canonical state, allowed player intents, required contracts, expected canonical events, projection changes, knowledge consequences, narrative consequences, presentation requirements, forbidden outcomes, replay/restart expectations, adversarial variants and acceptance criteria.
+Each keeps its human-readable scenario explanation and also contains a machine-checkable `machine_spec` with stable ID/version, actual type refs, structured initial/expected/forbidden predicates, provenance/authority assertions, ordering assertions, replay/restart assertions and explicit OPEN_DECISION dependencies.
 
-These are executable specifications and future implementation gates, not claims that the corresponding runtime exists today.
+For future-only subsystems, machine assertions state `CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED`; they do not pretend gameplay execution exists.
 
-## 12. Versioning and migration law
+## 13. Versioning and migration law
 
-Every freeze contract declares `contract_version` and compatibility expectations.
+Breaking changes to authority, identity, canonical event meaning, canonical ownership, required provenance or fail-closed boundaries require:
+- explicit migration specification;
+- replay/rebuild impact analysis;
+- affected Golden Scenario updates;
+- fresh independent review.
 
-Rules:
-- additive optional fields may be backward-compatible only when old consumers fail safely;
-- changing authority, identity, event meaning, required provenance or canonical ownership is a breaking contract change;
-- breaking changes require explicit migration spec, replay/rebuild impact analysis and new Golden Scenario receipts;
-- snapshots/caches declare source cursor + schema/ruleset version and may be invalidated/rebuilt;
-- source events are never rewritten in place merely to migrate a projection;
-- model-specific outputs remain derived artifacts and can be regenerated under a new model version.
+Source events are never rewritten to migrate projections. R001/R002 legacy events remain legal under their explicit profile. vNext event requirements activate only for newly emitted events after a later bounded migration task is accepted.
 
-Exact long-lived storage migration framework is `OPEN_DECISION`; AF-001 freezes the obligations, not a database vendor.
+## 14. R001/R002 compatibility boundary
 
-## 13. R001/R002 compatibility boundary
+AF-001 preserves:
+- raw player text as untrusted data;
+- player/NPC/world authority separation;
+- append-preserved event evidence;
+- replay for implemented domains;
+- live-state read-only seal;
+- R002 symbolic spatial/possession fail-closed integrity;
+- mode-specific knowledge provenance;
+- renderer projection-only authority.
 
-AF-001 must not weaken accepted foundations:
-- raw player text remains untrusted data;
-- player cannot directly control NPC mind/world rules;
-- canonical mutations flow through authoritative event/projector paths;
-- event history is append-preserved and replayable for implemented domains;
-- live canonical state is read-only outside authorized transitions;
-- symbolic R002 zone/reachability/affordance/possession invariants remain fail-closed;
-- knowledge provenance remains mode-specific and fail-closed;
-- renderer is projection-only and contradictions do not rewrite truth.
+AF-001 future-plane contracts are interfaces and ownership laws, not runtime implementation claims.
 
-AF-001 contracts that describe future planes are **interfaces and ownership laws**, not runtime implementation claims.
+## 15. OPEN_DECISION discipline
 
-## 14. OPEN_DECISION discipline
+Every unresolved mechanism is recorded once in `docs/AF001-TRACEABILITY.md` with its own bounded section containing competing options, evidence, dependency, risk and required experiment/research. Golden machine specs that depend on an unresolved mechanism must cite that exact OPEN_DECISION ID.
 
-If evidence is insufficient to freeze a concrete mechanism, the architecture records `OPEN_DECISION` with competing options, evidence, dependency, risk and required research/experiment. Open decisions block implementation that depends on them but do not invalidate already-frozen upstream boundaries.
+## 16. Governance / stop gate
 
-Current open-decision registry is maintained only in `docs/AF001-TRACEABILITY.md` to avoid duplicate decision ledgers.
-
-## 15. Governance / stop gate
-
-- **World Model / Control Tower** defines scope, accepts architecture and later releases bounded implementation tasks.
-- **Engineering Worker** edits architecture/contracts/evals and supplies exact-head evidence. No self-review, ACCEPT or merge.
-- **Independent Reviewer** fresh-reconciles and reviews exact head. No implementation/merge.
+- World Model / Control Tower defines scope, accepts architecture and later releases bounded implementation tasks.
+- Engineering Worker edits architecture/contracts/evals/validator and supplies exact-head evidence. No self-review, ACCEPT or merge.
+- Independent Reviewer fresh-reconciles and reviews exact head. No implementation/merge.
 
 No post-R002 runtime task is automatically released by this Freeze candidate.
 
-Promotion requires:
-1. complete AF-001 artifact set;
-2. non-vacuous architecture consistency/traceability checks;
-3. exact-head CI;
-4. fresh independent exact-head ACCEPT;
-5. Control Tower architecture acceptance and expected-head merge.
-
-Until then:
+Until independent ACCEPT plus Control Tower acceptance/merge:
 
 `RUNTIME_EXPANSION_BLOCKED_UNTIL_AF001_ACCEPTED`.
