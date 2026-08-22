@@ -1,6 +1,6 @@
 {
   "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-  "contract_version": "1.3.0-candidate",
+  "contract_version": "1.4.0-candidate",
   "status": "ARCHITECTURE_FREEZE_CANDIDATE",
   "implementation_state": "INTERFACE_ONLY_EXCEPT_ACCEPTED_R001_R002_FOUNDATIONS",
   "artifact_roles": {
@@ -65,6 +65,10 @@
       "AWRSE_NARRATIVE_OPPORTUNITY_PRODUCER",
       "AWRSE_INFORMATION_PACKET_ASSEMBLER",
       "AWRSE_PROMISE_LIFECYCLE_PROJECTOR",
+      "AWRSE_NARRATIVE_COMPOSITE_VIEW_ASSEMBLER",
+      "AWRSE_CAUSAL_ANCHOR_REVALIDATOR",
+      "AWRSE_SOFT_ATTRACTOR_STATUS_PROJECTOR",
+      "AWRSE_CHARACTER_ARC_PROJECTOR",
       "AWRSE_SPATIAL_VIEW_REGISTRY",
       "AWRSE_ASSET_REGISTRY",
       "AWRSE_ASSET_VERSION_REGISTRAR",
@@ -174,6 +178,38 @@
         "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
         "staging_authority": ["NONE"],
         "mutation_constraint": "AUTHORED_NARRATIVE_CONSTRAINTS_MAY_PROPOSE_OR_FILTER_BUT_CANNOT_RETCON_CANONICAL_WORLD_TRUTH"
+      },
+      "NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW": {
+        "canonical_data_authority": ["NONE"],
+        "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_NARRATIVE_COMPOSITE_VIEW_ASSEMBLER"],
+        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "COMPOSITE_VIEW_ASSEMBLY_DOES_NOT_GRANT_AUTHORITY_OVER_AUTHORED_DEFINITION_FIELDS_OR_EVIDENCE_DERIVED_DYNAMIC_FIELDS; EACH_FIELD_CLASS_MUST_FOLLOW_ITS_DECLARED_FIELD_AUTHORITY_PROFILE"
+      },
+      "CAUSAL_ANCHOR_VALIDITY_LIFECYCLE": {
+        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_CAUSAL_ANCHOR_REVALIDATOR"],
+        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "HARD_CAUSAL_ANCHOR_STATUS_MUST_REBUILD_DETERMINISTICALLY_FROM_DECLARED_CAUSE_REFS_AND_CANONICAL_EVENT_EVIDENCE; DESTROYED_INVALID_MISSING_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED_TO_NON_VALID; NARRATIVE_DESIGN_CANNOT_SET_ADVANCE_OR_RESTORE_VALID_STATUS; ONLY_LEGITIMATE_CAUSE_EVENT_EVIDENCE_PLUS_REVALIDATION_MAY_CHANGE_DERIVED_STATUS"
+      },
+      "SOFT_ATTRACTOR_STATUS_LIFECYCLE": {
+        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_SOFT_ATTRACTOR_STATUS_PROJECTOR"],
+        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "SOFT_ATTRACTOR_STATUS_IS_DERIVED_ELIGIBILITY_EXPIRY_OR_INVALIDATION_STATE_FROM_CANONICAL_WORLD_HISTORY_EVIDENCE; AUTHORED_DRAMATIC_DESIRE_CANNOT_FORCE_AN_INELIGIBLE_EXPIRED_OR_INVALIDATED_ATTRACTOR_ACTIVE"
+      },
+      "CHARACTER_ARC_STATE_LIFECYCLE": {
+        "canonical_data_authority": ["PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+        "producer_or_assembler": ["AWRSE_CHARACTER_ARC_PROJECTOR"],
+        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
+        "staging_authority": ["NONE"],
+        "mutation_constraint": "CURRENT_CHARACTER_ARC_STATE_IS_A_DERIVED_NARRATIVE_PROJECTION_FROM_RECORDED_HISTORY_CHOICES_AND_EVIDENCE; AUTHORED_ARC_DESIRE_CANNOT_ADVANCE_OR_REWRITE_CURRENT_ARC_STATE_WITHOUT_SUPPORTING_HISTORY"
       },
       "INFORMATION_PROVENANCE_LIFECYCLE": {
         "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
@@ -435,9 +471,9 @@
     "StoryDNA": {"type_id":"AF001.StoryDNA","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["story_id","primary_engine","secondary_engines","setting_envelope","tone_envelope","thematic_inquiries","interaction_structure","version"]},
     "StoryBible": {"type_id":"AF001.StoryBible","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["story_id","canonical_authored_fact_refs","character_core_refs","world_rule_refs","forbidden_retcon_rules","version"]},
     "GenreEngine": {"type_id":"AF001.GenreEngine","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["genre_engine_id","craft_constraints","eval_refs","version"]},
-    "CharacterDramaticCore": {"type_id":"AF001.CharacterDramaticCore","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["actor_id","external_goal","internal_need_optional","fear","desire","value_conflicts","obligations","non_negotiable_boundaries","arc_state","version"]},
-    "HardCausalAnchor": {"type_id":"AF001.HardCausalAnchor","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["anchor_id","cause_refs","planned_event_or_process","revalidation_predicates","status"]},
-    "SoftDramaticAttractor": {"type_id":"AF001.SoftDramaticAttractor","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["attractor_id","dramatic_function","eligibility_predicates","expiry_policy","status"]},
+    "CharacterDramaticCore": {"type_id":"AF001.CharacterDramaticCore","version":"1.1.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW","implementation_state":"INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_ARC_STATE","field_authority_profiles":{"authored_definition":{"profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","fields":["external_goal","internal_need_optional","fear","desire","value_conflicts","obligations","non_negotiable_boundaries"]},"derived_lifecycle":{"profile_ref":"CHARACTER_ARC_STATE_LIFECYCLE","fields":["arc_state"],"source_evidence_requirements":["RECORDED_HISTORY_CHOICES_EVENTS_OR_OTHER_PROVENANCE_BEARING_EVIDENCE"],"rebuild_semantics":"DETERMINISTIC_REBUILD_FROM_BOUND_HISTORY_AND_EVIDENCE; NARRATIVE_DESIRE_ALONE_CANNOT_ADVANCE_CURRENT_ARC_STATE"}},"fields":["actor_id","external_goal","internal_need_optional","fear","desire","value_conflicts","obligations","non_negotiable_boundaries","arc_state","version"]},
+    "HardCausalAnchor": {"type_id":"AF001.HardCausalAnchor","version":"1.1.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW","implementation_state":"INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_VALIDITY","field_authority_profiles":{"authored_definition":{"profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","fields":["cause_refs","planned_event_or_process","revalidation_predicates"]},"derived_lifecycle":{"profile_ref":"CAUSAL_ANCHOR_VALIDITY_LIFECYCLE","fields":["status"],"source_evidence_requirements":["cause_refs","CANONICAL_CAUSE_STATE_OR_EVENT_EVIDENCE","CANONICAL_EVENT_CURSOR_OR_EQUIVALENT_ORDERING_EVIDENCE"],"rebuild_semantics":"DETERMINISTIC_REBUILD_FROM_CAUSE_REFS_PLUS_CANONICAL_EVENTS_OR_EVIDENCE; INVALID_DESTROYED_MISSING_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED","rehydration_semantics":"RECOMPUTE_DERIVED_STATUS_FROM_BOUND_CAUSES_AND_EVENT_EVIDENCE; NEVER_REHYDRATE_STATUS_FROM_AUTHORED_DESIRE_OR_STALE_CACHE","revalidation_transition_rule":"ONLY_LEGITIMATE_NEW_CAUSE_OR_EVENT_EVIDENCE_MAY_TRIGGER_REVALIDATION_AND_CHANGE_DERIVED_STATUS"}},"fields":["anchor_id","cause_refs","planned_event_or_process","revalidation_predicates","status"]},
+    "SoftDramaticAttractor": {"type_id":"AF001.SoftDramaticAttractor","version":"1.1.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW","implementation_state":"INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_ELIGIBILITY_STATUS","field_authority_profiles":{"authored_definition":{"profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","fields":["dramatic_function","eligibility_predicates","expiry_policy"]},"derived_lifecycle":{"profile_ref":"SOFT_ATTRACTOR_STATUS_LIFECYCLE","fields":["status"],"source_evidence_requirements":["CANONICAL_WORLD_HISTORY_PLAYER_EVENT_EVIDENCE"],"rebuild_semantics":"REBUILD_ELIGIBILITY_EXPIRY_INVALIDATION_STATUS_FROM_BOUND_EVIDENCE; AUTHORED_DESIRE_CANNOT_FORCE_ACTIVE_STATUS"}},"fields":["attractor_id","dramatic_function","eligibility_predicates","expiry_policy","status"]},
     "Storylet": {"type_id":"AF001.Storylet","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["storylet_id","preconditions","eligible_roles","knowledge_constraints","dramatic_purpose","forbidden_contradictions","consequence_templates","repeat_policy","version"]},
     "EventDeckEntry": {"type_id":"AF001.EventDeckEntry","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"ALIAS_INTERFACE_ONLY","alias_of":"Storylet","alias_semantics":"DECK_SELECTION_METADATA_MAY_WRAP_A_STORYLET_BUT_CANNOT_CREATE_SEPARATE_WORLD_TRUTH","fields":["storylet_ref","deck_ref","selection_metadata","cooldown_or_weight_metadata"]},
     "InformationPacket": {"type_id":"AF001.InformationPacket","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"INFORMATION_PROVENANCE_LIFECYCLE","implementation_state":"INTERFACE_ONLY","lifecycle":"WORLD_EVENT_TO_SOURCE_WITNESS_TO_INFORMATION_PACKET_TO_CARRIER_CHANNEL_TO_PERCEPTION_COMMUNICATION_TO_PLAYER_NPC_KNOWLEDGE","source_authority_requirements":["source_fact_or_event_refs","source_refs","verification_state","confidence"],"fields":["info_id","source_fact_or_event_refs","classification","source_refs","verification_state","confidence","distortion_policy","created_world_time","propagation_scope","expiry_policy"]},
@@ -459,7 +495,7 @@
     "AF-C": {"name":"Capability / Injury","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["ActorBaseProfile","SkillLedger","DerivedCapability","ActionDemandProfile","ActionResolutionReceipt","InjuryState","FatigueState","StatusEffect","EquipmentModifier","EquipmentLoadout"],"invariants":["IMPOSSIBLE_ACTION_FAILS_BEFORE_PROBABILITY","SUCCESS_AND_INJURY_ARE_INDEPENDENT_AXES","EQUIPMENT_EFFECT_REQUIRES_CANONICAL_AVAILABILITY","RANDOMNESS_REQUIRES_DETERMINISTIC_REPLAY_PROVENANCE"],"open_decision_refs":["OD-CAPABILITY-ATTR-001","OD-CAPABILITY-MATH-001"]},
     "AF-D": {"name":"Appearance / Asset","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["ActorPresentationState","OutfitState","DressingState","SurfaceState","CameraAnchor","View","MediaAsset","MediaVersion","Locator","ActorAppearanceSnapshot"],"invariants":["FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT","CAMERA_POSITION_NE_CAMERA_FACING","MEDIA_ASSET_IDENTITY_NE_MEDIA_VERSION_NE_LOCATOR","DYNAMIC_PRESENTATION_STATE_NE_ASSET_REGISTRY_TRUTH","LOCATOR_MIGRATION_NE_ASSET_OR_VERSION_IDENTITY_CHANGE","GENERATED_PIXELS_CANNOT_CREATE_CANONICAL_STATE","INVENTORY_OWNED_NE_WORN"]},
     "AF-E": {"name":"Perception / Memory / Knowledge / Relationship","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_R002_PROVENANCE_FOUNDATION","type_refs":["PlayerChronicle","PlayerSnapshot","IntentBelief","CharacterCore","EnactedPersonaHypothesis","NPCPerceptionEvent","NPCPerceptionStream","NPCEpisodicMemory","BeliefState","NPCPlayerRelationshipState","NPCContextBundle"],"knowledge_modes":["SAW","HEARD","WAS_TOLD","DOCUMENTED","RUMORED","INFERRED","UNKNOWN"],"runtime_rule":"EACH_IMPLEMENTED_MODE_REQUIRES_EXECUTABLE_MODE_SPECIFIC_PROVENANCE_OR_FAILS_CLOSED","invariants":["PLAYER_KNOWLEDGE_NE_NPC_KNOWLEDGE","RECIPIENT_PROJECTION_CANNOT_CREATE_ACQUISITION_EVIDENCE","PRIVATE_PLAYER_PERSONA_NE_NPC_MODEL_OF_PLAYER","EXPLICIT_CHARACTER_CORE_NE_DERIVED_PERSONA_HYPOTHESIS","SUMMARY_REFLECTION_IS_DERIVED_CACHE"],"open_decision_refs":["OD-MEMORY-STORE-001","OD-MEMORY-DECAY-001","OD-RELATIONSHIP-MATH-001"]},
-    "AF-F": {"name":"Story / Information","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["StoryDNA","StoryBible","GenreEngine","CharacterDramaticCore","HardCausalAnchor","SoftDramaticAttractor","Storylet","EventDeckEntry","InformationPacket","NarrativePromise"],"invariants":["STORY_STRUCTURE_IS_NOT_WORLD_TRUTH","AUTHORED_NARRATIVE_NE_INFORMATION_PROVENANCE_LIFECYCLE","AUTHORED_NARRATIVE_NE_PROMISE_HISTORY","INFORMATION_PACKET_REQUIRES_SOURCE_AND_PROVENANCE_EVIDENCE","NARRATIVE_PROMISE_REQUIRES_SOURCE_EVENT_EVIDENCE","HARD_CAUSAL_ANCHOR_MUST_REVALIDATE_CAUSES","SOFT_DRAMATIC_ATTRACTOR_DOES_NOT_DEFINE_FACTS","IMPORTANT_INFORMATION_CANNOT_BYPASS_PROPAGATION","BRANCH_QUALITY_CANNOT_JUSTIFY_RETCON_OR_RESURRECTION"],"open_decision_refs":["OD-GENRE-REGISTRY-001","OD-CLUE-QUALITY-001"]},
+    "AF-F": {"name":"Story / Information","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["StoryDNA","StoryBible","GenreEngine","CharacterDramaticCore","HardCausalAnchor","SoftDramaticAttractor","Storylet","EventDeckEntry","InformationPacket","NarrativePromise"],"invariants":["STORY_STRUCTURE_IS_NOT_WORLD_TRUTH","AUTHORED_NARRATIVE_NE_INFORMATION_PROVENANCE_LIFECYCLE","AUTHORED_NARRATIVE_NE_PROMISE_HISTORY","INFORMATION_PACKET_REQUIRES_SOURCE_AND_PROVENANCE_EVIDENCE","NARRATIVE_PROMISE_REQUIRES_SOURCE_EVENT_EVIDENCE","AUTHORED_HARD_CAUSAL_ANCHOR_DEFINITION_NE_DERIVED_VALIDITY_STATUS","HARD_CAUSAL_ANCHOR_STATUS_REBUILDS_FROM_CAUSE_EVENT_EVIDENCE","INVALID_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED","NARRATIVE_DESIRE_CANNOT_RESTORE_INVALID_CAUSAL_ANCHOR","AUTHORED_SOFT_ATTRACTOR_DEFINITION_NE_DERIVED_STATUS","AUTHORED_CHARACTER_DRAMATIC_CORE_NE_DERIVED_ARC_STATE","HARD_CAUSAL_ANCHOR_MUST_REVALIDATE_CAUSES","SOFT_DRAMATIC_ATTRACTOR_DOES_NOT_DEFINE_FACTS","IMPORTANT_INFORMATION_CANNOT_BYPASS_PROPAGATION","BRANCH_QUALITY_CANNOT_JUSTIFY_RETCON_OR_RESURRECTION"],"open_decision_refs":["OD-GENRE-REGISTRY-001","OD-CLUE-QUALITY-001"]},
     "AF-G": {"name":"Opportunity / World Echo / PX","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["NarrativeOpportunityBroker","PlausibilityGate","EncounterCandidate","WorldEchoOpportunity","ResponseConcept","PlayerAutoExpressionPolicy","PXRankingReceipt"],"invariants":["NO_VALID_OPPORTUNITY_IS_VALID","PX_MAY_RANK_ONLY_LEGAL_CANDIDATES","PX_CANNOT_INVENT_FACTS_OR_INJECT_KNOWLEDGE","NARRATIVE_CANNOT_SECRETLY_LOWER_CAPABILITY_DIFFICULTY","COMMENTARY_REQUIRES_PROVENANCE_AND_ANTI_REPEAT_POLICY"],"open_decision_refs":["OD-PX-SCORING-001","OD-COMMENTARY-BUDGET-001","OD-ENCOUNTER-DENSITY-001"]},
     "AF-H": {"name":"AI Director / Renderer / Publication","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_WORLD_RENDER_PACKET_FOUNDATION","type_refs":["DIRECTOR-BEAT-PACKET","ActorPresentationRequirements","PublicationProjection"],"invariants":["AWRSE_OWNS_PACKET_FACTS_KNOWLEDGE_VISIBILITY_AND_PRESENTATION_CONSTRAINTS","AI_DIRECTOR_OWNS_ONLY_STAGING_INSIDE_VALID_ENVELOPE","AI_DIRECTOR_IS_DOWNSTREAM_READ_ONLY","RENDERER_CANNOT_RESOLVE_WORLD_OUTCOMES","PUBLICATION_KNOWLEDGE_DOES_NOT_FLOW_BACK_INTO_PLAYER_OR_NPC_KNOWLEDGE","MATERIAL_RENDER_CONTRADICTION_IS_FAILURE_NOT_WORLD_MUTATION"],"open_decision_refs":["OD-PUBLICATION-POLICY-001","OD-DIRECTOR-ADAPTER-001"]}
   },
