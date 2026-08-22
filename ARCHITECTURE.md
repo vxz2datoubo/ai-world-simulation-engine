@@ -213,6 +213,7 @@ Summaries/reflections remain derived caches. Model upgrades may recompute derive
 Frozen interfaces include:
 - `StoryDNA`
 - `StoryBible`
+- `CharacterDramaticCore`
 - `HardCausalAnchor`
 - `SoftDramaticAttractor`
 - `Storylet`
@@ -222,9 +223,53 @@ Frozen interfaces include:
 
 `EventDeckEntry` is an explicit **alias/wrapper around a `Storylet` for deck-selection metadata**. It is not a second narrative truth type and cannot create world facts independently of Storylet eligibility and world validation.
 
+### 8.1 Authored narrative definition is not dynamic lifecycle state
+
+AF-F explicitly separates authorial definition fields from evidence-derived current state. A single interface may expose both classes only when the machine contract carries field-level lifecycle authority; the authored loader never gains authority over the derived fields merely because they share a type name.
+
+#### Hard causal anchor
+
+`HardCausalAnchor` is a composite interface with two authority classes:
+
+Authored narrative definition:
+- `cause_refs`
+- `planned_event_or_process`
+- `revalidation_predicates`
+- narrative intent implied by the planned process
+
+These are authored/noncanonical design constraints. They describe what should remain eligible **if its causes remain intact**.
+
+Dynamic lifecycle:
+- `status`
+
+`status` is evidence-derived current validity, not authored truth. It must be produced by the dedicated causal-anchor revalidation/projector boundary from canonical cause/event evidence. It must support deterministic rebuild/rehydration from `cause_refs` plus canonical events/evidence.
+
+Hard rules:
+- an invalid, destroyed, missing or unresolved required cause fails closed and cannot yield a currently valid anchor;
+- narrative design cannot set, advance or restore current-valid status by authorial desire;
+- an `INVALID` anchor remains invalid until legitimate new canonical evidence changes the relevant cause state and the dedicated revalidator evaluates it;
+- legitimate cause restoration/change may permit revalidation, but only through real evidence and the same deterministic rules;
+- model wording, PX rank, Director preference or branch-quality desire cannot override the evidence-derived result.
+
+This preserves the Golden laws `destroyed_cause_invalidates_dependent_anchor` and `anchor_status_rebuilds_from_causes_and_events` without implementing a narrative runtime in AF-001.
+
+#### Soft dramatic attractor adjacent audit
+
+`SoftDramaticAttractor.dramatic_function`, `eligibility_predicates` and `expiry_policy` are authored design metadata. Its `status` is **not** authored metadata: current eligibility/expired/invalidated state depends on canonical world/history/player events. Therefore `status` uses a separate evidence-derived attractor-status lifecycle authority and must rebuild from bound evidence. Authored narrative may define the desired dramatic function but cannot mark an ineligible attractor active merely because it wants the beat.
+
+#### Character dramatic core adjacent audit
+
+`CharacterDramaticCore` goals, needs, fears, desires, value conflicts, obligations and non-negotiable boundaries are authored dramatic definition. `arc_state` is **not** free authored current state: Issue #11 explicitly treats current arc state as history/choice-sensitive and player-influenceable. Therefore `arc_state` uses a separate evidence-derived character-arc projection lifecycle. Narrative design may define an intended arc envelope, but current arc state must derive/rebuild from recorded history/evidence and cannot be advanced solely to hit a planned beat.
+
+These adjacent separations are architecture-only authority freezes, not runtime implementations.
+
+### 8.2 Information and promise evidence lifecycles
+
 Information lifecycle:
 
 `WORLD_EVENT -> SOURCE/WITNESS -> INFORMATION_PACKET -> CARRIER/CHANNEL -> PERCEPTION/COMMUNICATION -> PLAYER/NPC KNOWLEDGE`.
+
+`InformationPacket` is provenance-bearing and cannot be authored from narrative desire. `NarrativePromise` is source-event/evidence derived; authored narrative may schedule a legal callback/payoff opportunity but cannot invent the underlying promise/history.
 
 No direct Chronicle injection because a story considers information important. Narrative quality cannot justify resurrection, retcon or forced branch welding.
 
