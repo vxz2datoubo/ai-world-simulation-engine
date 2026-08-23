@@ -19,9 +19,10 @@ from awrse import (
     compare_replays,
     export_solo_replay_package,
     import_solo_replay_package,
+    inspect_replays,
     inspect_timeline,
 )
-from awrse.model import Event, _encode_world_snapshot
+from awrse.model import Event, _world_to_data
 
 
 BASELINE_VERSION = "R003-I1B-BASELINE-v1"
@@ -102,6 +103,13 @@ def right_events() -> tuple[Event, ...]:
     )
 
 
+def canonical_projection_data(world: WorldState) -> dict:
+    data = dict(_world_to_data(world))
+    data.pop("event_log", None)
+    data.pop("committed_event_ids", None)
+    return data
+
+
 def inspection_payload(left_package: bytes, right_package: bytes) -> dict:
     left = import_solo_replay_package(left_package)
     right = import_solo_replay_package(right_package)
@@ -160,19 +168,49 @@ def test_semantically_invalid_event_fails_through_canonical_replay_validation():
         inspect_timeline(baseline, (fabricated,))
 
 
-def test_checkpoint_digest_is_exact_sealed_replay_projection():
+def test_checkpoint_digest_is_exact_canonical_world_projection():
     baseline = make_baseline()
     events = left_events()
     timeline = inspect_timeline(baseline, events)
 
     canonical_after_first = SimulationEngine().replay(baseline, events[:1])
     expected_digest = hashlib.sha256(
-        _encode_world_snapshot(canonical_after_first)
+        json.dumps(
+            canonical_projection_data(canonical_after_first),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
     ).hexdigest()
 
     assert canonical_after_first.is_live is True
     assert timeline[1].state_digest == expected_digest
     assert timeline[1].state_version_ref == canonical_after_first.world_state_version
+
+
+def test_metadata_only_provenance_change_does_not_mint_canonical_divergence():
+    baseline = make_baseline()
+    left = (common_event(),)
+    right = (
+        Event(
+            event_id="E1",
+            event_type="OBJECT_DAMAGED",
+            actor_id="PLAYER",
+            scene_id="SCENE_001",
+            baseline_version=BASELINE_VERSION,
+            payload={"object_id": "DOOR_001", "damage_state": "DAMAGED"},
+            caused_by_action_id="A-DIFFERENT-PROVENANCE",
+        ),
+    )
+
+    left_world = SimulationEngine().replay(baseline, left)
+    right_world = SimulationEngine().replay(baseline, right)
+
+    assert left[0].caused_by_action_id != right[0].caused_by_action_id
+    assert canonical_projection_data(left_world) == canonical_projection_data(right_world)
+    assert compare_replays(baseline, left, baseline, right) is None
+    assert inspect_timeline(baseline, left)[1].state_digest == inspect_timeline(baseline, right)[1].state_digest
 
 
 def test_real_event_change_has_stable_first_canonical_divergence_and_state_diff():
@@ -199,6 +237,36 @@ def test_real_event_change_has_stable_first_canonical_divergence_and_state_diff(
     assert left_world.objects["DOOR_001"].damage_state == "DAMAGED"
     assert right_world.objects["DOOR_001"].is_open is False
     assert right_world.objects["DOOR_001"].damage_state == "BROKEN"
+
+
+def test_inspect_replays_normalizes_one_shot_iterables_once():
+    baseline = make_baseline()
+
+    def left_generator():
+        yield from left_events()
+
+    def right_generator():
+        yield from right_events()
+
+    result = inspect_replays(
+        baseline,
+        left_generator(),
+        baseline,
+        right_generator(),
+    )
+    expected_checkpoints = inspect_timeline(baseline, left_events())
+    expected_divergence = compare_replays(
+        baseline,
+        left_events(),
+        baseline,
+        right_events(),
+    )
+
+    assert result.checkpoints == expected_checkpoints
+    assert result.divergence == expected_divergence
+    assert result.divergence is not None
+    assert result.divergence.first_divergence_point == 1
+    assert "objects.DOOR_001.is_open" in result.divergence.state_differences
 
 
 def test_inspection_does_not_mutate_baseline_or_events():
