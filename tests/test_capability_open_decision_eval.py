@@ -38,6 +38,10 @@ def _signature(receipt):
     return {key: value for key, value in receipt.items() if key != "subject_ref"}
 
 
+def _scholar(spec):
+    return next(actor for actor in spec["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
+
+
 def test_cap_eval_spec_is_evaluation_only_and_covers_released_open_decisions():
     spec = load_spec()
     assert spec["suite_id"] == "AWRSE-CAP-EVAL-001-OPEN-DECISION"
@@ -55,14 +59,12 @@ def test_cap_eval_spec_is_evaluation_only_and_covers_released_open_decisions():
 
 def test_attribute_ablation_and_cross_domain_corpus_match_issue_24_surface():
     spec = load_spec()
-    representations = {candidate["family"] for candidate in spec["representation_candidates"]}
-    assert representations == {
+    assert {candidate["family"] for candidate in spec["representation_candidates"]} == {
         "ACTION_DEMAND_ONLY_PRIMITIVES",
         "SMALL_MUNDANE_CORE_VECTOR",
         "RICHER_GENRE_NEUTRAL_VECTOR",
     }
-    families = {task["family"] for task in spec["task_corpus"]}
-    assert families == {
+    assert {task["family"] for task in spec["task_corpus"]} == {
         "RESTRAINT_ESCAPE_FORCE",
         "RESTRAINT_ESCAPE_TECHNIQUE",
         "RESTRAINT_ESCAPE_TOOL_ASSISTED",
@@ -78,8 +80,7 @@ def test_attribute_ablation_and_cross_domain_corpus_match_issue_24_surface():
 
 def test_math_policy_ablation_covers_required_candidate_families():
     spec = load_spec()
-    kinds = {candidate["kind"] for candidate in spec["math_policy_candidates"]}
-    assert kinds == {
+    assert {candidate["kind"] for candidate in spec["math_policy_candidates"]} == {
         "DETERMINISTIC_MARGIN",
         "ADDITIVE_MULTIPLICATIVE_STACK",
         "TAGGED_PRIORITY",
@@ -97,7 +98,6 @@ def test_fighter_vs_scholar_same_restraint_is_method_specific_not_actor_name_bon
         scholar_tool = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
         fighter_technique = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "RESTRAINT_TECHNIQUE")
         scholar_technique = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "RESTRAINT_TECHNIQUE")
-
         assert fighter_force["margin"] > scholar_force["margin"]
         assert scholar_tool["margin"] > fighter_tool["margin"]
         assert (fighter_force["margin"], fighter_technique["margin"], fighter_tool["margin"]) != (
@@ -118,15 +118,8 @@ def test_fighter_vs_scholar_same_restraint_is_method_specific_not_actor_name_bon
 def test_missing_real_tool_fails_before_stochastic_mapping_and_gets_no_bonus():
     spec = load_spec()
     mutated = copy.deepcopy(spec)
-    scholar = next(actor for actor in mutated["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
-    scholar["available_tools"] = []
-    receipt = cap_eval.evaluate_case(
-        mutated,
-        "SMALL_CORE_V1",
-        "BOUNDED_SEEDED_STOCHASTIC_V1",
-        "SCHOLAR_B",
-        "RESTRAINT_TOOL",
-    )
+    _scholar(mutated)["available_tools"] = []
+    receipt = cap_eval.evaluate_case(mutated, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
     assert receipt["feasibility"] == "HARD_FAIL_MISSING_REQUIRED_TOOL"
     assert receipt["effective_capability"] is None
     assert receipt["margin"] is None
@@ -134,11 +127,15 @@ def test_missing_real_tool_fails_before_stochastic_mapping_and_gets_no_bonus():
     assert receipt["random_provenance_optional"] is None
 
 
-def test_function_local_injury_changes_relevant_routes_not_reasoning():
+def test_function_local_injury_covers_force_manual_tool_balance_and_reasoning_isolation():
     spec = load_spec()
     for representation in [candidate["candidate_id"] for candidate in spec["representation_candidates"]]:
         force_base = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "RESTRAINT_FORCE")
         force_hand = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "RESTRAINT_FORCE", ["HAND_ARM_IMPAIRMENT"])
+        manual_base = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "DISARM_TRAP")
+        manual_hand = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "DISARM_TRAP", ["HAND_ARM_IMPAIRMENT"])
+        tool_base = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
+        tool_hand = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "RESTRAINT_TOOL", ["HAND_ARM_IMPAIRMENT"])
         balance_base = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "BEAM_BALANCE")
         balance_leg = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "BEAM_BALANCE", ["LEG_IMPAIRMENT"])
         reasoning_base = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM")
@@ -146,19 +143,63 @@ def test_function_local_injury_changes_relevant_routes_not_reasoning():
         reasoning_leg = cap_eval.evaluate_case(spec, representation, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM", ["LEG_IMPAIRMENT"])
 
         assert force_hand["margin"] < force_base["margin"]
+        assert manual_hand["margin"] < manual_base["margin"]
+        assert tool_hand["margin"] < tool_base["margin"]
         assert balance_leg["margin"] < balance_base["margin"]
         assert reasoning_hand["margin"] == reasoning_base["margin"]
         assert reasoning_leg["margin"] == reasoning_base["margin"]
 
 
-def test_irrelevant_attribute_perturbation_does_not_change_unrelated_reasoning():
+def test_irrelevant_attribute_perturbation_does_not_change_unrelated_deterministic_reasoning():
     spec = load_spec()
     mutated = copy.deepcopy(spec)
-    scholar = next(actor for actor in mutated["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
-    scholar["representations"]["SMALL_CORE_V1"]["strength"] = 100
+    _scholar(mutated)["representations"]["SMALL_CORE_V1"]["strength"] = 100
     before = cap_eval.evaluate_case(spec, "SMALL_CORE_V1", "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM")
     after = cap_eval.evaluate_case(mutated, "SMALL_CORE_V1", "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM")
     assert _signature(before) == _signature(after)
+
+
+def test_stochastic_seed_and_full_receipt_ignore_all_reviewer_identified_irrelevant_inputs():
+    spec = load_spec()
+    baseline = cap_eval.evaluate_case(spec, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
+
+    variants = []
+    unused_dimension = copy.deepcopy(spec)
+    _scholar(unused_dimension)["representations"]["SMALL_CORE_V1"]["strength"] = 99
+    variants.append(unused_dimension)
+
+    unused_skill = copy.deepcopy(spec)
+    _scholar(unused_skill)["skills"]["athletics"] = 99
+    variants.append(unused_skill)
+
+    other_representation = copy.deepcopy(spec)
+    _scholar(other_representation)["representations"]["RICH_GENRE_NEUTRAL_V1"]["strength"] = 99
+    variants.append(other_representation)
+
+    unrelated_tool = copy.deepcopy(spec)
+    _scholar(unrelated_tool)["available_tools"].append("UNRELATED_TOOL_99")
+    variants.append(unrelated_tool)
+
+    for variant in variants:
+        receipt = cap_eval.evaluate_case(variant, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
+        assert receipt == baseline
+        assert receipt["random_provenance_optional"]["seed_digest"] == baseline["random_provenance_optional"]["seed_digest"]
+        assert receipt["outcome_band"] == baseline["outcome_band"]
+
+
+def test_stochastic_seed_changes_when_a_resolution_relevant_input_changes():
+    spec = load_spec()
+    baseline = cap_eval.evaluate_case(spec, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
+    changed = cap_eval.evaluate_case(
+        spec,
+        "SMALL_CORE_V1",
+        "BOUNDED_SEEDED_STOCHASTIC_V1",
+        "SCHOLAR_B",
+        "RESTRAINT_TOOL",
+        dimension_offsets={"dexterity": -10},
+    )
+    assert changed["margin"] != baseline["margin"]
+    assert changed["random_provenance_optional"]["seed_digest"] != baseline["random_provenance_optional"]["seed_digest"]
 
 
 def test_stronger_relevant_capability_never_worsens_deterministic_margin():
@@ -220,14 +261,52 @@ def test_repeated_execution_is_canonical_structure_stable_and_fresh_process_stab
     assert cap_eval.canonical_json(json.loads(process_a)) == first
 
 
-def test_sensitivity_sweeps_cover_fighter_and_two_noncombat_families_without_reversal():
-    spec = load_spec()
-    result = cap_eval.run_evaluation(spec)
+def test_sensitivity_sweeps_emit_all_four_required_detector_families_and_auditable_metrics():
+    result = cap_eval.run_evaluation(load_spec())
     sweeps = result["sensitivity_sweeps"]
     assert set(sweeps) == {"FIGHTER_FORCE_SWEEP", "MANUAL_SWEEP", "REASONING_SWEEP"}
+    for entry in sweeps.values():
+        assert entry["parameter_grid_size"] >= 30
+        assert isinstance(entry["reversal_detected"], bool)
+        assert isinstance(entry["cliff_detected"], bool)
+        assert isinstance(entry["dead_zone_detected"], bool)
+        assert isinstance(entry["excessive_sensitivity_detected"], bool)
+        assert entry["diagnostic_policy"] == cap_eval.SENSITIVITY_DIAGNOSTIC_POLICY
+        assert entry["capability_axis_diagnostics"]
+        assert entry["difficulty_axis_diagnostics"]
+        assert math.isfinite(entry["max_abs_capability_slope"])
+        assert math.isfinite(entry["max_abs_difficulty_slope"])
+        assert math.isfinite(entry["max_adjacent_slope_change"])
+        assert math.isfinite(entry["max_abs_condition_shift"])
     assert all(entry["reversal_detected"] is False for entry in sweeps.values())
     assert all(entry["dead_zone_detected"] is False for entry in sweeps.values())
-    assert all(entry["parameter_grid_size"] >= 30 for entry in sweeps.values())
+
+
+def test_sensitivity_detectors_are_non_vacuous_and_each_can_be_triggered():
+    reversal = cap_eval._diagnose_sensitivity_series(
+        [0, 10, 20], [0, 5, 4], expected_direction="NONDECREASING"
+    )
+    assert reversal["reversal_detected"] is True
+
+    dead_zone = cap_eval._diagnose_sensitivity_series(
+        [0, 10, 20], [4, 4, 4], expected_direction="NONDECREASING"
+    )
+    assert dead_zone["dead_zone_detected"] is True
+
+    cliff = cap_eval._diagnose_sensitivity_series(
+        [0, 10, 20, 30], [0, 2, 22, 24], expected_direction="NONDECREASING"
+    )
+    assert cliff["cliff_detected"] is True
+
+    excessive = cap_eval._diagnose_sensitivity_series(
+        [0, 10], [0, 20], expected_direction="NONDECREASING"
+    )
+    assert excessive["excessive_sensitivity_detected"] is True
+
+    difficulty_reversal = cap_eval._diagnose_sensitivity_series(
+        [0, 10, 20], [10, 5, 6], expected_direction="NONINCREASING"
+    )
+    assert difficulty_reversal["reversal_detected"] is True
 
 
 def test_malformed_or_unknown_candidate_inputs_fail_closed():
@@ -242,8 +321,7 @@ def test_malformed_or_unknown_candidate_inputs_fail_closed():
 
 
 def test_no_candidate_output_is_labeled_canonical_accepted_frozen_or_production():
-    spec = load_spec()
-    result = cap_eval.run_evaluation(spec)
+    result = cap_eval.run_evaluation(load_spec())
     labels = [entry["status"] for entry in result["candidate_dimensions"].values()]
     labels.extend(entry["status"] for entry in result["math_policy_checks"].values())
     for label in labels:
