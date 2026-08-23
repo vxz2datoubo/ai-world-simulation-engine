@@ -1,12 +1,12 @@
 # AWRSE Canonical Architecture
 
-Status: `AF001_ARCHITECTURE_FREEZE_CANDIDATE / NOT_YET_INDEPENDENTLY_ACCEPTED`
+Status: `AF001_ARCHITECTURE_FREEZE_ACCEPTED / MERGED_CANONICAL`
 
 Authority role: `CANONICAL_ARCHITECTURE_MASTER`.
 
 This file is the single current architecture master for AWRSE. `contracts/AF001-LIVING-STORY-CONTRACTS.json` is the machine contract registry, `evals/AF001-GOLDEN-SCENARIOS.json` is the Golden executable-spec registry, and `docs/AF001-TRACEABILITY.md` is the traceability/dependency/OPEN_DECISION registry. Supporting artifacts refine this master and do not compete with it.
 
-AF-001 is architecture/contracts/eval work only. It does **not** authorize gameplay runtime expansion. R001 and R002 merged runtime behavior remains canonical implementation truth until a later bounded task is explicitly released after Architecture Freeze acceptance.
+AF-001 is the accepted canonical architecture/contracts/eval foundation. It does **not** itself authorize gameplay runtime expansion. Accepted R001/R002 runtime behavior plus the bounded R003-I1A persistence/restart-replay and R003-I1B replay-inspection foundations are canonical implementation truth; any further runtime expansion still requires a separately released bounded task.
 
 ## 1. Product law
 
@@ -357,8 +357,6 @@ Every unresolved mechanism is recorded once in `docs/AF001-TRACEABILITY.md` with
 - Engineering Worker edits architecture/contracts/evals/validator and supplies exact-head evidence. No self-review, ACCEPT or merge.
 - Independent Reviewer fresh-reconciles and reviews exact head. No implementation/merge.
 
-No post-R002 runtime task is automatically released by this Freeze candidate.
+AF-001 is independently accepted and merged canonical architecture. Acceptance itself does not release further runtime scope.
 
-Until independent ACCEPT plus Control Tower acceptance/merge:
-
-`RUNTIME_EXPANSION_BLOCKED_UNTIL_AF001_ACCEPTED`.
+`AF001_ACCEPTED_CANONICAL / FURTHER_RUNTIME_EXPANSION_REQUIRES_EXPLICIT_RELEASE`

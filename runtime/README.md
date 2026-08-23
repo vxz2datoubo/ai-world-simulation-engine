@@ -1,23 +1,17 @@
 # Runtime
 
-Status: `R001 IMPLEMENTATION CANDIDATE / NOT PRODUCTION READY`
+Status: `ACCEPTED REFERENCE FOUNDATION / NOT PRODUCTION READY`
 
-The first authorized AWRSE runtime slice is being implemented on branch `gpt/r001-core-loop`.
+The canonical AWRSE runtime now contains accepted bounded foundations from R001, R002, R003-I1A and R003-I1B.
 
-Current R001 scope:
+Accepted reference foundation:
 
-- deterministic free-text -> typed Action DSL compiler
-- untrusted player-text boundary
-- authoritative action resolution
-- conservative physical impossibility rejection
-- append-preserved canonical events
-- deterministic state projection and replay
-- NPC knowledge acquisition only through explicit channels
-- renderer-neutral `WorldRenderPacket`
-- render/canonical mismatch contract
-- executable regression tests for the implemented invariants
+- R001: deterministic free-text -> typed Action DSL boundary, authoritative action resolution, append-preserved canonical events, deterministic replay, explicit knowledge-channel constraints, and renderer-neutral projection contracts
+- R002: accepted spatial/possession/knowledge-provenance hardening and associated deterministic runtime invariants
+- R003-I1A: deterministic SOLO persistence envelope plus exact restart/rehydration reference that returns through canonical replay rather than materialized-state authority
+- R003-I1B: deterministic read-only replay inspection and differential evaluation over canonical replay-produced state
 
-This is deliberately a **small proof of authority**, not yet a game, full physics engine, autonomous society, H3 integration, or Matrix-Game integration.
+This runtime remains deliberately **bounded and not production ready**. It is a reference world-truth substrate, not the finished game, full physics engine, autonomous society, production persistence service, Capability system, Memory system, Narrative Opportunity runtime, World Echo runtime, AI Director adapter, H3/Matrix integration, or PARTY/PUBLIC implementation.
 
 Implementation must preserve these invariants:
 
@@ -30,4 +24,4 @@ Implementation must preserve these invariants:
 7. core world state remains replayable from event history and authorized deterministic projections
 8. renderer mismatch cannot rewrite canonical truth
 
-Before implementation is considered acceptable, the core eval suite in `evals/AWRSE-CORE-EVALS.yaml` must have executable coverage appropriate to the implemented scope and CI must pass on the exact review head.
+Any future bounded runtime change requires explicit Control Tower release, executable coverage appropriate to the authorized scope, full regression CI on the exact head, and fresh independent review. Accepted foundations do not implicitly authorize unresolved upper-layer implementation.

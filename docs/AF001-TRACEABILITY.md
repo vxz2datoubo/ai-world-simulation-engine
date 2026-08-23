@@ -1,8 +1,10 @@
 # AF-001 Traceability, Dependency, Authority and OPEN_DECISION Register
 
-Status: `ARCHITECTURE_FREEZE_CANDIDATE / SINGLE_TRACEABILITY_ENTRYPOINT`
+Status: `ARCHITECTURE_FREEZE_ACCEPTED_CANONICAL / SINGLE_TRACEABILITY_ENTRYPOINT`
 
 This is the single AF-001 traceability/dependency/open-decision registry. It does not compete with `ARCHITECTURE.md`, which is the canonical architecture master. Machine contracts live in `contracts/AF001-LIVING-STORY-CONTRACTS.json`; Golden executable specifications live in `evals/AF001-GOLDEN-SCENARIOS.json`.
+
+AF-001 is independently accepted and merged canonical architecture. Subsequent accepted R003-I1A/I1B bounded runtime foundations do not, by themselves, resolve any `OPEN_DECISION` recorded here.
 
 ## 1. Fresh source baseline
 
@@ -127,7 +129,7 @@ No post-freeze runtime task may silently depend on an unresolved lower-layer `OP
 | Issue #12 `CAPABILITY-DESIGN-001` | AF-C/D | interface/order/provenance frozen; math open |
 | Issue #13 `ENCOUNTER-STATE-DESIGN-001` | AF-C/D/F/G/H | opportunity/presentation interfaces frozen |
 | Issue #14 `INTEGRATION-DESIGN-001` | AF-A..H | integrated into single master/registry |
-| Issue #15 `AF-001` | AF-A..H | current authorized architecture-only task |
+| Issue #15 `AF-001` | AF-A..H | accepted + merged canonical architecture freeze |
 
 Candidate skills S13-S61 remain `CANDIDATE / NOT_PROMOTED`.
 
@@ -258,4 +260,4 @@ Each section below is independently bounded. Validator must inspect only the tex
 
 ## 13. Governance
 
-Final Architecture Freeze requires **Independent Reviewer + Control Tower**. Worker may implement this architecture-only remediation and provide exact-head evidence, but may not self-review, ACCEPT, merge or release R003.
+AF-001 Architecture Freeze is independently accepted and merged through the Independent Reviewer + Control Tower gate. This file remains the canonical traceability/dependency/OPEN_DECISION entrypoint; every `OPEN_DECISION` remains open until a separately authorized, accepted task explicitly resolves it. Future Workers may not infer implementation authority from this registry and may not self-review, ACCEPT, merge, or release follow-on runtime scope.
