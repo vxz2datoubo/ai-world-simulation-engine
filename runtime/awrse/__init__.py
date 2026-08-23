@@ -23,6 +23,7 @@ from .persistence import (
     rehydrate_solo_replay_package,
 )
 from .render import RenderValidation, WorldRenderPacket, build_render_packet, validate_render_claims
+from .replay_inspection import ReplayDivergence, ReplayInspectionCheckpoint, ReplayInspectionResult, compare_replays, inspect_replays, inspect_timeline
 
 __all__ = [
     "Action",
@@ -43,10 +44,16 @@ __all__ = [
     "WorldBaseline",
     "WorldRenderPacket",
     "WorldState",
+    "ReplayDivergence",
+    "ReplayInspectionCheckpoint",
+    "ReplayInspectionResult",
     "build_render_packet",
     "capture_pristine_baseline",
+    "compare_replays",
     "export_solo_replay_package",
     "import_solo_replay_package",
+    "inspect_replays",
+    "inspect_timeline",
     "rehydrate_solo_replay_package",
     "validate_render_claims",
 ]
