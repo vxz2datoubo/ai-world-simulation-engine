@@ -107,6 +107,9 @@ def test_fighter_vs_scholar_same_restraint_is_method_specific_not_actor_name_bon
     renamed = copy.deepcopy(spec)
     actor = next(actor for actor in renamed["actor_fixtures"] if actor["actor_id"] == "FIGHTER_A")
     actor["actor_id"] = "SOME_OTHER_ID"
+    for sweep in renamed["sweep_definitions"]:
+        if sweep["actor_id"] == "FIGHTER_A":
+            sweep["actor_id"] = "SOME_OTHER_ID"
     original = cap_eval.evaluate_case(spec, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "FIGHTER_A", "RESTRAINT_FORCE")
     changed_id = cap_eval.evaluate_case(renamed, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SOME_OTHER_ID", "RESTRAINT_FORCE")
     assert _signature(original) == _signature(changed_id)
