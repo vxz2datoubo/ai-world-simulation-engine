@@ -10,12 +10,13 @@ world-state authority.
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
 from .engine import SimulationEngine
-from .model import Event, WorldBaseline, WorldState, _encode_world_snapshot, _world_to_data
+from .model import Event, WorldBaseline, WorldState, _world_to_data
 
 
 @dataclass(frozen=True)
@@ -52,27 +53,10 @@ def inspect_timeline(
     baseline: WorldBaseline,
     events: Iterable[Event],
 ) -> tuple[ReplayInspectionCheckpoint, ...]:
-    """Return deterministic checkpoints derived only from canonical replay.
-
-    Step 0 is the pristine baseline. Each later step is the sealed canonical
-    ``WorldState`` returned after replaying the ordered event prefix ending at
-    that event. Invalid/fabricated event sequences fail through the existing
-    replay validation path instead of becoming diagnostic truth.
-    """
+    """Return deterministic checkpoints derived only from canonical replay."""
 
     event_sequence = _require_replay_inputs(baseline, events)
-    states = _replay_prefix_states(baseline, event_sequence)
-    checkpoints = [_checkpoint(step=0, event_index=None, event=None, world=states[0])]
-    checkpoints.extend(
-        _checkpoint(
-            step=index + 1,
-            event_index=index,
-            event=event,
-            world=states[index + 1],
-        )
-        for index, event in enumerate(event_sequence)
-    )
-    return tuple(checkpoints)
+    return _inspect_timeline_from_sequence(baseline, event_sequence)
 
 
 def compare_replays(
@@ -81,68 +65,21 @@ def compare_replays(
     right_baseline: WorldBaseline,
     right_events: Iterable[Event],
 ) -> ReplayDivergence | None:
-    """Find the first divergence in two independently replayed timelines.
+    """Find the first canonical world-state divergence between two replays.
 
-    Event-boundary differences come from the accepted ordered ``Event``
-    sequences. State differences come from sealed ``WorldState`` checkpoints
-    produced by ``SimulationEngine.replay()`` using those same prefixes.
+    Event/provenance differences are diagnostic evidence only. They are
+    attached to a ``ReplayDivergence`` after the canonical replay projections
+    differ; an Event metadata difference alone cannot mint world divergence.
     """
 
     left_sequence = _require_replay_inputs(left_baseline, left_events)
     right_sequence = _require_replay_inputs(right_baseline, right_events)
-    left_states = _replay_prefix_states(left_baseline, left_sequence)
-    right_states = _replay_prefix_states(right_baseline, right_sequence)
-
-    if _state_digest(left_states[0]) != _state_digest(right_states[0]):
-        return ReplayDivergence(
-            first_divergence_point=0,
-            event_boundary="baseline",
-            left_event_id=None,
-            right_event_id=None,
-            event_differences=("baseline",),
-            state_differences=_canonical_projection_diff(left_states[0], right_states[0]),
-            left_state_marker=_state_marker(left_states[0]),
-            right_state_marker=_state_marker(right_states[0]),
-        )
-
-    limit = min(len(left_sequence), len(right_sequence))
-    for index in range(limit):
-        left_event = left_sequence[index]
-        right_event = right_sequence[index]
-        left_state = left_states[index + 1]
-        right_state = right_states[index + 1]
-        event_differences = _event_diff(left_event, right_event)
-        state_changed = _state_digest(left_state) != _state_digest(right_state)
-        if event_differences or state_changed:
-            return ReplayDivergence(
-                first_divergence_point=index,
-                event_boundary=f"event-index:{index}",
-                left_event_id=left_event.event_id,
-                right_event_id=right_event.event_id,
-                event_differences=event_differences,
-                state_differences=_canonical_projection_diff(left_state, right_state),
-                left_state_marker=_state_marker(left_state),
-                right_state_marker=_state_marker(right_state),
-            )
-
-    if len(left_sequence) != len(right_sequence):
-        index = limit
-        left_event = left_sequence[index] if index < len(left_sequence) else None
-        right_event = right_sequence[index] if index < len(right_sequence) else None
-        left_state = left_states[index + 1] if left_event is not None else left_states[index]
-        right_state = right_states[index + 1] if right_event is not None else right_states[index]
-        return ReplayDivergence(
-            first_divergence_point=index,
-            event_boundary=f"event-index:{index}",
-            left_event_id=None if left_event is None else left_event.event_id,
-            right_event_id=None if right_event is None else right_event.event_id,
-            event_differences=("timeline_length",),
-            state_differences=_canonical_projection_diff(left_state, right_state),
-            left_state_marker=_state_marker(left_state),
-            right_state_marker=_state_marker(right_state),
-        )
-
-    return None
+    return _compare_sequences(
+        left_baseline,
+        left_sequence,
+        right_baseline,
+        right_sequence,
+    )
 
 
 def inspect_replays(
@@ -151,16 +88,23 @@ def inspect_replays(
     right_baseline: WorldBaseline | None = None,
     right_events: Iterable[Event] = (),
 ) -> ReplayInspectionResult:
-    """Inspect one canonical replay and optionally compare it with another."""
+    """Inspect one canonical replay and optionally compare it with another.
 
-    checkpoints = inspect_timeline(left_baseline, left_events)
+    Each public iterable is normalized exactly once so one-shot generators are
+    consumed a single time and the same accepted sequence is reused for both
+    timeline inspection and comparison.
+    """
+
+    left_sequence = _require_replay_inputs(left_baseline, left_events)
+    checkpoints = _inspect_timeline_from_sequence(left_baseline, left_sequence)
     divergence = None
     if right_baseline is not None:
-        divergence = compare_replays(
+        right_sequence = _require_replay_inputs(right_baseline, right_events)
+        divergence = _compare_sequences(
             left_baseline,
-            left_events,
+            left_sequence,
             right_baseline,
-            right_events,
+            right_sequence,
         )
     return ReplayInspectionResult(checkpoints=checkpoints, divergence=divergence)
 
@@ -178,6 +122,87 @@ def _require_replay_inputs(
     if any(not isinstance(event, Event) for event in event_sequence):
         raise TypeError("ORDERED_CANONICAL_EVENTS_REQUIRED")
     return event_sequence
+
+
+def _inspect_timeline_from_sequence(
+    baseline: WorldBaseline,
+    events: tuple[Event, ...],
+) -> tuple[ReplayInspectionCheckpoint, ...]:
+    states = _replay_prefix_states(baseline, events)
+    checkpoints = [_checkpoint(step=0, event_index=None, event=None, world=states[0])]
+    checkpoints.extend(
+        _checkpoint(
+            step=index + 1,
+            event_index=index,
+            event=event,
+            world=states[index + 1],
+        )
+        for index, event in enumerate(events)
+    )
+    return tuple(checkpoints)
+
+
+def _compare_sequences(
+    left_baseline: WorldBaseline,
+    left_sequence: tuple[Event, ...],
+    right_baseline: WorldBaseline,
+    right_sequence: tuple[Event, ...],
+) -> ReplayDivergence | None:
+    left_states = _replay_prefix_states(left_baseline, left_sequence)
+    right_states = _replay_prefix_states(right_baseline, right_sequence)
+
+    baseline_state_diff = _canonical_projection_diff(left_states[0], right_states[0])
+    if baseline_state_diff:
+        return ReplayDivergence(
+            first_divergence_point=0,
+            event_boundary="baseline",
+            left_event_id=None,
+            right_event_id=None,
+            event_differences=("baseline",),
+            state_differences=baseline_state_diff,
+            left_state_marker=_state_marker(left_states[0]),
+            right_state_marker=_state_marker(right_states[0]),
+        )
+
+    limit = min(len(left_sequence), len(right_sequence))
+    for index in range(limit):
+        left_event = left_sequence[index]
+        right_event = right_sequence[index]
+        left_state = left_states[index + 1]
+        right_state = right_states[index + 1]
+        state_differences = _canonical_projection_diff(left_state, right_state)
+        if state_differences:
+            return ReplayDivergence(
+                first_divergence_point=index,
+                event_boundary=f"event-index:{index}",
+                left_event_id=left_event.event_id,
+                right_event_id=right_event.event_id,
+                event_differences=_event_diff(left_event, right_event),
+                state_differences=state_differences,
+                left_state_marker=_state_marker(left_state),
+                right_state_marker=_state_marker(right_state),
+            )
+
+    if len(left_sequence) != len(right_sequence):
+        index = limit
+        left_event = left_sequence[index] if index < len(left_sequence) else None
+        right_event = right_sequence[index] if index < len(right_sequence) else None
+        left_state = left_states[index + 1] if left_event is not None else left_states[index]
+        right_state = right_states[index + 1] if right_event is not None else right_states[index]
+        state_differences = _canonical_projection_diff(left_state, right_state)
+        if state_differences:
+            return ReplayDivergence(
+                first_divergence_point=index,
+                event_boundary=f"event-index:{index}",
+                left_event_id=None if left_event is None else left_event.event_id,
+                right_event_id=None if right_event is None else right_event.event_id,
+                event_differences=("timeline_length",),
+                state_differences=state_differences,
+                left_state_marker=_state_marker(left_state),
+                right_state_marker=_state_marker(right_state),
+            )
+
+    return None
 
 
 def _replay_prefix_states(
@@ -213,8 +238,22 @@ def _checkpoint(
     )
 
 
+def _canonical_projection_data(world: WorldState) -> dict[str, Any]:
+    data = dict(_world_to_data(world))
+    for evidence_field in ("event_log", "committed_event_ids"):
+        data.pop(evidence_field, None)
+    return data
+
+
 def _state_digest(world: WorldState) -> str:
-    return hashlib.sha256(_encode_world_snapshot(world)).hexdigest()
+    payload = json.dumps(
+        _canonical_projection_data(world),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _state_marker(world: WorldState) -> str:
@@ -235,19 +274,14 @@ def _event_diff(left: Event, right: Event) -> tuple[str, ...]:
 
 
 def _canonical_projection_diff(left: WorldState, right: WorldState) -> tuple[str, ...]:
-    """Diff canonical projection fields, excluding the event evidence already reported.
+    """Diff the canonical projected world, excluding Event evidence metadata."""
 
-    ``_world_to_data`` is the existing canonical snapshot representation used
-    by R003-I1A persistence. Reusing it avoids creating a second projector or a
-    hand-maintained shadow state schema.
-    """
-
-    left_data = dict(_world_to_data(left))
-    right_data = dict(_world_to_data(right))
-    for evidence_field in ("event_log", "committed_event_ids"):
-        left_data.pop(evidence_field, None)
-        right_data.pop(evidence_field, None)
-    return tuple(_diff_paths(left_data, right_data))
+    return tuple(
+        _diff_paths(
+            _canonical_projection_data(left),
+            _canonical_projection_data(right),
+        )
+    )
 
 
 def _diff_paths(left: Any, right: Any, prefix: str = "") -> list[str]:
