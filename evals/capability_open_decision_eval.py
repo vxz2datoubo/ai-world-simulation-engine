@@ -588,6 +588,9 @@ def _adversarial_checks(spec: Mapping[str, Any]) -> dict[str, bool]:
     renamed = copy.deepcopy(spec)
     fighter = next(actor for actor in renamed["actor_fixtures"] if actor["actor_id"] == "FIGHTER_A")
     fighter["actor_id"] = "RENAMED_SUBJECT"
+    for sweep in renamed["sweep_definitions"]:
+        if sweep["actor_id"] == "FIGHTER_A":
+            sweep["actor_id"] = "RENAMED_SUBJECT"
     validate_spec(renamed)
     original_receipt = evaluate_case(spec, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "FIGHTER_A", "RESTRAINT_FORCE")
     renamed_receipt = evaluate_case(renamed, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "RENAMED_SUBJECT", "RESTRAINT_FORCE")
