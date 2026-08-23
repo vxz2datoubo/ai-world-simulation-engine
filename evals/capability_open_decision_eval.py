@@ -2,7 +2,7 @@
 
 This module is not runtime capability resolution. It consumes the governed
 CAP-EVAL-001 spec and compares non-canonical candidates without network, LLM,
-wall-clock, or hidden global state dependencies.
+wall-clock, environment, or hidden global state dependencies.
 """
 
 from __future__ import annotations
@@ -21,6 +21,15 @@ ALLOWED_MATH_KINDS = {
     "ADDITIVE_MULTIPLICATIVE_STACK",
     "TAGGED_PRIORITY",
     "BOUNDED_SEEDED_STOCHASTIC",
+}
+
+# Evaluation tripwires only. These are auditable diagnostics, not gameplay law,
+# calibration claims, or OPEN_DECISION resolutions.
+SENSITIVITY_DIAGNOSTIC_POLICY = {
+    "dead_zone_abs_slope_epsilon": 1e-9,
+    "cliff_adjacent_slope_change_threshold": 0.75,
+    "excessive_abs_slope_threshold": 1.25,
+    "excessive_condition_shift_threshold": 35.0,
 }
 
 
@@ -99,14 +108,12 @@ def validate_spec(spec: Mapping[str, Any]) -> None:
         raise EvaluationSpecError("unexpected candidate status policy")
 
     representations = _index(spec["representation_candidates"], "candidate_id")
-    if len(representations) < 3:
-        raise EvaluationSpecError("at least three representation candidates are required")
     required_families = {
         "ACTION_DEMAND_ONLY_PRIMITIVES",
         "SMALL_MUNDANE_CORE_VECTOR",
         "RICHER_GENRE_NEUTRAL_VECTOR",
     }
-    if {candidate.get("family") for candidate in representations.values()} != required_families:
+    if len(representations) < 3 or {c.get("family") for c in representations.values()} != required_families:
         raise EvaluationSpecError("representation option families do not match the released ablation")
     for candidate_id, candidate in representations.items():
         if candidate.get("status") != candidate_status:
@@ -169,13 +176,16 @@ def validate_spec(spec: Mapping[str, Any]) -> None:
         if set(weights_by_representation) != set(representations):
             raise EvaluationSpecError(f"{task_id} does not cover every representation")
         for representation_id, weights in weights_by_representation.items():
-            if not weights or any(dimension not in representations[representation_id]["dimensions"] for dimension in weights):
+            if not weights or any(d not in representations[representation_id]["dimensions"] for d in weights):
                 raise EvaluationSpecError(f"{task_id}.{representation_id} has unknown dimensions")
             if not all(_finite_number(weight, low=0) for weight in weights.values()) or sum(weights.values()) <= 0:
                 raise EvaluationSpecError(f"{task_id}.{representation_id} has invalid weights")
         skill_weights = task.get("skill_weights", {})
         if not skill_weights or not all(_finite_number(weight, low=0) for weight in skill_weights.values()):
             raise EvaluationSpecError(f"{task_id} has invalid skill weights")
+        for actor_id, actor in actors.items():
+            if any(skill not in actor.get("skills", {}) for skill in skill_weights):
+                raise EvaluationSpecError(f"{task_id} references skill missing from {actor_id}")
         prerequisite = task.get("hard_prerequisites", {})
         if set(prerequisite) - {"required_tool"}:
             raise EvaluationSpecError(f"{task_id} has an unknown hard prerequisite")
@@ -202,6 +212,12 @@ def validate_spec(spec: Mapping[str, Any]) -> None:
             raise EvaluationSpecError(f"{sweep_id} references unknown math policy")
         if sweep.get("relevant_dimension") not in representations[representation_id]["dimensions"]:
             raise EvaluationSpecError(f"{sweep_id} references unknown relevant dimension")
+        for key in ("capability_offsets", "difficulty_offsets"):
+            values = sweep.get(key, [])
+            if len(values) < 2 or not all(_finite_number(value) for value in values):
+                raise EvaluationSpecError(f"{sweep_id} has invalid {key}")
+            if any(left >= right for left, right in zip(values, values[1:])):
+                raise EvaluationSpecError(f"{sweep_id}.{key} must be strictly increasing")
         for condition_set in sweep.get("conditions", []):
             if any(condition_id not in conditions for condition_id in condition_set):
                 raise EvaluationSpecError(f"{sweep_id} references unknown condition")
@@ -276,11 +292,55 @@ def _stochastic_bucket(margin: float) -> tuple[str, int]:
     return "VERY_FAVORABLE", 85
 
 
-def _actor_input_fingerprint(actor: Mapping[str, Any]) -> dict[str, Any]:
+def _semantic_seed_material(
+    spec: Mapping[str, Any],
+    representation_id: str,
+    representation: Mapping[str, Any],
+    math_policy_id: str,
+    math_policy: Mapping[str, Any],
+    task_id: str,
+    task: Mapping[str, Any],
+    actor: Mapping[str, Any],
+    adjusted_values: Mapping[str, float],
+    difficulty: float,
+    required_tool: str | None,
+    required_tool_present: bool,
+) -> dict[str, Any]:
+    """Return only inputs semantically consumed by this exact resolution.
+
+    Actor identity, unused dimensions/skills, other candidate representations,
+    and unrelated available tools are deliberately excluded so they cannot mint
+    a hidden reroll surface.
+    """
+
+    relevant_dimensions = {
+        dimension: round(float(adjusted_values[dimension]), 6)
+        for dimension in sorted(task["representation_weights"][representation_id])
+    }
+    relevant_skills = {
+        skill: round(float(actor["skills"][skill]), 6)
+        for skill in sorted(task["skill_weights"])
+    }
     return {
-        "representations": actor["representations"],
-        "skills": actor["skills"],
-        "available_tools": sorted(actor["available_tools"]),
+        "seed_salt": spec["provenance"]["seed_salt"],
+        "evaluation_ruleset_version": spec["provenance"]["evaluation_ruleset_version"],
+        "representation_candidate": {
+            "candidate_id": representation_id,
+            "version": representation["version"],
+        },
+        "math_policy_candidate": {
+            "candidate_id": math_policy_id,
+            "version": math_policy["version"],
+        },
+        "task_id": task_id,
+        "method_id": task["method_id"],
+        "relevant_dimension_values_after_conditions": relevant_dimensions,
+        "relevant_skill_values": relevant_skills,
+        "required_tool_truth": {
+            "required_tool": required_tool,
+            "present": required_tool_present if required_tool is not None else None,
+        },
+        "difficulty": round(float(difficulty), 6),
     }
 
 
@@ -321,7 +381,7 @@ def evaluate_case(
 
     prerequisite = task["hard_prerequisites"]
     required_tool = prerequisite.get("required_tool")
-    feasible = required_tool is None or required_tool in actor["available_tools"]
+    required_tool_present = required_tool is None or required_tool in actor["available_tools"]
     difficulty = max(0.0, min(100.0, float(task["difficulty"]) + float(difficulty_offset)))
 
     receipt_base = {
@@ -336,7 +396,7 @@ def evaluate_case(
         "candidate_status": spec["candidate_status_required"],
     }
 
-    if not feasible:
+    if not required_tool_present:
         return {
             **receipt_base,
             "feasibility": "HARD_FAIL_MISSING_REQUIRED_TOOL",
@@ -377,19 +437,20 @@ def evaluate_case(
     random_receipt = None
     if kind == "BOUNDED_SEEDED_STOCHASTIC":
         probability_band, threshold_percent = _stochastic_bucket(margin)
-        seed_material = {
-            "seed_salt": spec["provenance"]["seed_salt"],
-            "representation_candidate_id": representation_id,
-            "math_policy_candidate_id": math_policy_id,
-            "task_id": task_id,
-            "method_id": task["method_id"],
-            "conditions": list(normalized_condition_ids),
-            "actor_candidate_inputs": _actor_input_fingerprint({
-                **actor,
-                "representations": {**actor["representations"], representation_id: raw_values},
-            }),
-            "difficulty": difficulty,
-        }
+        seed_material = _semantic_seed_material(
+            spec,
+            representation_id,
+            representation,
+            math_policy_id,
+            math_policy,
+            task_id,
+            task,
+            actor,
+            adjusted_values,
+            difficulty,
+            required_tool,
+            required_tool_present,
+        )
         digest = hashlib.sha256(canonical_json(seed_material).encode("utf-8")).hexdigest()
         roll_bucket = int(digest[:8], 16) % 100
         sampled_success = roll_bucket < threshold_percent
@@ -417,11 +478,7 @@ def evaluate_case(
 
 
 def _resolution_signature(receipt: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        key: value
-        for key, value in receipt.items()
-        if key not in {"subject_ref"}
-    }
+    return {key: value for key, value in receipt.items() if key != "subject_ref"}
 
 
 def _fighter_vs_scholar(spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -438,7 +495,8 @@ def _fighter_vs_scholar(spec: Mapping[str, Any]) -> dict[str, Any]:
                     "fighter": fighter,
                     "scholar": scholar,
                     "margin_delta_fighter_minus_scholar": (
-                        None if fighter["margin"] is None or scholar["margin"] is None
+                        None
+                        if fighter["margin"] is None or scholar["margin"] is None
                         else round(float(fighter["margin"]) - float(scholar["margin"]), 6)
                     ),
                 }
@@ -454,12 +512,18 @@ def _locality_probes(spec: Mapping[str, Any]) -> dict[str, Any]:
         reasoning_leg = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM", ["LEG_IMPAIRMENT"])
         force_base = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "RESTRAINT_FORCE")
         force_hand = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "RESTRAINT_FORCE", ["HAND_ARM_IMPAIRMENT"])
+        manual_base = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "DISARM_TRAP")
+        manual_hand = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "DISARM_TRAP", ["HAND_ARM_IMPAIRMENT"])
+        tool_base = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
+        tool_hand = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "RESTRAINT_TOOL", ["HAND_ARM_IMPAIRMENT"])
         balance_base = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "BEAM_BALANCE")
         balance_leg = evaluate_case(spec, representation_id, "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "BEAM_BALANCE", ["LEG_IMPAIRMENT"])
         output[representation_id] = {
             "reasoning_unchanged_by_hand": reasoning_base["margin"] == reasoning_hand["margin"],
             "reasoning_unchanged_by_leg": reasoning_base["margin"] == reasoning_leg["margin"],
             "force_reduced_by_hand": float(force_hand["margin"]) < float(force_base["margin"]),
+            "manual_reduced_by_hand": float(manual_hand["margin"]) < float(manual_base["margin"]),
+            "tool_reduced_by_hand": float(tool_hand["margin"]) < float(tool_base["margin"]),
             "balance_reduced_by_leg": float(balance_leg["margin"]) < float(balance_base["margin"]),
             "receipts": {
                 "reasoning_base": reasoning_base,
@@ -467,6 +531,10 @@ def _locality_probes(spec: Mapping[str, Any]) -> dict[str, Any]:
                 "reasoning_leg": reasoning_leg,
                 "force_base": force_base,
                 "force_hand": force_hand,
+                "manual_base": manual_base,
+                "manual_hand": manual_hand,
+                "tool_base": tool_base,
+                "tool_hand": tool_hand,
                 "balance_base": balance_base,
                 "balance_leg": balance_leg,
             },
@@ -474,10 +542,67 @@ def _locality_probes(spec: Mapping[str, Any]) -> dict[str, Any]:
     return output
 
 
+def _diagnose_sensitivity_series(
+    axis_values: Iterable[float],
+    margins: Iterable[float],
+    *,
+    expected_direction: str,
+    policy: Mapping[str, float] = SENSITIVITY_DIAGNOSTIC_POLICY,
+) -> dict[str, Any]:
+    xs = [float(value) for value in axis_values]
+    ys = [float(value) for value in margins]
+    if len(xs) != len(ys) or len(xs) < 2:
+        raise EvaluationSpecError("sensitivity series needs matching axis/margin values")
+    if any(not math.isfinite(value) for value in xs + ys):
+        raise EvaluationSpecError("sensitivity series contains non-finite values")
+    if any(left >= right for left, right in zip(xs, xs[1:])):
+        raise EvaluationSpecError("sensitivity axis must be strictly increasing")
+    if expected_direction not in {"NONDECREASING", "NONINCREASING"}:
+        raise EvaluationSpecError("unknown sensitivity expected direction")
+
+    slopes = [(right_y - left_y) / (right_x - left_x) for left_x, right_x, left_y, right_y in zip(xs, xs[1:], ys, ys[1:])]
+    slope_changes = [abs(right - left) for left, right in zip(slopes, slopes[1:])]
+    epsilon = float(policy["dead_zone_abs_slope_epsilon"])
+    reversal_detected = (
+        any(slope < -epsilon for slope in slopes)
+        if expected_direction == "NONDECREASING"
+        else any(slope > epsilon for slope in slopes)
+    )
+    max_abs_slope = max(abs(slope) for slope in slopes)
+    max_adjacent_slope_change = max(slope_changes, default=0.0)
+    return {
+        "slopes": [round(slope, 6) for slope in slopes],
+        "reversal_detected": reversal_detected,
+        "dead_zone_detected": all(abs(slope) <= epsilon for slope in slopes),
+        "cliff_detected": max_adjacent_slope_change > float(policy["cliff_adjacent_slope_change_threshold"]),
+        "excessive_sensitivity_detected": max_abs_slope > float(policy["excessive_abs_slope_threshold"]),
+        "max_abs_slope": round(max_abs_slope, 6),
+        "max_adjacent_slope_change": round(max_adjacent_slope_change, 6),
+    }
+
+
+def _condition_shift_diagnostic(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    baseline: dict[tuple[float, float], float] = {}
+    conditioned: list[tuple[tuple[float, float], float]] = []
+    for row in rows:
+        key = (float(row["difficulty_offset"]), float(row["capability_offset"]))
+        if row["conditions"] == []:
+            baseline[key] = float(row["margin"])
+        else:
+            conditioned.append((key, float(row["margin"])))
+    shifts = [abs(value - baseline[key]) for key, value in conditioned if key in baseline]
+    max_shift = max(shifts, default=0.0)
+    return {
+        "max_abs_condition_shift": round(max_shift, 6),
+        "excessive_condition_shift_detected": max_shift > float(SENSITIVITY_DIAGNOSTIC_POLICY["excessive_condition_shift_threshold"]),
+    }
+
+
 def _sensitivity_sweeps(spec: Mapping[str, Any]) -> dict[str, Any]:
     output: dict[str, Any] = {}
     for sweep in sorted(spec["sweep_definitions"], key=lambda item: item["sweep_id"]):
-        rows = []
+        rows: list[dict[str, Any]] = []
+        capability_diagnostics: list[dict[str, Any]] = []
         for condition_ids in sweep["conditions"]:
             for difficulty_offset in sweep["difficulty_offsets"]:
                 margins = []
@@ -500,15 +625,64 @@ def _sensitivity_sweeps(spec: Mapping[str, Any]) -> dict[str, Any]:
                         "margin": receipt["margin"],
                         "outcome_band": receipt["outcome_band"],
                     })
-                nondecreasing = all(left <= right for left, right in zip(margins, margins[1:]))
-                if not nondecreasing:
-                    raise EvaluationSpecError(f"sweep reversal detected in {sweep['sweep_id']}")
+                diagnostic = _diagnose_sensitivity_series(
+                    sweep["capability_offsets"],
+                    margins,
+                    expected_direction="NONDECREASING",
+                )
+                capability_diagnostics.append({
+                    "conditions": list(condition_ids),
+                    "difficulty_offset": difficulty_offset,
+                    **diagnostic,
+                })
+
+        difficulty_diagnostics: list[dict[str, Any]] = []
+        for condition_ids in sweep["conditions"]:
+            for capability_offset in sweep["capability_offsets"]:
+                margins = []
+                for difficulty_offset in sweep["difficulty_offsets"]:
+                    receipt = evaluate_case(
+                        spec,
+                        sweep["representation_id"],
+                        sweep["math_policy_id"],
+                        sweep["actor_id"],
+                        sweep["task_id"],
+                        condition_ids,
+                        dimension_offsets={sweep["relevant_dimension"]: capability_offset},
+                        difficulty_offset=difficulty_offset,
+                    )
+                    margins.append(float(receipt["margin"]))
+                diagnostic = _diagnose_sensitivity_series(
+                    sweep["difficulty_offsets"],
+                    margins,
+                    expected_direction="NONINCREASING",
+                )
+                difficulty_diagnostics.append({
+                    "conditions": list(condition_ids),
+                    "capability_offset": capability_offset,
+                    **diagnostic,
+                })
+
         sorted_rows = sorted(rows, key=lambda row: (tuple(row["conditions"]), row["difficulty_offset"], row["capability_offset"]))
-        unique_margins = {row["margin"] for row in sorted_rows}
+        all_axis_diagnostics = capability_diagnostics + difficulty_diagnostics
+        condition_shift = _condition_shift_diagnostic(sorted_rows)
         output[sweep["sweep_id"]] = {
             "rows": sorted_rows,
-            "reversal_detected": False,
-            "dead_zone_detected": len(unique_margins) == 1,
+            "diagnostic_policy": dict(SENSITIVITY_DIAGNOSTIC_POLICY),
+            "capability_axis_diagnostics": capability_diagnostics,
+            "difficulty_axis_diagnostics": difficulty_diagnostics,
+            "condition_shift_diagnostic": condition_shift,
+            "reversal_detected": any(entry["reversal_detected"] for entry in all_axis_diagnostics),
+            "cliff_detected": any(entry["cliff_detected"] for entry in all_axis_diagnostics),
+            "dead_zone_detected": any(entry["dead_zone_detected"] for entry in all_axis_diagnostics),
+            "excessive_sensitivity_detected": (
+                any(entry["excessive_sensitivity_detected"] for entry in all_axis_diagnostics)
+                or condition_shift["excessive_condition_shift_detected"]
+            ),
+            "max_abs_capability_slope": max((entry["max_abs_slope"] for entry in capability_diagnostics), default=0.0),
+            "max_abs_difficulty_slope": max((entry["max_abs_slope"] for entry in difficulty_diagnostics), default=0.0),
+            "max_adjacent_slope_change": max((entry["max_adjacent_slope_change"] for entry in all_axis_diagnostics), default=0.0),
+            "max_abs_condition_shift": condition_shift["max_abs_condition_shift"],
             "parameter_grid_size": len(sorted_rows),
         }
     return output
@@ -520,15 +694,9 @@ def _candidate_dimensions(spec: Mapping[str, Any]) -> dict[str, Any]:
     output: dict[str, Any] = {}
     for representation_id, candidate in sorted(representations.items()):
         demand_weight_count = sum(len(task["representation_weights"][representation_id]) for task in tasks.values())
-        signatures = {
-            canonical_json(task["representation_weights"][representation_id])
-            for task in tasks.values()
-        }
+        signatures = {canonical_json(task["representation_weights"][representation_id]) for task in tasks.values()}
         deterministic = fighter_matrix[representation_id]["DETERMINISTIC_MARGIN_V1"]
-        discrimination = sum(
-            abs(float(entry["margin_delta_fighter_minus_scholar"])) >= 5
-            for entry in deterministic.values()
-        )
+        discrimination = sum(abs(float(entry["margin_delta_fighter_minus_scholar"])) >= 5 for entry in deterministic.values())
         output[representation_id] = {
             "status": candidate["status"],
             "family": candidate["family"],
@@ -561,9 +729,7 @@ def _math_policy_checks(spec: Mapping[str, Any]) -> dict[str, Any]:
         output[policy_id] = {
             "kind": policy["kind"],
             "status": policy["status"],
-            "relevant_capability_monotonic": (
-                low["margin"] is not None and high["margin"] is not None and float(high["margin"]) >= float(low["margin"])
-            ),
+            "relevant_capability_monotonic": low["margin"] is not None and high["margin"] is not None and float(high["margin"]) >= float(low["margin"]),
             "repeat_deterministic": canonical_json(repeated_a) == canonical_json(repeated_b),
             "hard_feasibility_precedes_resolution": True,
             "success_hazard_separate_axes": "hazard_outcome" in repeated_a and "outcome_band" in repeated_a,
@@ -579,6 +745,39 @@ def _core_results(spec: Mapping[str, Any]) -> dict[str, Any]:
         "locality_probes": _locality_probes(spec),
         "math_policy_checks": _math_policy_checks(spec),
         "sensitivity_sweeps": _sensitivity_sweeps(spec),
+    }
+
+
+def _stochastic_irrelevant_factor_checks(spec: Mapping[str, Any]) -> dict[str, bool]:
+    baseline = evaluate_case(spec, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
+
+    unused_dimension = copy.deepcopy(spec)
+    scholar = next(actor for actor in unused_dimension["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
+    scholar["representations"]["SMALL_CORE_V1"]["strength"] = 99
+
+    unused_skill = copy.deepcopy(spec)
+    scholar = next(actor for actor in unused_skill["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
+    scholar["skills"]["athletics"] = 99
+
+    other_representation = copy.deepcopy(spec)
+    scholar = next(actor for actor in other_representation["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
+    scholar["representations"]["RICH_GENRE_NEUTRAL_V1"]["strength"] = 99
+
+    unrelated_tool = copy.deepcopy(spec)
+    scholar = next(actor for actor in unrelated_tool["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
+    scholar["available_tools"].append("UNRELATED_TOOL_99")
+
+    variants = {
+        "unused_dimension": unused_dimension,
+        "unused_skill": unused_skill,
+        "other_representation": other_representation,
+        "unrelated_tool": unrelated_tool,
+    }
+    return {
+        name: canonical_json(baseline) == canonical_json(
+            evaluate_case(variant, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
+        )
+        for name, variant in variants.items()
     }
 
 
@@ -603,22 +802,27 @@ def _adversarial_checks(spec: Mapping[str, Any]) -> dict[str, bool]:
     after = evaluate_case(irrelevant, "SMALL_CORE_V1", "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM")
     checks["irrelevant_factor_isolated"] = _resolution_signature(before) == _resolution_signature(after)
 
+    stochastic_isolation = _stochastic_irrelevant_factor_checks(spec)
+    checks.update({f"stochastic_irrelevant_{name}_isolated": passed for name, passed in stochastic_isolation.items()})
+
     missing_tool = copy.deepcopy(spec)
     scholar_no_tool = next(actor for actor in missing_tool["actor_fixtures"] if actor["actor_id"] == "SCHOLAR_B")
     scholar_no_tool["available_tools"] = []
     impossible = evaluate_case(missing_tool, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
-    checks["impossible_not_rescued_by_probability"] = (
-        impossible["feasibility"].startswith("HARD_FAIL") and impossible["random_provenance_optional"] is None
-    )
+    checks["impossible_not_rescued_by_probability"] = impossible["feasibility"].startswith("HARD_FAIL") and impossible["random_provenance_optional"] is None
     checks["no_unowned_tool_bonus"] = impossible["effective_capability"] is None
 
     weak = evaluate_case(spec, "SMALL_CORE_V1", "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "RESTRAINT_FORCE", dimension_offsets={"strength": -10})
     strong = evaluate_case(spec, "SMALL_CORE_V1", "DETERMINISTIC_MARGIN_V1", "FIGHTER_A", "RESTRAINT_FORCE", dimension_offsets={"strength": 10})
     checks["stronger_relevant_capability_not_worse"] = float(strong["margin"]) >= float(weak["margin"])
 
-    reasoning_base = evaluate_case(spec, "SMALL_CORE_V1", "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM")
-    reasoning_injured = evaluate_case(spec, "SMALL_CORE_V1", "DETERMINISTIC_MARGIN_V1", "SCHOLAR_B", "SOLVE_MECHANISM", ["HAND_ARM_IMPAIRMENT"])
-    checks["local_injury_does_not_reduce_unrelated_cognition"] = reasoning_base["margin"] == reasoning_injured["margin"]
+    locality = _locality_probes(spec)
+    checks["local_injury_does_not_reduce_unrelated_cognition"] = all(
+        entry["reasoning_unchanged_by_hand"] and entry["reasoning_unchanged_by_leg"] for entry in locality.values()
+    )
+    checks["hand_arm_impairment_reduces_force_manual_and_tool_routes"] = all(
+        entry["force_reduced_by_hand"] and entry["manual_reduced_by_hand"] and entry["tool_reduced_by_hand"] for entry in locality.values()
+    )
 
     sentinel_before = evaluate_case(spec, "RICH_GENRE_NEUTRAL_V1", "TAGGED_PRIORITY_V1", "SCHOLAR_B", "OBSERVE_TRACKS")
     for representation_id in sorted(candidate["candidate_id"] for candidate in spec["representation_candidates"]):
@@ -630,7 +834,6 @@ def _adversarial_checks(spec: Mapping[str, Any]) -> dict[str, bool]:
     reordered["representation_candidates"] = list(reversed(reordered["representation_candidates"]))
     reordered["math_policy_candidates"] = list(reversed(reordered["math_policy_candidates"]))
     checks["candidate_order_independent"] = canonical_json(_core_results(spec)) == canonical_json(_core_results(reordered))
-
     checks["repeated_structure_stable"] = canonical_json(_core_results(spec)) == canonical_json(_core_results(spec))
 
     stochastic_a = evaluate_case(spec, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1", "SCHOLAR_B", "RESTRAINT_TOOL")
@@ -646,14 +849,10 @@ def _adversarial_checks(spec: Mapping[str, Any]) -> dict[str, bool]:
         malformed_failed_closed = True
     checks["malformed_reference_fails_closed"] = malformed_failed_closed
 
-    labels = []
-    labels.extend(candidate["status"] for candidate in spec["representation_candidates"])
+    labels = [candidate["status"] for candidate in spec["representation_candidates"]]
     labels.extend(candidate["status"] for candidate in spec["math_policy_candidates"])
     forbidden_authority_labels = {"CANONICAL", "ACCEPTED", "FROZEN", "PRODUCTION"}
-    checks["candidate_labels_non_authoritative"] = all(
-        not any(token in label for token in forbidden_authority_labels)
-        for label in labels
-    )
+    checks["candidate_labels_non_authoritative"] = all(not any(token in label for token in forbidden_authority_labels) for label in labels)
 
     checks["all_checks_pass"] = all(checks.values())
     return checks
@@ -672,14 +871,15 @@ def run_evaluation(spec: Mapping[str, Any]) -> dict[str, Any]:
             "SMALL_CORE_V1 uses fewer durable base dimensions than RICH_GENRE_NEUTRAL_V1 while preserving the bounded corpus route discrimination.",
             "DEMAND_PRIMITIVES_V1 remains useful as a method-demand representation but risks becoming a hidden second actor sheet without durable evidence binding.",
             "All four math candidates remain evaluation candidates; deterministic margin is the simplest audit baseline, while seeded stochastic mapping remains reproducible but uncalibrated.",
-            "Tagged bottleneck and whole-stack multiplicative policies retain explicit counterexamples that require broader calibration before any governance resolution."
+            "Tagged bottleneck and whole-stack multiplicative policies retain explicit counterexamples that require broader calibration before any governance resolution.",
         ],
     }
     strongest_counterevidence = [
         "The corpus and actor values are deliberately synthetic and bounded; no human playtest or production telemetry calibrates the candidate scales or weights.",
         "Genre extension pressure is represented only by structural metadata, not by executable wuxia/xianxia/science-fiction task corpora.",
         "Injury probes establish locality properties but do not validate medical, healing, fatigue, or canonical injury runtime semantics.",
-        "A passing deterministic sensitivity grid cannot prove that any probability curve or parameter set feels fair or fun in production."
+        "Sensitivity tripwires are transparent evaluation diagnostics, not validated player-facing fairness thresholds or production calibration.",
+        "A passing deterministic sensitivity grid cannot prove that any probability curve or parameter set feels fair or fun in production.",
     ]
     result = {
         **core,
