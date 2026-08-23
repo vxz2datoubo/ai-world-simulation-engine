@@ -250,7 +250,7 @@ def test_af001_artifact_authority_roles_are_structured_and_unique():
 
     architecture = ARCH_PATH.read_text(encoding="utf-8")
     assert "Authority role: `CANONICAL_ARCHITECTURE_MASTER`" in architecture
-    assert "RUNTIME_EXPANSION_BLOCKED_UNTIL_AF001_ACCEPTED" in architecture
+    assert "AF001_ACCEPTED_CANONICAL / FURTHER_RUNTIME_EXPANSION_REQUIRES_EXPLICIT_RELEASE" in architecture
 
     trace = TRACE_PATH.read_text(encoding="utf-8")
     block = re.search(r"```json\n(\{.*?\})\n```", trace, re.DOTALL)
