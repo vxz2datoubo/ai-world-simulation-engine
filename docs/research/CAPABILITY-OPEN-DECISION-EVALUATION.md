@@ -22,7 +22,7 @@ Hard properties retained by the evaluator:
 - impossible/hard-prerequisite failure occurs before stochastic mapping;
 - success and hazard remain separate axes;
 - actor ID/name is not a capability bonus;
-- tools contribute only when the fixture explicitly makes the tool available;
+- tools contribute only when the fixture explicitly makes the required tool available;
 - local function impairment changes only dimensions tagged as relevant to that function;
 - no candidate is labeled canonical, accepted, frozen or production;
 - no runtime code is called or modified by this evaluation.
@@ -77,20 +77,23 @@ Two evaluation-only conditions are used:
 - `HAND_ARM_IMPAIRMENT`: affects tags such as hand function and upper-limb force;
 - `LEG_IMPAIRMENT`: affects balance/mobility tags.
 
-Required executable properties:
+The executable locality matrix now directly executes all required route classes across every governed representation candidate:
 
-| Probe | Required result |
-|---|---|
-| hand/arm impairment on force restraint | lower relevant margin |
-| hand/arm impairment on manual/tool dimensions | lower relevant margin where used |
-| leg impairment on beam balance | lower relevant margin |
-| hand/arm impairment on `SOLVE_MECHANISM` | unchanged reasoning result |
-| leg impairment on `SOLVE_MECHANISM` | unchanged reasoning result |
-| all condition-adjusted outputs | finite and range-bounded |
+| Probe | Executable fixture | Required result |
+|---|---|---|
+| hand/arm impairment on force route | `RESTRAINT_FORCE` | lower relevant margin |
+| hand/arm impairment on precision/manual route | `DISARM_TRAP` | lower relevant margin |
+| hand/arm impairment on real-tool route | `RESTRAINT_TOOL` | lower relevant margin |
+| leg impairment on balance route | `BEAM_BALANCE` | lower relevant margin |
+| hand/arm impairment on reasoning | `SOLVE_MECHANISM` | unchanged reasoning result |
+| leg impairment on reasoning | `SOLVE_MECHANISM` | unchanged reasoning result |
+| all condition-adjusted outputs | all above | finite and range-bounded |
+
+This closes the earlier evidence gap where the report described manual/tool locality but the evaluator only executed force, balance and reasoning isolation.
 
 These probes only evaluate locality. They are **not** a canonical injury taxonomy, medical model, healing system, fatigue system or I2 implementation.
 
-## 5. Math-policy comparison
+## 5. Math-policy comparison and stochastic seed semantics
 
 All math policies remain `EVALUATION_CANDIDATE_ONLY`.
 
@@ -103,7 +106,28 @@ All math policies remain `EVALUATION_CANDIDATE_ONLY`.
 
 The stochastic candidate intentionally exposes only coarse mapping bands plus a deterministic receipt. It does not print a false-precision success percentage as if experimentally validated.
 
-There is no caller-provided reroll seed. Repeated identical candidate input/ruleset/task produces the same seed digest and roll receipt.
+### No hidden reroll from irrelevant actor data
+
+The deterministic seed is now derived only from semantic inputs actually consumed by the current resolution:
+- evaluation ruleset and fixed seed salt;
+- current representation candidate ID/version;
+- current math-policy candidate ID/version;
+- current task and method;
+- only the current task's referenced representation dimensions, after applicable offsets/conditions;
+- only the current task's referenced skills;
+- the actual required-tool truth for this task;
+- current difficulty/resistance.
+
+It deliberately excludes:
+- actor name/ID;
+- unused dimensions in the current representation;
+- unused skills;
+- values from other representation candidates;
+- unrelated tools merely present in `available_tools`.
+
+Executable adversarial regressions perturb each of those four reviewer-identified irrelevant actor-data classes and require the **entire stochastic receipt, seed digest, roll and sampled outcome** to remain identical. A resolution-relevant dimension perturbation, by contrast, must change the semantic seed material.
+
+There is no caller-provided reroll seed.
 
 ## 6. Sensitivity / parameter sweeps
 
@@ -112,28 +136,57 @@ The governed spec executes bounded grids for:
 2. scholar precision/manual trap handling vs difficulty, with/without hand impairment;
 3. scholar reasoning vs difficulty, including unrelated hand and leg impairment.
 
-Each sweep varies relevant capability and difficulty across five-by-three grids and condition variants. The evaluator fails closed if a stronger relevant capability produces a lower deterministic margin in the governed sweep.
+Each sweep varies relevant capability, difficulty/resistance and condition state. The structured result now includes separate diagnostics for both capability and difficulty axes, plus discrete condition shift analysis.
 
-The report keeps reversal/dead-zone signals explicit rather than collapsing them into one score.
+### Auditable diagnostic policy
+
+These thresholds are **evaluation tripwires only**, not gameplay law or calibrated fairness claims:
+
+| Diagnostic | Machine threshold |
+|---|---:|
+| dead zone | absolute local slope `<= 1e-9` across a full axis series |
+| cliff | adjacent local-slope change `> 0.75` margin-per-axis-unit |
+| excessive continuous sensitivity | absolute local slope `> 1.25` margin-per-axis-unit |
+| excessive condition sensitivity | absolute same-grid condition shift `> 35.0` margin units |
+
+For every sweep the evaluator emits:
+- `reversal_detected`;
+- `cliff_detected`;
+- `dead_zone_detected`;
+- `excessive_sensitivity_detected`;
+- capability-axis local slopes;
+- difficulty-axis local slopes;
+- maximum adjacent slope change;
+- maximum condition shift;
+- the exact diagnostic policy used.
+
+A reversal means the response moves opposite the declared expected direction. A cliff means local response slope changes abruptly, not merely that an outcome-band label crosses a threshold. Excessive sensitivity remains separate from cliff detection: a consistently steep response can be excessive without being discontinuous.
+
+The regression suite contains deliberately synthetic series that trigger **each** detector, so the detector paths are non-vacuous. Governed candidate sweeps remain evidence and are not converted into a winner score.
 
 ## 7. Adversarial evidence
 
 The executable suite explicitly challenges:
 
 1. actor ID/name change with identical candidate inputs;
-2. irrelevant attribute perturbation on an unrelated reasoning task;
-3. missing tool under stochastic policy;
-4. stronger relevant capability monotonicity;
-5. local injury leakage into unrelated cognition;
-6. unowned/nonexistent tool bonus;
-7. evaluation order mutation;
-8. candidate list order dependence;
-9. canonical-serialization stability;
-10. deterministic stochastic receipt reproduction;
-11. malformed/unknown candidate references;
-12. accidental authority-bearing candidate labels.
+2. irrelevant attribute perturbation on an unrelated deterministic task;
+3. stochastic unused-dimension perturbation;
+4. stochastic unused-skill perturbation;
+5. stochastic other-representation perturbation;
+6. stochastic unrelated-tool perturbation;
+7. missing tool under stochastic policy;
+8. stronger relevant capability monotonicity;
+9. hand/arm locality on force, manual and real-tool routes;
+10. local injury leakage into unrelated cognition;
+11. evaluation order mutation;
+12. candidate list order dependence;
+13. canonical-serialization stability;
+14. deterministic stochastic receipt reproduction;
+15. malformed/unknown candidate references;
+16. accidental authority-bearing candidate labels;
+17. non-vacuous reversal/cliff/dead-zone/excessive-sensitivity detection.
 
-Any failure raises an evaluation error or fails CI rather than being converted into a favorable recommendation.
+Any invariant failure raises an evaluation error or fails CI rather than being converted into a favorable recommendation.
 
 ## 8. Evidence dimensions kept separate
 
@@ -168,7 +221,8 @@ The executable evidence is strong enough to reject several *failure modes*, but 
 - no human playtest establishes whether outcome bands feel fair;
 - no production telemetry calibrates probability or modifier scales;
 - genre-extension friendliness is structural reasoning here, not an executable wuxia/xianxia/science-fiction corpus;
-- injury tests establish functional locality only, not gameplay or medical validity.
+- injury tests establish functional locality only, not gameplay or medical validity;
+- the sensitivity thresholds above are transparent diagnostic tripwires, not validated player-facing tuning law.
 
 ### Useful narrowing signal
 
@@ -187,7 +241,8 @@ An Independent Reviewer should therefore attack whether:
 - the corpus under-represents tasks where richer axes matter;
 - the small core is getting a tuning-burden advantage without paying an expressiveness cost;
 - demand primitives are merely moving hidden attributes from the actor sheet into each task definition;
-- the stochastic buckets encode arbitrary taste as mathematics.
+- the stochastic buckets encode arbitrary taste as mathematics;
+- the sensitivity tripwires are useful diagnostics without being mistaken for validated production tuning thresholds.
 
 That counterevidence is why the recommendation remains `INSUFFICIENT_EVIDENCE_KEEP_OPEN` rather than declaring a winner.
 
