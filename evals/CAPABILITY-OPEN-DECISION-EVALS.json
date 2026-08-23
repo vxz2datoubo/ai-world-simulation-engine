@@ -1,0 +1,363 @@
+{
+  "suite_id": "AWRSE-CAP-EVAL-001-OPEN-DECISION",
+  "suite_version": "1.0.0",
+  "status": "EVALUATION_ONLY_NON_CANONICAL",
+  "release_base": "15abb16b3892d69aeed14ee2327211d2af672500",
+  "source_open_decision_refs": [
+    "OD-CAPABILITY-ATTR-001",
+    "OD-CAPABILITY-MATH-001"
+  ],
+  "authority_sources": [
+    "ARCHITECTURE.md",
+    "docs/AF001-TRACEABILITY.md",
+    "contracts/AF001-LIVING-STORY-CONTRACTS.json",
+    "evals/AF001-GOLDEN-SCENARIOS.json",
+    "Issue #12 CAPABILITY-DESIGN-001",
+    "Issue #19 Post-R003-I1B Planning Review",
+    "Issue #24 CAP-EVAL-001"
+  ],
+  "all_candidates_non_canonical": true,
+  "candidate_status_required": "EVALUATION_CANDIDATE_ONLY",
+  "provenance": {
+    "evaluation_ruleset_version": "CAP-EVAL-001/1.0.0",
+    "serialization": "UTF8_CANONICAL_JSON_SORTED_KEYS_COMPACT",
+    "seed_salt": "CAP-EVAL-001-FIXED-SEED-V1",
+    "network_dependency": false,
+    "model_dependency": false,
+    "wall_clock_dependency": false
+  },
+  "representation_candidates": [
+    {
+      "candidate_id": "DEMAND_PRIMITIVES_V1",
+      "family": "ACTION_DEMAND_ONLY_PRIMITIVES",
+      "version": "1.0.0",
+      "status": "EVALUATION_CANDIDATE_ONLY",
+      "dimensions": {
+        "force": {"tags": ["force", "upper_limb_force"]},
+        "endurance": {"tags": ["endurance"]},
+        "manual_precision": {"tags": ["manual", "hand_function"]},
+        "coordination": {"tags": ["coordination"]},
+        "balance": {"tags": ["balance", "mobility"]},
+        "perception": {"tags": ["perception"]},
+        "reasoning": {"tags": ["reasoning", "cognitive"]},
+        "technique_control": {"tags": ["technique", "hand_function"]},
+        "tool_control": {"tags": ["tool", "manual", "hand_function"]}
+      },
+      "genre_extension_note": "Primitives can be extended per demand without expanding a durable mundane actor vector.",
+      "strongest_counterexample": "Task-local primitives can become a hidden second character sheet if authoring discipline does not bind them to durable evidence."
+    },
+    {
+      "candidate_id": "SMALL_CORE_V1",
+      "family": "SMALL_MUNDANE_CORE_VECTOR",
+      "version": "1.0.0",
+      "status": "EVALUATION_CANDIDATE_ONLY",
+      "dimensions": {
+        "strength": {"tags": ["force", "upper_limb_force"]},
+        "endurance": {"tags": ["endurance"]},
+        "dexterity": {"tags": ["manual", "hand_function"]},
+        "coordination": {"tags": ["coordination", "balance"]},
+        "perception": {"tags": ["perception"]},
+        "reasoning": {"tags": ["reasoning", "cognitive"]}
+      },
+      "genre_extension_note": "Keeps a small mundane base while techniques, skills and genre state remain outside the core.",
+      "strongest_counterexample": "Collapsing agility, balance and power into a smaller core may under-describe tasks where those distinctions materially matter."
+    },
+    {
+      "candidate_id": "RICH_GENRE_NEUTRAL_V1",
+      "family": "RICHER_GENRE_NEUTRAL_VECTOR",
+      "version": "1.0.0",
+      "status": "EVALUATION_CANDIDATE_ONLY",
+      "dimensions": {
+        "strength": {"tags": ["force", "upper_limb_force"]},
+        "power": {"tags": ["force", "upper_limb_force", "burst"]},
+        "endurance": {"tags": ["endurance"]},
+        "agility": {"tags": ["mobility"]},
+        "dexterity": {"tags": ["manual", "hand_function"]},
+        "coordination": {"tags": ["coordination"]},
+        "balance": {"tags": ["balance", "mobility"]},
+        "perception": {"tags": ["perception"]},
+        "reasoning": {"tags": ["reasoning", "cognitive"]},
+        "composure": {"tags": ["cognitive", "composure"]}
+      },
+      "genre_extension_note": "Provides more explicit mundane axes before genre packs are added.",
+      "strongest_counterexample": "The bounded corpus may not justify the larger vector, creating stat-soup and tuning burden without measurable discrimination gain."
+    }
+  ],
+  "math_policy_candidates": [
+    {
+      "candidate_id": "DETERMINISTIC_MARGIN_V1",
+      "kind": "DETERMINISTIC_MARGIN",
+      "version": "1.0.0",
+      "status": "EVALUATION_CANDIDATE_ONLY",
+      "strongest_counterexample": "A single margin can hide bottleneck dimensions unless hard prerequisites are explicit."
+    },
+    {
+      "candidate_id": "ADDITIVE_MULTIPLICATIVE_STACK_V1",
+      "kind": "ADDITIVE_MULTIPLICATIVE_STACK",
+      "version": "1.0.0",
+      "status": "EVALUATION_CANDIDATE_ONLY",
+      "strongest_counterexample": "Multiplying the whole stack can over-penalize tool or skill contributions that should be condition-local."
+    },
+    {
+      "candidate_id": "TAGGED_PRIORITY_V1",
+      "kind": "TAGGED_PRIORITY",
+      "version": "1.0.0",
+      "status": "EVALUATION_CANDIDATE_ONLY",
+      "strongest_counterexample": "Bottleneck weighting can create sensitivity cliffs near the weakest relevant dimension."
+    },
+    {
+      "candidate_id": "BOUNDED_SEEDED_STOCHASTIC_V1",
+      "kind": "BOUNDED_SEEDED_STOCHASTIC",
+      "version": "1.0.0",
+      "status": "EVALUATION_CANDIDATE_ONLY",
+      "strongest_counterexample": "Seeded randomness adds policy complexity and can be mistaken for calibrated science without playtest evidence."
+    }
+  ],
+  "actor_fixtures": [
+    {
+      "actor_id": "FIGHTER_A",
+      "role": "TRAINED_FIGHTER",
+      "representations": {
+        "DEMAND_PRIMITIVES_V1": {"force": 84, "endurance": 76, "manual_precision": 56, "coordination": 78, "balance": 82, "perception": 62, "reasoning": 52, "technique_control": 86, "tool_control": 48},
+        "SMALL_CORE_V1": {"strength": 84, "endurance": 76, "dexterity": 58, "coordination": 80, "perception": 62, "reasoning": 52},
+        "RICH_GENRE_NEUTRAL_V1": {"strength": 84, "power": 88, "endurance": 76, "agility": 80, "dexterity": 58, "coordination": 82, "balance": 84, "perception": 62, "reasoning": 52, "composure": 74}
+      },
+      "skills": {"restraint_escape": 88, "athletics": 84, "tool_use": 44, "trap_handling": 38, "observation": 58, "problem_solving": 52},
+      "available_tools": ["PICK_SET_01"]
+    },
+    {
+      "actor_id": "SCHOLAR_B",
+      "role": "WEAK_SCHOLAR",
+      "representations": {
+        "DEMAND_PRIMITIVES_V1": {"force": 38, "endurance": 48, "manual_precision": 82, "coordination": 68, "balance": 56, "perception": 76, "reasoning": 90, "technique_control": 66, "tool_control": 88},
+        "SMALL_CORE_V1": {"strength": 38, "endurance": 48, "dexterity": 84, "coordination": 68, "perception": 76, "reasoning": 90},
+        "RICH_GENRE_NEUTRAL_V1": {"strength": 38, "power": 34, "endurance": 48, "agility": 54, "dexterity": 84, "coordination": 68, "balance": 56, "perception": 76, "reasoning": 90, "composure": 80}
+      },
+      "skills": {"restraint_escape": 64, "athletics": 38, "tool_use": 90, "trap_handling": 86, "observation": 82, "problem_solving": 92},
+      "available_tools": ["PICK_SET_01"]
+    }
+  ],
+  "task_corpus": [
+    {
+      "task_id": "RESTRAINT_FORCE",
+      "family": "RESTRAINT_ESCAPE_FORCE",
+      "method_id": "FORCE",
+      "difficulty": 68,
+      "hazard": 42,
+      "required_body_functions": ["hand_function", "upper_limb_force"],
+      "hard_prerequisites": {},
+      "skill_weights": {"restraint_escape": 0.6, "athletics": 0.4},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"force": 0.65, "endurance": 0.15, "technique_control": 0.2},
+        "SMALL_CORE_V1": {"strength": 0.7, "endurance": 0.15, "coordination": 0.15},
+        "RICH_GENRE_NEUTRAL_V1": {"strength": 0.5, "power": 0.25, "endurance": 0.1, "coordination": 0.15}
+      }
+    },
+    {
+      "task_id": "RESTRAINT_TECHNIQUE",
+      "family": "RESTRAINT_ESCAPE_TECHNIQUE",
+      "method_id": "TECHNIQUE",
+      "difficulty": 64,
+      "hazard": 28,
+      "required_body_functions": ["hand_function", "coordination"],
+      "hard_prerequisites": {},
+      "skill_weights": {"restraint_escape": 1.0},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"technique_control": 0.55, "manual_precision": 0.25, "coordination": 0.2},
+        "SMALL_CORE_V1": {"dexterity": 0.45, "coordination": 0.45, "strength": 0.1},
+        "RICH_GENRE_NEUTRAL_V1": {"dexterity": 0.4, "coordination": 0.4, "agility": 0.1, "strength": 0.1}
+      }
+    },
+    {
+      "task_id": "RESTRAINT_TOOL",
+      "family": "RESTRAINT_ESCAPE_TOOL_ASSISTED",
+      "method_id": "TOOL",
+      "difficulty": 60,
+      "hazard": 22,
+      "required_body_functions": ["hand_function"],
+      "hard_prerequisites": {"required_tool": "PICK_SET_01"},
+      "skill_weights": {"tool_use": 0.6, "restraint_escape": 0.4},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"tool_control": 0.55, "manual_precision": 0.3, "reasoning": 0.15},
+        "SMALL_CORE_V1": {"dexterity": 0.6, "reasoning": 0.25, "coordination": 0.15},
+        "RICH_GENRE_NEUTRAL_V1": {"dexterity": 0.55, "reasoning": 0.25, "coordination": 0.15, "perception": 0.05}
+      }
+    },
+    {
+      "task_id": "LIFT_CRATE",
+      "family": "LIFT_PUSH_PULL_FORCE",
+      "method_id": "LIFT",
+      "difficulty": 66,
+      "hazard": 32,
+      "required_body_functions": ["upper_limb_force"],
+      "hard_prerequisites": {},
+      "skill_weights": {"athletics": 1.0},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"force": 0.8, "endurance": 0.2},
+        "SMALL_CORE_V1": {"strength": 0.8, "endurance": 0.2},
+        "RICH_GENRE_NEUTRAL_V1": {"strength": 0.65, "power": 0.15, "endurance": 0.2}
+      }
+    },
+    {
+      "task_id": "SUSTAINED_CRANK",
+      "family": "SUSTAINED_EFFORT",
+      "method_id": "CRANK",
+      "difficulty": 58,
+      "hazard": 18,
+      "required_body_functions": ["endurance"],
+      "hard_prerequisites": {},
+      "skill_weights": {"athletics": 1.0},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"endurance": 0.75, "force": 0.25},
+        "SMALL_CORE_V1": {"endurance": 0.75, "strength": 0.25},
+        "RICH_GENRE_NEUTRAL_V1": {"endurance": 0.7, "strength": 0.2, "coordination": 0.1}
+      }
+    },
+    {
+      "task_id": "DISARM_TRAP",
+      "family": "PRECISION_MANUAL",
+      "method_id": "MANUAL",
+      "difficulty": 65,
+      "hazard": 55,
+      "required_body_functions": ["hand_function"],
+      "hard_prerequisites": {},
+      "skill_weights": {"trap_handling": 0.7, "tool_use": 0.3},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"manual_precision": 0.55, "tool_control": 0.25, "perception": 0.2},
+        "SMALL_CORE_V1": {"dexterity": 0.6, "perception": 0.25, "coordination": 0.15},
+        "RICH_GENRE_NEUTRAL_V1": {"dexterity": 0.55, "perception": 0.25, "coordination": 0.2}
+      }
+    },
+    {
+      "task_id": "BEAM_BALANCE",
+      "family": "COORDINATION_BALANCE",
+      "method_id": "BALANCE",
+      "difficulty": 57,
+      "hazard": 35,
+      "required_body_functions": ["balance", "mobility"],
+      "hard_prerequisites": {},
+      "skill_weights": {"athletics": 1.0},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"balance": 0.65, "coordination": 0.35},
+        "SMALL_CORE_V1": {"coordination": 0.75, "dexterity": 0.25},
+        "RICH_GENRE_NEUTRAL_V1": {"balance": 0.55, "coordination": 0.3, "agility": 0.15}
+      }
+    },
+    {
+      "task_id": "OBSERVE_TRACKS",
+      "family": "PERCEPTION_OBSERVATION",
+      "method_id": "OBSERVE",
+      "difficulty": 61,
+      "hazard": 4,
+      "required_body_functions": ["perception"],
+      "hard_prerequisites": {},
+      "skill_weights": {"observation": 1.0},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"perception": 0.85, "reasoning": 0.15},
+        "SMALL_CORE_V1": {"perception": 0.85, "reasoning": 0.15},
+        "RICH_GENRE_NEUTRAL_V1": {"perception": 0.85, "reasoning": 0.15}
+      }
+    },
+    {
+      "task_id": "SOLVE_MECHANISM",
+      "family": "REASONING_PROBLEM_SOLVING",
+      "method_id": "REASON",
+      "difficulty": 67,
+      "hazard": 2,
+      "required_body_functions": ["reasoning"],
+      "hard_prerequisites": {},
+      "skill_weights": {"problem_solving": 1.0},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"reasoning": 0.9, "perception": 0.1},
+        "SMALL_CORE_V1": {"reasoning": 0.9, "perception": 0.1},
+        "RICH_GENRE_NEUTRAL_V1": {"reasoning": 0.85, "perception": 0.1, "composure": 0.05}
+      }
+    }
+  ],
+  "condition_probes": [
+    {
+      "condition_id": "HAND_ARM_IMPAIRMENT",
+      "status": "EVALUATION_PROBE_ONLY",
+      "affected_tags": ["hand_function", "upper_limb_force"],
+      "multiplier": 0.55,
+      "strongest_locality_expectation": "May reduce grip/manual/force routes but must not reduce unrelated reasoning."
+    },
+    {
+      "condition_id": "LEG_IMPAIRMENT",
+      "status": "EVALUATION_PROBE_ONLY",
+      "affected_tags": ["balance", "mobility"],
+      "multiplier": 0.55,
+      "strongest_locality_expectation": "May reduce balance/mobility routes but must not reduce unrelated manual precision or reasoning."
+    }
+  ],
+  "sweep_definitions": [
+    {
+      "sweep_id": "FIGHTER_FORCE_SWEEP",
+      "task_id": "RESTRAINT_FORCE",
+      "actor_id": "FIGHTER_A",
+      "representation_id": "SMALL_CORE_V1",
+      "math_policy_id": "DETERMINISTIC_MARGIN_V1",
+      "relevant_dimension": "strength",
+      "capability_offsets": [-20, -10, 0, 10, 20],
+      "difficulty_offsets": [-15, 0, 15],
+      "conditions": [[], ["HAND_ARM_IMPAIRMENT"]]
+    },
+    {
+      "sweep_id": "MANUAL_SWEEP",
+      "task_id": "DISARM_TRAP",
+      "actor_id": "SCHOLAR_B",
+      "representation_id": "SMALL_CORE_V1",
+      "math_policy_id": "DETERMINISTIC_MARGIN_V1",
+      "relevant_dimension": "dexterity",
+      "capability_offsets": [-20, -10, 0, 10, 20],
+      "difficulty_offsets": [-15, 0, 15],
+      "conditions": [[], ["HAND_ARM_IMPAIRMENT"]]
+    },
+    {
+      "sweep_id": "REASONING_SWEEP",
+      "task_id": "SOLVE_MECHANISM",
+      "actor_id": "SCHOLAR_B",
+      "representation_id": "SMALL_CORE_V1",
+      "math_policy_id": "DETERMINISTIC_MARGIN_V1",
+      "relevant_dimension": "reasoning",
+      "capability_offsets": [-20, -10, 0, 10, 20],
+      "difficulty_offsets": [-15, 0, 15],
+      "conditions": [[], ["HAND_ARM_IMPAIRMENT"], ["LEG_IMPAIRMENT"]]
+    }
+  ],
+  "explicit_invariants": [
+    "ACTOR_ID_OR_NAME_IS_NOT_A_CAPABILITY_BONUS",
+    "IRRELEVANT_FACTOR_PERTURBATION_DOES_NOT_CHANGE_UNRELATED_TASK_OUTPUT",
+    "HARD_FEASIBILITY_FAILURE_PRECEDES_STOCHASTIC_MAPPING",
+    "STRONGER_RELEVANT_CAPABILITY_CANNOT_WORSEN_DETERMINISTIC_MARGIN_ABSENT_EXPLICIT_TRADEOFF",
+    "LOCAL_INJURY_DOES_NOT_SILENTLY_REDUCE_UNRELATED_COGNITION",
+    "NO_UNOWNED_OR_NONEXISTENT_TOOL_BONUS",
+    "EVALUATION_ORDER_DOES_NOT_MUTATE_LATER_RESULTS",
+    "CANDIDATE_ORDER_DOES_NOT_CHANGE_RESULTS",
+    "REPEATED_IDENTICAL_EXECUTION_IS_CANONICAL_SERIALIZATION_STABLE",
+    "SEEDED_STOCHASTIC_CANDIDATE_REPRODUCES_EXACT_RECEIPT",
+    "MALFORMED_OR_UNKNOWN_CANDIDATE_REFERENCE_FAILS_CLOSED",
+    "NO_CANDIDATE_OUTPUT_MAY_BE_LABELED_CANONICAL_ACCEPTED_OR_FROZEN",
+    "SUCCESS_AND_HAZARD_ARE_SEPARATE_AXES"
+  ],
+  "expected_report_fields": [
+    "candidate_dimensions",
+    "fighter_vs_scholar",
+    "locality_probes",
+    "math_policy_checks",
+    "sensitivity_sweeps",
+    "adversarial_checks",
+    "recommendation",
+    "strongest_counterevidence",
+    "provenance"
+  ],
+  "recommendation_policy": {
+    "allowed_statuses": [
+      "RECOMMEND_CANDIDATE",
+      "NARROW_TO_CANDIDATE_SET",
+      "INSUFFICIENT_EVIDENCE_KEEP_OPEN"
+    ],
+    "default_status": "INSUFFICIENT_EVIDENCE_KEEP_OPEN",
+    "reason": "Synthetic bounded fixtures can eliminate broken candidates but are insufficient to freeze player-facing capability law without broader calibration/playtest evidence."
+  }
+}
