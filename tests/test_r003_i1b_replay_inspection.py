@@ -226,6 +226,11 @@ def test_fresh_python_process_reconstructs_validated_evidence_and_matches_output
     right_package = export_solo_replay_package(baseline, right_world)
 
     parent_payload = inspection_payload(left_package, right_package)
+    parent_json = json.dumps(
+        parent_payload,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
     transport = json.dumps(
         {
             "left": base64.b64encode(left_package).decode("ascii"),
@@ -268,8 +273,9 @@ print(json.dumps(payload, sort_keys=True, separators=(",", ":")))
         check=True,
         env=env,
     )
-    child_payload = json.loads(child.stdout)
+    child_json = child.stdout.strip()
+    child_payload = json.loads(child_json)
 
-    assert child_payload == parent_payload
+    assert child_json == parent_json
     assert child_payload["divergence"]["first_divergence_point"] == 1
     assert "objects.DOOR_001.is_open" in child_payload["divergence"]["state_differences"]
