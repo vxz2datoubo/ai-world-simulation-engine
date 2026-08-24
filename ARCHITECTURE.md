@@ -163,9 +163,69 @@ Future resolution order:
 
 `Intent -> Method Candidate -> Authority -> Physics/Affordance -> Capability Feasibility -> Difficulty/Resistance -> Outcome -> Hazard/Side Effects -> Canonical Events`.
 
-Impossible actions fail before probability. Success and injury/hazard are separate axes. Equipment contributes only when canonical possession/equip/reachability permits. Randomness, if used, requires deterministic replay provenance.
+### 5.1 Post CAP-EVAL architectural resolution
 
-Exact attribute vector and resolution/stacking mathematics remain `OPEN_DECISION`.
+Control Tower decision `CAPABILITY-ARCH-RESOLUTION-001` resolves the architectural substrate previously carried inside `OD-CAPABILITY-ATTR-001` and `OD-CAPABILITY-MATH-001`. The historical decision IDs and CAP-EVAL evidence remain traceable, while ruleset tuning, player balance and genre-extension policy remain explicitly deferred.
+
+Current architectural status for both capability decisions is `RESOLVED_ARCHITECTURAL_SUBSTRATE`.
+
+Capability truth and representation law:
+
+1. `ActorBaseProfile` remains canonical persistent/versioned actor capability truth. Every AF-C v1.1 profile carries immutable `profile_schema_ref` and `ruleset_family_ref` alongside `profile_version`, `base_attribute_map` and source evidence; the map keys are not an eternal universal stat ontology. Legacy v1.0 profiles remain valid only for their accepted historical replay profile and may not be silently reinterpreted as v1.1 capability input.
+2. `SkillLedger` remains separate persistent competence truth. Skill truth may influence resolution but is not folded into or substituted for base-profile truth.
+3. `DerivedCapability` is a current derived projection and remains distinct from `ActorBaseProfile` and `SkillLedger`.
+4. Action resolution remains method-specific through `ActionDemandProfile`; one universal combat or capability score may not replace method-specific demand semantics.
+5. Task-local logic may consume declared profile/skill/demand inputs but may not invent undocumented actor capability truth or mint a hidden second character sheet.
+6. Capability schema and `base_attribute_map` keys are versioned ruleset schema. Migration across incompatible schemas requires explicit version/migration handling rather than silent reinterpretation.
+7. Genre-specific capability remains an explicit extension namespace, resource or skill surface. Genre extensions may not silently redefine mundane-core semantics.
+8. Profile, demand and receipt provenance must bind sufficient profile/schema/ruleset identity and source inputs for deterministic replay and migration. The current AF-C v1.1 minimum surface is `ActorBaseProfile.profile_version`, `ActorBaseProfile.profile_schema_ref`, `ActorBaseProfile.ruleset_family_ref`, source refs, `ActionDemandProfile.ruleset_version`, `ActionResolutionReceipt.ruleset_version` and deterministic random provenance. A legacy-v1.0-to-v1.1 transformation requires explicit compatibility or transformation evidence and must fail closed when that evidence is missing or mismatched.
+
+Minimum resolution law:
+
+1. Hard feasibility precedes graded or stochastic resolution.
+2. An infeasible action is a hard failure at the relevant prerequisite gate. It has no fabricated numeric margin and cannot become a lucky success.
+3. `EffectiveCapability` derives deterministically from declared versioned inputs.
+4. For feasible graded ordering, the minimum auditable deterministic substrate is `Margin = EffectiveCapability - DifficultyOrResistance`.
+5. Relevant impairment effects remain function-local; unrelated impairments may not leak into unrelated capability dimensions merely through a global stack.
+6. Success and hazard/injury remain separate axes.
+7. Outcome-band thresholds are ruleset-versioned policy rather than universal architecture constants.
+8. Randomness is optional and downstream of feasibility.
+9. Any randomness must carry deterministic provenance sufficient for exact replay.
+
+CAP-EVAL-002's stack-nonlocality failure is evidence against canonicalizing the challenged stacking policies. It is **not** evidence against the deterministic feasibility/margin substrate above.
+
+### 5.2 Deferred ruleset and balance policy
+
+The following remain `DEFERRED_RULESET_TUNING` or `DEFERRED_PLAYER_BALANCE`, not unresolved architectural substrate:
+- exact mundane stat list and stat ranges;
+- strength vs power split;
+- agility vs balance split;
+- task and skill weights;
+- progression values;
+- injury and condition coefficients;
+- outcome-band thresholds and exact balance coefficients;
+- player-facing stat/balance/probability presentation and calibration.
+
+Genre-specific naming, extension-pack composition and adoption policy remain `DEFERRED_GENRE_EXTENSION_POLICY` while the explicit-extension boundary itself is architectural law.
+
+Candidate disposition is intentionally bounded:
+- `RICH_GENRE_NEUTRAL_V1` is not selected as a universal canonical base vector.
+- `DEMAND_PRIMITIVES_V1` may inform demand semantics but may not become free task-local actor truth.
+- `SMALL_CORE_V1` is allowed only as a bounded initial/reference ruleset family, not as an eternal global ontology.
+- `ADDITIVE_MULTIPLICATIVE_STACK_V1`, `TAGGED_PRIORITY_V1` and `BOUNDED_SEEDED_STOCHASTIC_V1` remain non-canonical ruleset/evaluation candidates and are not universal architecture.
+
+### 5.3 I2 authority boundary
+
+This architecture resolution establishes only:
+
+`I2A_ARCHITECTURALLY_UNBLOCKED_PENDING_SEPARATE_CONTROL_TOWER_RELEASE`
+
+It does **not** establish `I2_RUNTIME_IMPLEMENTATION_AUTHORIZED`. Capability, Skill, Injury, stochastic gameplay, progression, combat and healing runtime remain unimplemented and unauthorized by this architecture-only decision.
+
+Governance locks:
+- `RUNTIME_SEMANTICS_UNCHANGED=true`
+- `NO_I2_RUNTIME_IMPLEMENTED=true`
+- `I2_RUNTIME_AUTHORITY_NOT_GRANTED=true`
 
 ## 6. AF-D — appearance and asset state
 
@@ -319,7 +379,9 @@ The eight required scenarios remain:
 7. `HOSTILE_PLAYER_BREAKS_PLOT`
 8. `MULTIPLAYER_DIFFERENT_KNOWLEDGE`
 
-Each keeps its human-readable scenario explanation and also contains a machine-checkable `machine_spec` with stable ID/version, actual type refs, structured initial/expected/forbidden predicates, provenance/authority assertions, ordering assertions, replay/restart assertions and explicit OPEN_DECISION dependencies.
+Each keeps its human-readable scenario explanation and also contains a machine-checkable `machine_spec` with stable ID/version, actual type refs, structured initial/expected/forbidden predicates, provenance/authority assertions, ordering assertions, replay/restart assertions and explicit decision dependencies.
+
+For `FIGHTER_VS_SCHOLAR`, the historical `OD-CAPABILITY-ATTR-001` and `OD-CAPABILITY-MATH-001` references now bind the preserved decision evidence and deferred ruleset/balance choices. They are no longer unresolved **architectural** dependencies. The scenario remains contract-gated and explicitly bound to versioned profile/ruleset/seed provenance; it does not claim a runtime implementation or a universal tuned stat vector.
 
 For future-only subsystems, machine assertions state `CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED`; they do not pretend gameplay execution exists.
 
@@ -347,9 +409,19 @@ AF-001 preserves:
 
 AF-001 future-plane contracts are interfaces and ownership laws, not runtime implementation claims.
 
-## 15. OPEN_DECISION discipline
+## 15. Decision and deferred-policy discipline
 
-Every unresolved mechanism is recorded once in `docs/AF001-TRACEABILITY.md` with its own bounded section containing competing options, evidence, dependency, risk and required experiment/research. Golden machine specs that depend on an unresolved mechanism must cite that exact OPEN_DECISION ID.
+Historical `OPEN_DECISION` evidence is never deleted merely because an architectural substrate is later resolved. A decision record may therefore carry both a resolved architectural substrate and explicit deferred policy tracks.
+
+For `OD-CAPABILITY-ATTR-001` and `OD-CAPABILITY-MATH-001`, `docs/AF001-TRACEABILITY.md` is authoritative for the split between:
+- `RESOLVED_ARCHITECTURAL_SUBSTRATE`;
+- `DEFERRED_RULESET_TUNING`;
+- `DEFERRED_PLAYER_BALANCE`;
+- `DEFERRED_GENRE_EXTENSION_POLICY` where applicable.
+
+A Golden machine spec may retain one of these historical decision IDs to preserve traceability and bind future ruleset choices. Such a reference is not automatically an architecture blocker. Whether it blocks architecture, runtime release or only tuned policy must be read from the decision's current status and dependency semantics.
+
+Unresolved mechanisms outside this split remain recorded in `docs/AF001-TRACEABILITY.md` with their own bounded section containing competing options, evidence, dependency, risk and required experiment/research. No Worker may silently treat a deferred tuning choice as resolved, nor use a deferred choice to re-open an already resolved architecture boundary without a new Control Tower decision.
 
 ## 16. Governance / stop gate
 
@@ -357,6 +429,12 @@ Every unresolved mechanism is recorded once in `docs/AF001-TRACEABILITY.md` with
 - Engineering Worker edits architecture/contracts/evals/validator and supplies exact-head evidence. No self-review, ACCEPT or merge.
 - Independent Reviewer fresh-reconciles and reviews exact head. No implementation/merge.
 
-AF-001 is independently accepted and merged canonical architecture. Acceptance itself does not release further runtime scope.
+AF-001 is independently accepted and merged canonical architecture. `CAPABILITY-ARCH-RESOLUTION-001` may remove the architectural blocker for an eventual I2A release, but it does not itself release I2 runtime scope.
+
+`RUNTIME_SEMANTICS_UNCHANGED=true`
+
+`NO_I2_RUNTIME_IMPLEMENTED=true`
+
+`I2_RUNTIME_AUTHORITY_NOT_GRANTED=true`
 
 `AF001_ACCEPTED_CANONICAL / FURTHER_RUNTIME_EXPANSION_REQUIRES_EXPLICIT_RELEASE`

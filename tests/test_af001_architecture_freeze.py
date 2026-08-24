@@ -10,6 +10,7 @@ from awrse.model import ActorState, Event, ObjectState
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
 GOLDEN_PATH = ROOT / "evals" / "AF001-GOLDEN-SCENARIOS.json"
+DECISION_BINDING_PATH = ROOT / "evals" / "AF001-DECISION-LIFECYCLE-BINDINGS.json"
 ARCH_PATH = ROOT / "ARCHITECTURE.md"
 TRACE_PATH = ROOT / "docs" / "AF001-TRACEABILITY.md"
 
@@ -61,13 +62,12 @@ REQUIRED_FREEZE_TYPES = {
 }
 EXPECTED_SCENARIO_OD_DEPS = {
     "WILDERNESS_NEWS_TRAP": {
-        "OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001",
         "OD-ENCOUNTER-DENSITY-001", "OD-PX-SCORING-001", "OD-PUBLICATION-POLICY-001",
     },
     "BROKEN_DOOR_WORLD_ECHO": {
         "OD-COMMENTARY-BUDGET-001", "OD-PX-SCORING-001", "OD-MEMORY-DECAY-001",
     },
-    "FIGHTER_VS_SCHOLAR": {"OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001"},
+    "FIGHTER_VS_SCHOLAR": set(),
     "PROMISE_RETURN_CALLBACK": {
         "OD-MEMORY-STORE-001", "OD-MEMORY-DECAY-001", "OD-RELATIONSHIP-MATH-001",
     },
@@ -92,6 +92,12 @@ def _all_open_decision_refs(contract):
     for domain in contract["freeze_domains"].values():
         refs.update(domain.get("open_decision_refs", []))
     return refs
+
+
+def _effective_open_decision_dependencies(scenario, binding):
+    legacy = set(scenario["machine_spec"]["open_decision_dependencies"])
+    historical = set((binding or {}).get("historical_decision_dependencies", []))
+    return legacy - historical
 
 
 def _decision_sections(trace: str):
@@ -431,7 +437,7 @@ def test_b04_open_decision_sections_are_independently_bounded_and_complete():
     contract = load_json(CONTRACT_PATH)
     trace = TRACE_PATH.read_text(encoding="utf-8")
     sections = _decision_sections(trace)
-    expected_refs = _all_open_decision_refs(contract)
+    expected_refs = _all_open_decision_refs(contract) | set(contract["decision_lifecycle_registry"])
     assert set(sections) == expected_refs
     fields_required = (
         "**Competing options:**", "**Evidence:**", "**Dependency:**",
@@ -445,12 +451,59 @@ def test_b04_open_decision_sections_are_independently_bounded_and_complete():
             assert tail, f"{decision_id} empty {marker}"
 
 
+def test_b04_resolved_capability_decisions_are_machine_classified_without_erasing_history():
+    contract = load_json(CONTRACT_PATH)
+    suite = load_json(GOLDEN_PATH)
+    bindings = load_json(DECISION_BINDING_PATH)
+    lifecycle = contract["decision_lifecycle_registry"]
+
+    assert contract["contract_version"] == "1.7.0-candidate"
+    assert contract["versioning_and_migration"]["contract_version_lineage"] == {
+        "previous_contract_version": "1.6.0-candidate",
+        "semantic_delta": [
+            "V1_1_COMPLETE_PROFILE_SHAPE_ADMISSION",
+            "LEGACY_TRANSFORMATION_SOURCE_VERSION_AND_PROFILE_BINDING",
+            "FAIL_CLOSED_GOLDEN_PROFILE_PROVENANCE_RECEIPTS",
+        ],
+        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_PRE_LIFECYCLE_AND_POST_LIFECYCLE_RECEIPTS",
+    }
+    assert suite["suite_version"] == "1.5.0-candidate"
+    assert suite["required_contract_version"] == contract["contract_version"]
+    assert bindings["required_contract_version"] == contract["contract_version"]
+    assert suite["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"
+    assert contract["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"
+    assert contract["freeze_domains"]["AF-C"]["open_decision_refs"] == []
+    assert set(contract["freeze_domains"]["AF-C"]["resolved_decision_refs"]) == {
+        "OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001"
+    }
+
+    for decision_id in ("OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001"):
+        decision = lifecycle[decision_id]
+        assert decision["historical_status"] == "OPEN_DECISION"
+        assert decision["current_architecture_status"] == "RESOLVED_ARCHITECTURAL_SUBSTRATE"
+        assert decision["architecture_blocking_class"] == "HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER"
+        assert decision["runtime_binding_requirement"].startswith("EXPLICIT_VERSIONED_")
+
+    for scenario_id in ("WILDERNESS_NEWS_TRAP", "FIGHTER_VS_SCHOLAR"):
+        binding = bindings["scenario_bindings"][scenario_id]
+        assert set(binding["historical_decision_dependencies"]) == {
+            "OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001"
+        }
+        assert set(binding["historical_decision_dependencies"]) <= set(lifecycle)
+        assert set(binding["required_runtime_bindings"]) == {
+            lifecycle[decision_id]["runtime_binding_requirement"]
+            for decision_id in binding["historical_decision_dependencies"]
+        }
+        assert _effective_open_decision_dependencies(suite["scenarios"][scenario_id], binding) == set(binding["current_open_architecture_dependencies"])
+
+
 def test_b04_scenario_open_decision_dependencies_are_explicit_and_resolve():
     contract = load_json(CONTRACT_PATH)
     suite = load_json(GOLDEN_PATH)
+    bindings = load_json(DECISION_BINDING_PATH)["scenario_bindings"]
     available = _all_open_decision_refs(contract)
     for scenario_id, expected in EXPECTED_SCENARIO_OD_DEPS.items():
-        actual = set(suite["scenarios"][scenario_id]["machine_spec"]["open_decision_dependencies"])
+        actual = _effective_open_decision_dependencies(suite["scenarios"][scenario_id], bindings.get(scenario_id))
         assert actual == expected, f"{scenario_id}: expected {sorted(expected)}, got {sorted(actual)}"
         assert actual <= available
 
