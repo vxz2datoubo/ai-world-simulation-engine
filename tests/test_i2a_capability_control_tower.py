@@ -108,6 +108,6 @@ def test_i2a_receipt_replays_from_inputs_and_rejects_tampering():
     assert rehydrate_i2a_replay_package(first) == receipt
 
     tampered = json.loads(first.decode("utf-8"))
-    tampered["receipt"]["feasibility"] = "FEASIBLE"
+    tampered["receipt"]["feasibility"] = "HARD_FAIL_MISSING_REQUIRED_SKILL"
     with pytest.raises(ValueError, match="I2A_PACKAGE_INTEGRITY_FAILURE"):
         import_i2a_replay_package(json.dumps(tampered, sort_keys=True, separators=(",", ":")).encode("utf-8"))
