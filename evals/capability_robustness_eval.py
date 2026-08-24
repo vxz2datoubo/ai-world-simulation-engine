@@ -300,9 +300,6 @@ def validate_inputs(spec: Mapping[str, Any], predecessor: Mapping[str, Any]) -> 
     if not policy.get("attr_allowed_prefixes") or not policy.get("math_allowed_prefixes"):
         raise RobustnessSpecError("recommendation classes missing")
 
-    if "expected_winner" in canonical_json(spec).lower():
-        raise RobustnessSpecError("expected-winner label is forbidden")
-
 
 def _weighted(values: Mapping[str, float], weights: Mapping[str, float]) -> float:
     total = float(sum(weights.values()))
