@@ -148,8 +148,14 @@ causal_flow:
 release_path:
   current_gate:
     id: "CAPABILITY-ARCH-RESOLUTION-001 / PR-29"
-    required_before_I2: ["machine-readable AF-C decision lifecycle", "profile schema/ruleset provenance", "independent exact-head review"]
-  first_runtime_slice_after_gate:
+    required_before_I2:
+      - "machine-readable AF-C decision lifecycle"
+      - "profile schema/ruleset provenance"
+      - "independent exact-head review"
+      - "For every I2-relevant lower-layer capability OPEN_DECISION: an accepted current resolution, not only a historical lifecycle classification."
+      - "Current CAP-EVAL evidence remains KEEP_ATTR_OPEN and KEEP_MATH_OPEN; PR-29 alone is therefore not I2 release authority."
+      - "Alternative only: a separately reviewed bounded exemption that names the exact non-controversial semantics, excludes unresolved formulas/tuning, defines fail-closed behavior, and carries a distinct Control Tower runtime release authorization."
+  first_runtime_slice_after_decision_or_bounded_exemption:
     candidate_name: "I2_CAPABILITY_FEASIBILITY_REFERENCE"
     bounded_outcome: "Two profiles face one method-specific obstacle; world records hard infeasibility, legal result and distinct hazard outcome with deterministic replay."
     forbidden_scope: ["combat system", "progression economy", "balance claims", "AI-director mutation", "provider production automation"]

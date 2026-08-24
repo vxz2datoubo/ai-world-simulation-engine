@@ -44,6 +44,8 @@ def test_mapping_skill_covers_all_required_system_handoffs_and_release_checks():
         assert module in content
 
     assert "CAPABILITY-ARCH-RESOLUTION-001 / PR-29" in content
+    assert "KEEP_ATTR_OPEN and KEEP_MATH_OPEN" in content
+    assert "separately reviewed bounded exemption" in content
     assert "I2_CAPABILITY_FEASIBILITY_REFERENCE" in content
     assert "DIRECTOR_PACKET_REFERENCE_LOOP" in content
 
@@ -54,6 +56,7 @@ def test_research_map_teaches_project_status_without_claiming_provider_or_runtim
     assert "CANDIDATE_RESEARCH_MAPPING / NOT_RUNTIME_AUTHORIZATION" in content
     assert "What already runs, what is only designed" in content
     assert "PR #29 still requires changes" in content
+    assert "A historical lifecycle label is not an exemption" in content
     assert "not a product capability claim" in content
     assert "K1 never silently becomes K0" in content
     assert "A renderer cannot send pixels" in content

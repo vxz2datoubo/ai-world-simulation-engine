@@ -107,19 +107,27 @@ discipline.
 ## The next honest release sequence
 
 1. **Repair PR #29.** Make AF-C lifecycle and `ActorBaseProfile` provenance
-   machine-readable. It is an architecture/governance repair, not runtime work.
-2. **Release I2 as a tiny capability feasibility reference.** One obstacle, two
+   machine-readable. It is an architecture/governance repair, not runtime work;
+   it does not itself release I2.
+2. **Resolve the lower-layer decision gate, or grant a bounded exemption.** The
+   current CAP-EVAL evidence explicitly remains `KEEP_ATTR_OPEN` and
+   `KEEP_MATH_OPEN`. I2 therefore needs either accepted current decisions for the
+   exact semantics it consumes, or a separate, independently reviewed exemption
+   that names the permitted non-controversial semantics, excludes formula/balance
+   tuning, fails closed outside that envelope and carries a Control Tower runtime
+   release. A historical lifecycle label is not an exemption.
+3. **Release I2 as a tiny capability feasibility reference.** One obstacle, two
    versioned character profiles, a hard feasibility gate, a separate hazard axis,
    event receipt and exact replay. No combat system, balance claim or progression.
-3. **Release a Director Packet reference loop.** One already-resolved canonical
+4. **Release a Director Packet reference loop.** One already-resolved canonical
    event must yield a packet containing confirmed facts, visibility limits and
    presentation requirements. Perform an AI Film dry-run only; do not call a
    provider or alter the world from media.
-4. **Add a controlled renderer experiment.** Evaluate the same packet across
+5. **Add a controlled renderer experiment.** Evaluate the same packet across
    selected backends for action fidelity, identity/scene continuity, latency,
    cost and unauthorized-hallucination rate. Revalidate provider documentation at
    the exact version before any routing decision.
-5. **Only then evaluate broader systems.** NPC memory, storylets, World Echo,
+6. **Only then evaluate broader systems.** NPC memory, storylets, World Echo,
    party/public topology and experience ranking must each receive a bounded
    contract, adversarial tests, independent review and a separate release.
 
