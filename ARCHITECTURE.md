@@ -171,14 +171,14 @@ Current architectural status for both capability decisions is `RESOLVED_ARCHITEC
 
 Capability truth and representation law:
 
-1. `ActorBaseProfile` remains canonical persistent/versioned actor capability truth. Its `profile_version`, `base_attribute_map` and source evidence bind the versioned capability schema/ruleset family used by that profile; the map keys are not an eternal universal stat ontology.
+1. `ActorBaseProfile` remains canonical persistent/versioned actor capability truth. Every AF-C v1.1 profile carries immutable `profile_schema_ref` and `ruleset_family_ref` alongside `profile_version`, `base_attribute_map` and source evidence; the map keys are not an eternal universal stat ontology. Legacy v1.0 profiles remain valid only for their accepted historical replay profile and may not be silently reinterpreted as v1.1 capability input.
 2. `SkillLedger` remains separate persistent competence truth. Skill truth may influence resolution but is not folded into or substituted for base-profile truth.
 3. `DerivedCapability` is a current derived projection and remains distinct from `ActorBaseProfile` and `SkillLedger`.
 4. Action resolution remains method-specific through `ActionDemandProfile`; one universal combat or capability score may not replace method-specific demand semantics.
 5. Task-local logic may consume declared profile/skill/demand inputs but may not invent undocumented actor capability truth or mint a hidden second character sheet.
 6. Capability schema and `base_attribute_map` keys are versioned ruleset schema. Migration across incompatible schemas requires explicit version/migration handling rather than silent reinterpretation.
 7. Genre-specific capability remains an explicit extension namespace, resource or skill surface. Genre extensions may not silently redefine mundane-core semantics.
-8. Profile, demand and receipt provenance must bind sufficient profile/schema/ruleset identity and source inputs for deterministic replay and migration. The existing contract fields `ActorBaseProfile.profile_version`, `ActionDemandProfile.ruleset_version`, `ActionResolutionReceipt.ruleset_version`, source refs and deterministic random provenance are the current minimum contract surface; later runtime implementation may strengthen this surface only through an explicit compatible contract/migration task.
+8. Profile, demand and receipt provenance must bind sufficient profile/schema/ruleset identity and source inputs for deterministic replay and migration. The current AF-C v1.1 minimum surface is `ActorBaseProfile.profile_version`, `ActorBaseProfile.profile_schema_ref`, `ActorBaseProfile.ruleset_family_ref`, source refs, `ActionDemandProfile.ruleset_version`, `ActionResolutionReceipt.ruleset_version` and deterministic random provenance. A legacy-v1.0-to-v1.1 transformation requires explicit compatibility or transformation evidence and must fail closed when that evidence is missing or mismatched.
 
 Minimum resolution law:
 

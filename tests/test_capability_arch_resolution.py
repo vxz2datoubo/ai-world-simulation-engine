@@ -185,3 +185,30 @@ def test_remediation_handoff_preserves_independent_review_and_closed_authority()
         "independent_review_required: true",
     ):
         assert marker in handoff
+
+
+def test_profile_schema_ruleset_change_has_compatible_migration_and_golden_replay_evidence():
+    contract = load_json(CONTRACT_PATH)
+    suite = load_json(GOLDEN_PATH)
+    architecture = ARCH_PATH.read_text(encoding="utf-8")
+    trace = TRACE_PATH.read_text(encoding="utf-8")
+    profile_migration = contract["versioning_and_migration"]["actor_base_profile_migration"]
+    fighter = suite["scenarios"]["FIGHTER_VS_SCHOLAR"]
+
+    assert "profile_schema_ref" in architecture
+    assert "Legacy v1.0 profiles remain valid only" in architecture
+    assert "profile_schema_ref" in trace
+    assert "Legacy v1.0 profiles remain replayable only" in trace
+    assert profile_migration["legacy_replay_policy"].startswith("LEGACY_R001_R002_REPLAY_ONLY")
+    assert profile_migration["vnext_profile_contract_version"] == "1.1.0-candidate"
+    assert {"profile_schema_ref", "ruleset_family_ref"} <= set(profile_migration["vnext_required_fields"])
+    assert "EXPLICIT_COMPATIBILITY_OR_TRANSFORMATION_EVIDENCE_REQUIRED" in profile_migration["transformation_requirement"]
+    assert profile_migration["failure_policy"] == "UNKNOWN_OR_MISMATCHED_PROFILE_SCHEMA_OR_RULESET_FAMILY_FAILS_CLOSED"
+    assert "NO_I2_USE_OF_LEGACY_PROFILE" in profile_migration["runtime_activation"]
+
+    profile_rule = suite["machine_semantics"]["assertion_rule_registry"]["fighter_and_scholar_profiles_are_not_interchangeable"]
+    assert {"ActorBaseProfile.profile_schema_ref", "ActorBaseProfile.ruleset_family_ref"} <= set(profile_rule["field_refs"])
+    assert any(
+        assertion["assertion"] == "profile_schema_and_ruleset_rehydrate_or_fail_closed"
+        for assertion in fighter["machine_spec"]["replay_restart_assertions"]
+    )
