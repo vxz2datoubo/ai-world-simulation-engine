@@ -36,7 +36,7 @@ Action DSL -> authority / affordance / physics / capability gates
         |                                      |
         | reject, ask, partial, or resolve     | no narrative override
         v                                      v
-Canonical event history <---- replayable world state
+Canonical event history ----> replayable world state
         |
         +--> recipient-specific knowledge / memory
         |

@@ -63,6 +63,7 @@ def test_research_map_teaches_project_status_without_claiming_provider_or_runtim
     assert "K1 never silently becomes K0" in content
     assert "A renderer cannot send pixels" in content
     assert "back to mutate the world" in content
+    assert "Canonical event history ----> replayable world state" in content
     assert "SIMA" in content
     assert "OWASP prompt-injection guidance" in content
 
