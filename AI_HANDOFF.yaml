@@ -1,0 +1,19 @@
+handoff_id: INTERACTIVE-CINEMA-GAME-MAPPING-0001
+agent_id: CODEX
+source_agent: CODEX
+target_agent: GPT_INDEPENDENT_REVIEWER
+reviewer: GPT_INDEPENDENT_REVIEWER_REQUIRED
+repository: vxz2datoubo/ai-world-simulation-engine
+pull_request: 30
+base_ref: 76a223f96dfb4e97400cc753d65d89b4e543cae6
+handoff_status: READY_FOR_INDEPENDENT_REVIEW
+scope: "Candidate mapping skill, research map and regression checks only."
+runtime_authority: NOT_GRANTED
+merge_authority: NOT_GRANTED
+production_action: NONE
+independent_review_required: true
+review_focus:
+  - "K0/K1/K2/K3 classification remains explicit and evidence-linked."
+  - "World truth remains upstream of director and renderer presentation."
+  - "I2 remains gated by accepted architecture and a separate Control Tower runtime release."
+  - "External content remains untrusted data and cannot obtain privileged authority."

@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "skills" / "INTERACTIVE-CINEMA-GAME-SYSTEM-MAPPING-SKILL.yaml"
 MAP = ROOT / "docs" / "research" / "INTERACTIVE-CINEMA-GAME-SYSTEM-MAP.md"
+HANDOFF = ROOT / "AI_HANDOFF.yaml"
 
 
 def test_mapping_skill_keeps_knowledge_lenses_and_authority_boundaries_explicit():
@@ -64,3 +65,19 @@ def test_research_map_teaches_project_status_without_claiming_provider_or_runtim
     assert "back to mutate the world" in content
     assert "SIMA" in content
     assert "OWASP prompt-injection guidance" in content
+
+
+def test_mapping_handoff_preserves_the_required_independent_review_chain():
+    content = HANDOFF.read_text(encoding="utf-8")
+
+    for marker in (
+        "agent_id: CODEX",
+        "source_agent: CODEX",
+        "target_agent: GPT_INDEPENDENT_REVIEWER",
+        "reviewer: GPT_INDEPENDENT_REVIEWER_REQUIRED",
+        "handoff_status: READY_FOR_INDEPENDENT_REVIEW",
+        "runtime_authority: NOT_GRANTED",
+        "merge_authority: NOT_GRANTED",
+        "independent_review_required: true",
+    ):
+        assert marker in content
