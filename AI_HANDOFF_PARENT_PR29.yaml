@@ -1,0 +1,29 @@
+handoff_id: CAPABILITY-ARCH-RESOLUTION-001-PARENT-FINAL-HANDOFF
+agent_id: CODEX
+source_agent: GPT_ENGINEERING_WORKER_AND_CODEX_REMEDIATION
+target_agent: REVIEWER_ANY_OF_GPT_CODEX_DOUBAO_WORKBUDDY
+reviewer: CODEX_INDEPENDENT_REVIEWER
+repository: vxz2datoubo/ai-world-simulation-engine
+parent_pull_request: 29
+parent_release_base: 76a223f96dfb4e97400cc753d65d89b4e543cae6
+parent_head_before_final_handoff: bbab68abd4b460bced4b1f823abe89c3a9070b9a
+child_remediation_pull_request: 31
+child_remediation_approved_head: a9e8100ea75a4a3c4a8a630c9af01255be105eef
+handoff_status: READY_FOR_INDEPENDENT_REVIEW
+scope: "Parent PR #29 final governance and contract handoff only; no I2 runtime implementation."
+actual_execution_chain:
+  - GPT_ENGINEERING_WORKER: "Original AF-C architecture and B01 decision-lifecycle work."
+  - CODEX: "Machine-readable B01/B02 provenance remediation integrated through reviewed PR #31."
+actual_independent_review_chain:
+  - CODEX_INDEPENDENT_REVIEWER: "Approved PR #31 exact head a9e8100ea75a4a3c4a8a630c9af01255be105eef."
+  - CODEX_INDEPENDENT_REVIEWER: "Must independently approve the final parent exact head after this handoff record is integrated."
+reviewer_policy: "User-authorized approval by any one independent reviewer: GPT, Codex, Doubao, or WorkBuddy."
+runtime_authority: NOT_GRANTED
+merge_authority: USER_AUTHORIZED_AFTER_INDEPENDENT_REVIEW
+production_action: NONE
+independent_review_required: true
+review_focus:
+  - "PR #29 body and changed-file scope match the final exact head."
+  - "Historical OPEN_DECISION evidence and current architectural status remain separately machine-readable."
+  - "ActorBaseProfile provenance admission remains complete, versioned, source-bound, actor-bound, and fail closed."
+  - "No runtime/, I2 gameplay, provider, secret, account, deployment, or production action is introduced."

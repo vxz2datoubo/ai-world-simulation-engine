@@ -11,6 +11,7 @@ GOLDEN_PATH = ROOT / "evals" / "AF001-GOLDEN-SCENARIOS.json"
 CAP_EVAL_001_PATH = ROOT / "evals" / "CAPABILITY-OPEN-DECISION-EVALS.json"
 CAP_EVAL_002_PATH = ROOT / "evals" / "CAPABILITY-ROBUSTNESS-EVALS.json"
 HANDOFF_PATH = ROOT / "AI_HANDOFF.yaml"
+PARENT_HANDOFF_PATH = ROOT / "AI_HANDOFF_PARENT_PR29.yaml"
 
 ATTR_OD = "OD-CAPABILITY-ATTR-001"
 MATH_OD = "OD-CAPABILITY-MATH-001"
@@ -183,6 +184,25 @@ def test_remediation_handoff_preserves_independent_review_and_closed_authority()
         "reviewer_policy: \"User-authorized approval by any one independent reviewer: GPT, Codex, Doubao, or WorkBuddy.\"",
         "handoff_status: READY_FOR_INDEPENDENT_REVIEW",
         "runtime_authority: NOT_GRANTED",
+        "independent_review_required: true",
+    ):
+        assert marker in handoff
+
+
+def test_parent_pr_final_handoff_keeps_parent_and_child_responsibility_chains_distinct():
+    handoff = PARENT_HANDOFF_PATH.read_text(encoding="utf-8")
+
+    for marker in (
+        "handoff_id: CAPABILITY-ARCH-RESOLUTION-001-PARENT-FINAL-HANDOFF",
+        "source_agent: GPT_ENGINEERING_WORKER_AND_CODEX_REMEDIATION",
+        "target_agent: REVIEWER_ANY_OF_GPT_CODEX_DOUBAO_WORKBUDDY",
+        "reviewer: CODEX_INDEPENDENT_REVIEWER",
+        "parent_pull_request: 29",
+        "child_remediation_pull_request: 31",
+        "child_remediation_approved_head: a9e8100ea75a4a3c4a8a630c9af01255be105eef",
+        "runtime_authority: NOT_GRANTED",
+        "merge_authority: USER_AUTHORIZED_AFTER_INDEPENDENT_REVIEW",
+        "production_action: NONE",
         "independent_review_required: true",
     ):
         assert marker in handoff
