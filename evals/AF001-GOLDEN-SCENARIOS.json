@@ -1,8 +1,9 @@
 {
   "eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
-  "suite_version": "1.2.0-candidate",
+  "suite_version": "1.3.0-candidate",
   "status": "ARCHITECTURE_FREEZE_EXECUTABLE_SPEC_CANDIDATE",
   "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
+  "required_contract_version": "1.5.0-candidate",
   "decision_lifecycle_binding_registry": "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json",
   "foundation_eval_registry": "evals/AWRSE-CORE-EVALS.yaml",
   "required_fields_per_scenario": [
