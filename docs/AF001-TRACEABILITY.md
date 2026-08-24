@@ -193,11 +193,11 @@ Breaking authority/identity/event/ownership/provenance changes require explicit 
 - R002 SAW/HEARD/WAS_TOLD provenance remains mode-specific; unsupported modes fail closed.
 - R002 render projection remains contradiction-checked.
 
-## 12. OPEN_DECISION and resolved-decision registry
+## 12. OPEN_DECISION registry with resolved-decision status
 
 Each section below is independently bounded. Validator must inspect only the text between one `### OD-...` heading and the next `### OD-...` or next level-2 heading.
 
-A historical `OD-*` identifier is durable traceability. Its presence does not imply that every layer remains open forever. Where an explicit Control Tower decision resolves architecture but leaves tuning open, this section records both states instead of deleting the old evidence.
+A historical `OD-*` identifier is durable traceability. Its presence does not imply that every layer remains open forever. Where an explicit Control Tower decision resolves architecture but leaves tuning open, this section records both states instead of deleting the old evidence. The legacy five-field metadata remains present for backwards-compatible traceability validation even when its current architectural status is resolved.
 
 ### OD-CONCURRENCY-001 — canonical concurrency/arbitration algorithm
 - **Current status:** `OPEN_DECISION`.
@@ -209,6 +209,11 @@ A historical `OD-*` identifier is durable traceability. Its presence does not im
 
 ### OD-CAPABILITY-ATTR-001 — capability representation architecture and ruleset vector
 - **Current architecture status:** `RESOLVED_ARCHITECTURAL_SUBSTRATE` by Control Tower `CAPABILITY-ARCH-RESOLUTION-001` / Issue #28.
+- **Competing options:** historically small mundane core; richer genre-neutral vector; action-demand-only primitives. These remain evidence of the original monolithic decision, not equally open architecture alternatives after Issue #28.
+- **Evidence:** Issue #12 candidate design, CAP-EVAL-001 executable evaluation, CAP-EVAL-002 held-out robustness evaluation, Independent Review `5004524795`, and the explicit Control Tower split in Issue #28.
+- **Dependency:** `ActionDemandProfile`, progression and genre extensions. Architecture no longer waits on the exact vector; any future runtime still depends on an explicit versioned ruleset choice.
+- **Risk:** stat soup, hidden LLM judgment, or silently freezing one evaluation vector as eternal ontology.
+- **Required experiment/research:** architecture-resolution evidence is complete for this split; future ruleset tuning still requires bounded balance/usability/genre validation before its chosen values become runtime policy.
 - **Historical OPEN_DECISION preserved:** yes. Original competing options were small mundane core, richer genre-neutral vector and action-demand-only primitives. Issue #12, CAP-EVAL-001 and CAP-EVAL-002 remain immutable evidence history rather than being rewritten to look retrospectively resolved.
 - **Accepted evidence chain:** Issue #12 -> Issue #19 planning -> Issue #24 / merged PR #25 CAP-EVAL-001 -> Issue #26 / merged PR #27 CAP-EVAL-002 -> Independent Review `5004524795` `ACCEPT` on exact head `91a46c7c1ac8a5c7e13f389a81497a5307166ca0` -> Issue #28 Control Tower architecture decision.
 - **Resolved architectural substrate:** `ActorBaseProfile` is persistent/versioned actor capability truth; `SkillLedger` is separate persistent competence truth; `DerivedCapability` is current derived state; `ActionDemandProfile` is method-specific; task-local logic cannot invent actor capability truth; `base_attribute_map` belongs to versioned ruleset/schema families rather than one eternal vector; genre capability must use explicit extension namespaces/resources/skills; profile/demand/receipt provenance must remain sufficient for replay/migration.
@@ -221,6 +226,11 @@ A historical `OD-*` identifier is durable traceability. Its presence does not im
 
 ### OD-CAPABILITY-MATH-001 — resolution substrate and ruleset mathematics
 - **Current architecture status:** `RESOLVED_ARCHITECTURAL_SUBSTRATE` by Control Tower `CAPABILITY-ARCH-RESOLUTION-001` / Issue #28.
+- **Competing options:** historically additive/multiplicative stack, tagged priority, per-demand rules, deterministic margin and bounded seeded stochastic variants. They remain evaluation/ruleset candidates rather than unresolved universal architecture choices.
+- **Evidence:** Issue #12 candidate equations, CAP-EVAL-001 and CAP-EVAL-002 executable evidence, stack-nonlocality failure, Independent Review `5004524795`, and Issue #28's explicit architecture/tuning split.
+- **Dependency:** `DerivedCapability` and `ActionResolutionReceipt` runtime. Architecture fixes feasibility and auditable ordering substrate while exact stacking/threshold/balance policy remains ruleset-versioned.
+- **Risk:** fake precision, non-local impairment leakage, non-monotonicity, replay mismatch, or promoting an evaluation formula into universal gameplay law.
+- **Required experiment/research:** architecture-resolution evidence is complete for the feasibility/margin split; future ruleset tuning still requires bounded balance/calibration tests for stacking, coefficients, thresholds and optional probability policy.
 - **Historical OPEN_DECISION preserved:** yes. Original competing options included additive/multiplicative stack, tagged priority, per-demand rules and deterministic margin variants. CAP-EVAL artifacts remain evaluation evidence and are not rewritten.
 - **Accepted evidence chain:** Issue #12 -> Issue #19 planning -> Issue #24 / merged PR #25 CAP-EVAL-001 -> Issue #26 / merged PR #27 CAP-EVAL-002 -> Independent Review `5004524795` `ACCEPT` -> Issue #28 Control Tower architecture decision.
 - **Resolved architectural substrate:** hard feasibility precedes graded/stochastic resolution; infeasible actions have no fabricated numeric margin and cannot get lucky success; effective capability derives deterministically from declared versioned inputs; for feasible graded ordering the minimum auditable substrate is `Margin = EffectiveCapability - DifficultyOrResistance`; relevant impairment is function-local; success and hazard/injury are separate axes; outcome bands are ruleset-versioned; randomness is optional/downstream feasibility and must carry exact-replay provenance.
