@@ -3,6 +3,7 @@
   "suite_version": "1.2.0-candidate",
   "status": "ARCHITECTURE_FREEZE_EXECUTABLE_SPEC_CANDIDATE",
   "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
+  "decision_lifecycle_binding_registry": "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json",
   "foundation_eval_registry": "evals/AWRSE-CORE-EVALS.yaml",
   "required_fields_per_scenario": [
     "initial_canonical_state",

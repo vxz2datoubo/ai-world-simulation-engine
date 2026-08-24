@@ -83,7 +83,13 @@ def test_existing_contract_surface_already_binds_the_resolved_substrate():
     demand_fields = set(registry["ActionDemandProfile"]["fields"])
     receipt_fields = set(registry["ActionResolutionReceipt"]["fields"])
 
-    assert {"profile_version", "base_attribute_map", "source_event_refs"} <= profile_fields
+    assert {"profile_version", "profile_schema_ref", "ruleset_family_ref", "base_attribute_map", "source_event_refs"} <= profile_fields
+    profile = registry["ActorBaseProfile"]
+    assert profile["field_semantics"]["profile_schema_ref"].startswith("IMMUTABLE_IDENTIFIER")
+    assert "FAILS_CLOSED" in profile["field_semantics"]["profile_schema_ref"]
+    assert "profile_schema_ref_AND_ruleset_family_ref" in profile["field_semantics"]["base_attribute_map"]
+    assert "PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED" in profile["migration_invariants"]
+    assert "UNKNOWN_OR_MISMATCHED_PROFILE_SCHEMA_FAILS_CLOSED" in profile["migration_invariants"]
     assert {"skill_entries", "source_event_cursor", "schema_version"} <= skill_fields
     assert {"source_profile_ref", "source_condition_refs", "ruleset_version"} <= derived_fields
     assert {"method_id", "hard_prerequisites", "ruleset_version"} <= demand_fields
@@ -111,7 +117,11 @@ def test_fighter_vs_scholar_is_not_architecture_blocked_by_deferred_tuning():
     machine = fighter["machine_spec"]
 
     assert machine["implementation_state"] == "CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED"
+    bindings = load_json(ROOT / "evals" / "AF001-DECISION-LIFECYCLE-BINDINGS.json")
+    binding = bindings["scenario_bindings"]["FIGHTER_VS_SCHOLAR"]
     assert set(machine["open_decision_dependencies"]) == {ATTR_OD, MATH_OD}
+    assert set(binding["historical_decision_dependencies"]) == {ATTR_OD, MATH_OD}
+    assert binding["current_open_architecture_dependencies"] == []
     assert "Same ruleset/seed provenance" in " ".join(fighter["replay_restart_expectations"])
     assert "versioned rules" in " ".join(fighter["projection_changes"])
 
