@@ -1,0 +1,194 @@
+schema_version: "1.0"
+skill_family_id: "AWRSE-INTERACTIVE-CINEMA-GAME-SYSTEM-MAPPING"
+status: "CANDIDATE_SKILL_FAMILY_RESEARCH_AND_GOVERNANCE_READY"
+canonical_owner: "WORLD_MODEL_SYSTEM"
+scope: "RESEARCH_MAPPING_AND_RELEASE_PLANNING_ONLY"
+
+purpose: >-
+  Make the whole interactive-cinema game legible before extending runtime: map user
+  intent, observed system facts, evidence-backed inferences, accessible domain knowledge
+  and material unknowns into one traceable authority graph. The map is a release-planning
+  skill, not a game-master, renderer, task route or implementation authorization.
+
+non_goals:
+  - "Does not make a candidate design canonical."
+  - "Does not grant I2 or any other runtime implementation authority."
+  - "Does not let an LLM, director, renderer or publication projection mutate world truth."
+  - "Does not import private source material into public coordination records."
+  - "Does not make a provider capability, benchmark or paper result a product guarantee."
+
+knowledge_lenses:
+  K0_USER_EXPLICIT:
+    user_can_recognize: true
+    definition: "Direct requirements, examples, quality bars, constraints and explicit verdicts."
+    handling: "Keep verbatim source reference; distinguish a requested outcome from proof that it works."
+  K1_EVIDENCE_DERIVED:
+    user_can_recognize: true
+    definition: "A bounded inference from K0, repository evidence or repeated observed outcomes."
+    handling: "Record inference, evidence, confidence, counterexample and explicit-override rule."
+  K2_ACCESSIBLE_DOMAIN_MODEL:
+    user_can_recognize: true
+    definition: "Useful professional concepts that can be explained with examples and linked sources."
+    handling: "Teach in plain language, map to a project module, and label it candidate until evaluated."
+  K3_MATERIAL_UNKNOWN:
+    user_can_recognize: false
+    definition: "A decision, capability, outcome or external condition not yet observable or not safe to infer."
+    handling: "Name the uncertainty, owner, revalidation trigger and fail-closed behavior; never fill it with prose."
+
+authority_map:
+  WORLD_MODEL_SYSTEM:
+    canonical_truth:
+      - "world events and replayable state"
+      - "action parsing and resolution"
+      - "physics, affordance, possession and social consequence"
+      - "knowledge acquisition evidence and player/NPC boundary"
+    cannot_delegate:
+      - "canonical outcome selection"
+      - "world fact mutation to directors, renderers or publication"
+  AI_FILM_SYSTEM:
+    canonical_truth:
+      - "director mechanism learning and retrieval"
+      - "shot-local visible/audible compilation"
+      - "staging, performance, camera, edit and sound guidance"
+    must_receive_only:
+      - "AWRSE-approved DIRECTOR-BEAT-PACKET facts"
+      - "allowed visibility and presentation constraints"
+  SECOND_BRAIN_SYSTEM:
+    canonical_truth:
+      - "public-safe evidence, learning coordination and cross-domain reconciliation"
+    prohibition: "Never becomes a second world-state or director-rules authority."
+  RENDERER_PROVIDER:
+    role: "non-authoritative visual or audio projection backend"
+    prohibition: "Pixels, audio or model narration cannot amend canonical history."
+
+system_map:
+  - id: M01_WORLD_TRUTH
+    plain_language: "The game needs one answer to what really happened."
+    owner: WORLD_MODEL_SYSTEM
+    current_state: "R001_R002_R003_REFERENCE_FOUNDATION"
+    inputs: ["attempted Action DSL", "authorized deterministic state", "event history"]
+    outputs: ["canonical event", "rebuildable state projection", "replay evidence"]
+    K3_unknowns: ["production storage topology", "party/public concurrency policy"]
+  - id: M02_PLAYER_FREEDOM_AND_RESOLUTION
+    plain_language: "Players can try broad actions, but attempting is different from succeeding."
+    owner: WORLD_MODEL_SYSTEM
+    current_state: "R001_R002_IMPLEMENTED_REFERENCE"
+    inputs: ["untrusted player text", "entity resolution", "affordance and authority checks"]
+    outputs: ["resolved success, partial result, rejection or disambiguation"]
+    invariant: "No player text directly changes NPC mind, world law or canonical outcome."
+  - id: M03_CAPABILITY_INJURY
+    plain_language: "A character's lasting abilities, skills, equipment and injuries must affect outcomes without model drift."
+    owner: WORLD_MODEL_SYSTEM
+    current_state: "AF_C_INTERFACE_ONLY_PENDING_CAPABILITY_ARCH_RESOLUTION"
+    inputs: ["versioned profile", "skill ledger", "method demand", "conditions", "equipment"]
+    outputs: ["feasibility", "auditable margin", "outcome and separate hazard receipt"]
+    K3_unknowns: ["ruleset coefficients", "player balance", "genre extension policy"]
+  - id: M04_PERCEPTION_MEMORY_RELATIONSHIP
+    plain_language: "NPCs remember only what they could legitimately acquire and rehydrate."
+    owner: WORLD_MODEL_SYSTEM
+    current_state: "R002_PROVENANCE_FOUNDATION_PLUS_INTERFACE"
+    inputs: ["perception events", "source world events", "recipient scope"]
+    outputs: ["episodic memory", "belief and relationship projections", "safe context bundle"]
+    invariant: "Summary, reflection and LLM context are rebuildable caches, not truth."
+  - id: M05_INTERACTIVE_NARRATIVE
+    plain_language: "Authored story creates meaningful opportunities, never retroactive facts or compulsory player choices."
+    owner: WORLD_MODEL_SYSTEM
+    current_state: "AF_F_INTERFACE_ONLY"
+    inputs: ["StoryDNA", "world causes", "knowledge provenance", "player choices"]
+    outputs: ["storylet eligibility", "promise/callback opportunity", "causal anchor status"]
+    K2_concepts: ["dramatic agency", "storylets", "hard causal anchors", "soft attractors"]
+  - id: M06_EXPERIENCE_AND_OPPORTUNITY
+    plain_language: "A background system may rank legal opportunities but cannot make an illegal outcome easier."
+    owner: WORLD_MODEL_SYSTEM
+    current_state: "AF_G_INTERFACE_ONLY"
+    inputs: ["legal candidates", "player-visible history", "plausibility and anti-repeat checks"]
+    outputs: ["ranking receipt", "eligible encounter or world-echo proposal"]
+    invariant: "Narrative and PX cannot inject knowledge or lower capability difficulty."
+  - id: M07_ASSET_SPACE_CONTINUITY
+    plain_language: "Maps, views, character appearance and media versions have stable identities."
+    owner: WORLD_MODEL_SYSTEM
+    current_state: "AF_D_INTERFACE_ONLY_WITH_R002_SPATIAL_FOUNDATION"
+    inputs: ["scene topology", "camera anchor", "presentation state", "asset registry"]
+    outputs: ["scene/view references", "immutable media version references"]
+    invariant: "Generated media cannot redefine space, appearance or injury facts."
+  - id: M08_DIRECTOR_HANDOFF
+    plain_language: "The director is told only what is true, visible and allowed to be staged."
+    owner: "WORLD_MODEL_SYSTEM -> AI_FILM_SYSTEM"
+    current_state: "AF_H_INTERFACE_ONLY; AI_FILM_DIRECTOR_ROUTING_AVAILABLE"
+    inputs: ["DIRECTOR-BEAT-PACKET", "actor presentation requirements", "visibility policy"]
+    outputs: ["shot-local execution plan", "prompt controls", "sound/editing/staging proposal"]
+    invariant: "Director choices are read-only presentation choices inside a valid packet."
+  - id: M09_RENDER_AND_PUBLICATION
+    plain_language: "A model produces a clip; the clip is evidence to evaluate, not an authority to rewrite the world."
+    owner: "RENDERER_PROVIDER under AWRSE/AI_FILM contracts"
+    current_state: "PROVISIONAL_ADAPTER_STRATEGY_ONLY"
+    inputs: ["director plan", "approved assets", "packet constraints"]
+    outputs: ["candidate media", "evaluation observations", "publication projection"]
+    K3_unknowns: ["provider version behavior", "cost/latency frontier", "long-horizon continuity"]
+  - id: M10_EVALUATION_AND_LEARNING
+    plain_language: "Failures become reproducible tests; a good-looking clip alone does not promote a rule."
+    owner: "WORLD_MODEL_SYSTEM + AI_FILM_SYSTEM + SECOND_BRAIN_SYSTEM"
+    current_state: "PARTIAL_FOUNDATIONS"
+    inputs: ["golden scenarios", "runtime receipts", "director pulls", "A/B results", "user verdicts"]
+    outputs: ["regression cases", "candidate lessons", "bounded promotion evidence"]
+    invariant: "Observation, interpretation, prompt hypothesis and unknown must remain separate."
+
+causal_flow:
+  - "K0 user intent -> attempted Action DSL (untrusted data)"
+  - "Action DSL -> authority / affordance / physics / capability gates"
+  - "valid resolution -> canonical event and replayable world state"
+  - "event evidence -> recipient-specific knowledge and memory projections"
+  - "state + knowledge -> legal narrative/PX opportunity candidates"
+  - "selected legal candidate -> DIRECTOR-BEAT-PACKET"
+  - "packet -> AI Film shot/sound/director compilation"
+  - "compiled plan -> renderer candidate media"
+  - "media + receipts + user verdict -> observation / experiment / regression learning"
+  - "validated learning -> candidate rule or later governed promotion"
+
+release_path:
+  current_gate:
+    id: "CAPABILITY-ARCH-RESOLUTION-001 / PR-29"
+    required_before_I2: ["machine-readable AF-C decision lifecycle", "profile schema/ruleset provenance", "independent exact-head review"]
+  first_runtime_slice_after_gate:
+    candidate_name: "I2_CAPABILITY_FEASIBILITY_REFERENCE"
+    bounded_outcome: "Two profiles face one method-specific obstacle; world records hard infeasibility, legal result and distinct hazard outcome with deterministic replay."
+    forbidden_scope: ["combat system", "progression economy", "balance claims", "AI-director mutation", "provider production automation"]
+  first_cinema_loop_after_I2:
+    candidate_name: "DIRECTOR_PACKET_REFERENCE_LOOP"
+    bounded_outcome: "One resolved world event yields a packet whose visible facts, knowledge scope and presentation state can be checked before an AI Film dry-run."
+    acceptance: ["same event replay", "no hidden knowledge leakage", "no renderer-to-world mutation", "shot-scope validation"]
+
+evidence_sources:
+  - id: E01
+    source: "AWRSE current contracts, architecture and accepted R001/R002/R003 runtime"
+    use: "project truth boundary and current implementation state"
+  - id: E02
+    source: "AI Film director route index and Golden Case Director Pull schema"
+    use: "director mechanism, shot scope, observability and learning boundary"
+  - id: E03
+    source: "Unreal Mass Entity / Mass Gameplay / Smart Objects official documentation"
+    use: "data-oriented simulation, representation LOD and reservation as adapter inspiration; not a canonical-world replacement"
+  - id: E04
+    source: "inkle Ink official documentation and 80 Days postmortem"
+    use: "authorable branching/recombination and narrative tooling; not world-state authority"
+  - id: E05
+    source: "AAAI/AIIDE drama-management and interactive-narrative literature"
+    use: "agency-preserving opportunity/ranking evaluation; not permission to manipulate outcomes"
+  - id: E06
+    source: "LLM interactive-world research and benchmarks"
+    use: "consistency-risk evidence and evaluation hypotheses; preprints remain non-authoritative candidates"
+
+validation_protocol:
+  required_for_every_new_module:
+    - "name the canonical data authority and forbidden mutation path"
+    - "classify K0/K1/K2/K3 knowledge and preserve evidence links"
+    - "state current implementation evidence, not intended state"
+    - "define a replay, authority, privacy and failure-closed test"
+    - "record provider/version dependencies and revalidation trigger"
+    - "require independent review before promoting a material contract or runtime slice"
+  fail_conditions:
+    - "A presentation artifact is treated as a world fact."
+    - "A K1 inference is reported as K0 confirmed user intent."
+    - "A K3 unknown is filled by an untested model claim."
+    - "A research result is promoted without project-specific evaluation."
+    - "A task expands from an interface boundary into unapproved runtime scope."
