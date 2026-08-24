@@ -6,152 +6,221 @@ Release base: `32e2a1a830f0685af207275da0ad4849e7637ea4`
 
 Predecessor evidence: Issue #24 / merged PR #25 / accepted head `6e665ca3f02795564119383f52f7643190997eec`.
 
-This report is bounded CAP-EVAL-002 evidence for `OD-CAPABILITY-ATTR-001` and `OD-CAPABILITY-MATH-001`. It does not modify either OPEN_DECISION, does not implement Capability/Skill/Injury gameplay runtime, and does not authorize I2.
+This report is bounded CAP-EVAL-002 evidence for `OD-CAPABILITY-ATTR-001` and `OD-CAPABILITY-MATH-001`. It does not resolve either OPEN_DECISION, does not implement Capability/Skill/Injury gameplay runtime, and does not authorize I2.
 
-## 1. What this evaluation can and cannot establish
+The executable source of truth is `evals/capability_robustness_eval.py` consuming the governed `evals/CAPABILITY-ROBUSTNESS-EVALS.json` plus the read-only CAP-EVAL-001 predecessor artifacts. Numeric evidence must come from a successful evaluator execution and exact-head CI, not from hand-maintained prose.
 
-The executable suite can establish structural properties of the candidate representations and math policies: held-out discrimination, declared qualitative ordering, locality, prerequisite dominance, perturbation behavior, deterministic replay, label/order independence, parameter burden, and whether explicit genre extensions can remain outside the mundane base representation.
-
-It cannot establish player-facing fairness, genre desirability, progression feel, probability calibration, injury realism, or production tuning. Those claims require playtest or production evidence and are deliberately excluded from the recommendation authority here.
-
-Governance locks remain:
+Governance locks:
 
 - `RUNTIME_SEMANTICS_UNCHANGED=true`
 - `OPEN_DECISION_STATUS_UNCHANGED=true`
 - `NO_I2_RUNTIME_IMPLEMENTED=true`
 
+## 1. What the suite is allowed to establish
+
+Executable evidence may establish:
+
+- held-out task distinctness from CAP-EVAL-001;
+- hard-prerequisite feasibility ordering;
+- representation collisions;
+- bounded actor/difficulty/weight robustness;
+- function-local impairment behavior;
+- candidate/task/order/name independence;
+- fresh-process determinism;
+- explicit WUXIA / XIANXIA / SF extension isolation;
+- parameter burden and auditability;
+- whether a governed recommendation policy is actually satisfied.
+
+It may not establish:
+
+- player-facing fairness;
+- final genre ontology;
+- progression feel;
+- probability calibration;
+- medical realism;
+- production tuning;
+- I2 authority.
+
+Those remain outside CAP-EVAL-002.
+
 ## 2. True held-out corpus
 
-CAP-EVAL-002 declares eight task families whose IDs and normalized task semantics are checked against the CAP-EVAL-001 predecessor corpus. A duplicate ID or duplicate normalized task definition fails closed.
+The governed spec declares eight held-out families, all with task IDs and normalized semantics mechanically checked against CAP-EVAL-001:
 
-| Held-out family | Fixture | Pressure being tested |
+| Family | Fixture | Pressure |
 |---|---|---|
 | explosive / rapid force | `BREACH_DOOR_BURST` | burst power distinct from slow force |
-| whole-body change of direction | `CROWD_DODGE_CUT` | rapid agility distinct from static balance |
-| precision under time pressure | `TIMED_NEEDLE_ALIGNMENT` | manual precision + control under pressure |
-| multi-stage tool manipulation | `VALVE_BYPASS_SEQUENCE` | hard real-tool prerequisite before resolution |
-| noisy/ambiguous observation | `FOG_SIGNAL_DISCRIMINATION` | perception + analysis under weak evidence |
-| reasoning with irrelevant impairment | `LOGIC_GRID_WITH_WRIST_SPLINT` | physical-condition locality |
+| whole-body change of direction | `CROWD_DODGE_CUT` | agility distinct from static balance |
+| precision under time pressure | `TIMED_NEEDLE_ALIGNMENT` | precision + control under time pressure |
+| multi-stage tool manipulation | `VALVE_BYPASS_SEQUENCE` | hard prerequisite before resolution |
+| noisy observation | `FOG_SIGNAL_DISCRIMINATION` | observation under ambiguous evidence |
+| reasoning with irrelevant impairment | `LOGIC_GRID_WITH_WRIST_SPLINT` | locality / irrelevant-factor isolation |
 | sustained coordinated physical work | `ROPE_BRIDGE_HAUL` | endurance + control |
-| assistance/teamwork-shaped pressure | `TWO_PERSON_STRETCHER_SYNC` | representation pressure only, not PARTY runtime |
+| teamwork-shaped pressure | `TWO_PERSON_STRETCHER_SYNC` | representation pressure only, not PARTY runtime |
 
-The evaluator contains no actor fixture names, held-out task fixture names, or predecessor candidate IDs. Actor, task, representation, and math-policy renames preserve semantic receipts when their semantic inputs remain unchanged.
+The evaluator does not inspect an `expected_winner` label. Actor, task, representation, and math-policy identifiers are excluded from semantic resolution identity where only semantics should matter.
 
-## 3. Representation-collision evidence
+## 3. B01 remediation: feasibility is not a fake numeric margin
 
-The collision probes intentionally ask whether the currently declared candidate surfaces can express two distinctions that CAP-EVAL-001 left unresolved. They do not contain an `expected_winner` label.
+`VALVE_BYPASS_SEQUENCE` requires `MULTITOOL_KIT`.
 
-| Probe | `DEMAND_PRIMITIVES_V1` | `SMALL_CORE_V1` | `RICH_GENRE_NEUTRAL_V1` |
-|---|---:|---:|---:|
-| burst/power collision, margin delta | `0.0` | `0.0` | `19.95` |
-| agility/change-of-direction collision, margin delta | `0.0` | `0.0` | `10.4625` |
+A fixture without that tool returns:
 
-This is real structural counterevidence against prematurely freezing the previous small-core/primitives narrowing: in the declared predecessor forms, neither `SMALL_CORE_V1` nor `DEMAND_PRIMITIVES_V1` can distinguish these actor pairs without adding some extra evidence-bearing semantic input. `RICH_GENRE_NEUTRAL_V1` can distinguish both because it already carries explicit `power` and `agility` axes.
+- `feasibility = HARD_FAIL_MISSING_REQUIRED_TOOL`
+- `margin = null`
+- no stochastic receipt
+- no sampled outcome
 
-However, that does **not** prove those axes belong in durable mundane actor truth. The probes were designed specifically to pressure those distinctions, and synthetic evidence cannot decide whether a future design should represent them as durable base attributes, derived capability, explicit technique/skill state, or another separately governed structure.
+CAP-EVAL-002 now treats qualitative comparison in two explicit domains:
 
-## 4. Parameter and weight robustness
+1. `FEASIBILITY_DOMINANCE`
+   - one side is feasible and the other fails a hard prerequisite;
+   - the relation is evaluated by feasibility;
+   - no margin subtraction is attempted.
 
-For every declared qualitative relation, every representation candidate and every math-policy candidate, the evaluator independently perturbs:
+2. `MARGIN_ORDER`
+   - both sides are feasible;
+   - margin ordering and bounded perturbation are evaluated numerically.
 
-- left-actor relevant capability: `-5 / 0 / +5`;
-- right-actor relevant capability: `-5 / 0 / +5`;
-- task difficulty: `-5 / 0 / +5`;
-- task representation/skill weight tilt: `0.9 / 1.0 / 1.1`.
+If both sides are infeasible, the evaluator reports `BOTH_INFEASIBLE_NO_MARGIN_ORDER` and does not invent a numeric ordering.
 
-That produces **81 perturbation combinations per relation**. The four held-out qualitative relations preserve their declared ordering in **81/81 cases** for every representation/math combination. No small-perturbation reversal is observed, so `fragile_relation_count = 0` throughout this bounded grid.
+Robustness evidence separately reports:
 
-The stricter margin-band metric is intentionally more sensitive: only `0.333333` of the perturbation combinations remain within the declared ±2 margin band of baseline for each relation under the deterministic audit baseline. This prevents “rank stable” from being misreported as “numerically insensitive”. Rank ordering is robust here; exact margin magnitude is tuning-sensitive.
+- feasibility-dominance count;
+- margin-comparison count;
+- preservation fraction;
+- margin-band stability only when a numeric margin comparison actually exists;
+- reversal locations with the comparison basis that produced them.
 
-### Representation parameter burden
+This preserves the AF-001 law that hard prerequisites dominate later stochastic or graded resolution.
 
-| Candidate | durable/base dimensions | held-out representation weight entries |
-|---|---:|---:|
-| `SMALL_CORE_V1` | 6 | 17 |
-| `DEMAND_PRIMITIVES_V1` | 9 | 17 |
-| `RICH_GENRE_NEUTRAL_V1` | 10 | 25 |
+## 4. Representation-collision pressure
 
-`RICH_GENRE_NEUTRAL_V1` earns extra collision discrimination, but it also carries the largest durable surface and the largest held-out weight burden. That unresolved expressiveness-versus-burden tradeoff is why this evaluation does not recommend resolving the attribute OPEN_DECISION yet.
+The collision probes deliberately pressure distinctions left unresolved by CAP-EVAL-001:
 
-## 5. WUXIA / XIANXIA / SF extension pressure
+- explosive burst/power;
+- rapid agility/change of direction.
 
-Three explicit extension envelopes are exercised:
+The executable evidence records, per candidate, whether the declared representation collides or distinguishes. The suite does not translate collision coverage directly into authority. A richer vector may distinguish more cases while also carrying a larger durable parameter surface.
 
-- WUXIA: qinggong / internal-force-control style inputs;
-- XIANXIA: qi-control / formation style inputs;
-- SF: hacking / piloting / cybernetic-assist style inputs.
+Therefore collision coverage is one evidence dimension, not a winner score.
 
-For all three predecessor representation candidates:
+## 5. Genre-extension pressure without mundane-core pollution
 
-1. genre inputs live in an explicit extension-input namespace, not in the mundane base representation;
-2. mutating those extension inputs does not change the mundane receipt when no extension fixture is selected;
-3. selecting the extension fixture changes only the evaluation-only extension contribution;
-4. the base-representation snapshot digest remains unchanged.
+Evaluation-only WUXIA, XIANXIA and SF fixtures use explicit extension namespaces.
 
-This supports a structural rule that genre extension can be explicit without silently redefining mundane core attributes. It does not implement WUXIA, XIANXIA, SF, PARTY, or any production genre runtime.
+For each representation candidate, the evaluator checks:
 
-## 6. Math-policy held-out comparison
+- extension values remain outside the mundane representation map;
+- mutating extension values does not change the mundane receipt when no extension is selected;
+- selecting an extension fixture changes only the explicit extension contribution;
+- the mundane base representation snapshot remains unchanged.
 
-All four CAP-EVAL-001 math-policy candidates are exercised on held-out monotonicity and locality probes.
+This establishes an extension-boundary invariant only. It does not implement WUXIA, XIANXIA, SF, PARTY, or production genre runtime.
 
-| Math family | bounded monotonicity | unrelated wrist impairment changes reasoning? | relevant wrist impairment changes tool route? | tool-condition penalty | excess vs deterministic |
-|---|---|---|---|---:|---:|
-| deterministic margin | pass | no | yes | `11.2875` | `0.0` |
-| bounded seeded stochastic | pass | no | yes | `11.2875` | `0.0` |
-| tagged priority | pass | no | yes | `11.8975` | `0.61` |
-| additive/multiplicative stack | pass | no | yes | `16.561393` | `5.273893` |
+## 6. Parameter / weight robustness
 
-The additive/multiplicative candidate shows the strongest held-out concern in this diagnostic: its global multiplicative condition factor also scales contributions that are not themselves the impaired function, producing a materially larger penalty than the deterministic local audit baseline. The tagged-priority candidate remains monotonic here but introduces a smaller extra bottleneck penalty and still requires a separately justified bottleneck weight.
+The governed perturbation grid varies:
 
-The seeded stochastic candidate reproduces the exact same semantic seed, roll and sampled outcome in fresh evaluations. Feasibility remains before sampling. Its probability buckets are still explicitly uncalibrated, so replayability is evidence for determinism, not evidence that the probability curve is valid player-facing law.
+- left actor relevant capability;
+- right actor relevant capability;
+- task difficulty;
+- representation / skill weight tilt.
 
-## 7. Candidate-overfit and label-dependence guards
+The evaluator does not collapse the result into one score.
+
+Each relation records:
+
+- preservation fraction;
+- feasibility-dominance versus margin-comparison counts;
+- reversal locations;
+- fragile / non-fragile classification;
+- margin-band stability only when a margin baseline exists.
+
+This distinction matters because a relation can be structurally stable due to a hard prerequisite while having no legitimate numeric margin comparison at all.
+
+## 7. Math-policy diagnostics
+
+All four CAP-EVAL-001 math-policy families remain evaluation-only:
+
+- deterministic margin;
+- additive/multiplicative stack;
+- tagged priority;
+- bounded seeded stochastic.
+
+The held-out diagnostics separately report:
+
+- monotonicity under relevant capability perturbation;
+- reasoning isolation from unrelated physical impairment;
+- local tool-route effect from relevant impairment;
+- exact seeded replay when stochastic sampling is used;
+- excess condition penalty relative to deterministic margin;
+- no probability-calibration claim.
+
+The current governed recommendation policy is explicit:
+
+`math_resolution_requires_deterministic_baseline_monotonic_and_stack_nonlocality_absent=true`
+
+The evaluator now consumes that policy as a real gate. It does not bypass it.
+
+Current executable evidence satisfies the deterministic baseline checks, but the challenge stacking policies do not satisfy the strict “stack non-locality absent” condition under the held-out diagnostic. Therefore the governed math resolution gate is not satisfied.
+
+That result is intentionally conservative. CAP-EVAL-002 may provide narrowing evidence without pretending the OPEN_DECISION has been resolved.
+
+## 8. Candidate-overfit guards
 
 The regression suite proves:
 
-- held-out task IDs and normalized definitions are distinct from CAP-EVAL-001;
-- the evaluator source has no actor fixture names and no representation/math candidate IDs;
-- there is no `expected_winner` branch;
-- every held-out task covers every representation candidate;
-- candidate order and task order do not change structured evidence;
-- actor/task/representation/math renames do not change semantic resolution;
-- collision paths and actor/difficulty/weight perturbation paths are non-vacuous;
-- missing required tool fails before stochastic mapping;
-- WUXIA/XIANXIA/SF inputs do not pollute mundane base semantics;
-- repeated execution is canonical-serialization stable;
-- separate fresh Python interpreter processes emit byte-identical canonical JSON;
-- evaluation does not mutate its input specs;
-- no candidate output receives authority-bearing status.
+- held-out IDs and normalized semantics are distinct from CAP-EVAL-001;
+- no `expected_winner` label is consumed;
+- evaluator source contains no held-out actor fixture IDs or predecessor candidate IDs;
+- all held-out tasks cover all representation candidates;
+- candidate and task order do not alter structured evidence;
+- actor/task/representation/math renames preserve semantic receipts;
+- missing tools remain feasibility failures across every math candidate;
+- robustness paths are non-vacuous;
+- genre-extension inputs do not pollute mundane base semantics;
+- input specs remain immutable;
+- repeated evaluation is canonical-serialization stable;
+- fresh Python processes emit byte-identical output;
+- candidate status remains `EVALUATION_CANDIDATE_ONLY`.
 
-## 8. Strongest counterargument against the suite
+Tests validate recommendation-policy consistency. They do not force the evaluator to emit one preferred governance answer.
 
-A larger synthetic suite can still be a more elaborate mirror of its author's assumptions. In particular, the burst and agility collision probes deliberately test distinctions represented explicitly only by the current rich-vector candidate. They prove a **representation fact** about the three declared candidate shapes, not a **game-design fact** that power and agility must be durable base stats.
+## 9. Strongest counterargument
 
-Similarly, 81/81 qualitative ordering preservation proves bounded structural robustness under this declared grid. It does not prove that ±5 actor perturbations, ±5 difficulty, or 0.9–1.1 weight tilts are the correct production calibration envelope.
+A bigger synthetic benchmark can still become a bigger synthetic mirror.
 
-Therefore the legitimate architectural evidence is:
+Executable invariants can legitimately establish:
 
-- hard prerequisites before uncertainty;
-- deterministic semantic replay;
-- local impairment should remain local;
-- labels/order must not alter outcomes;
-- genre-specific inputs can stay outside mundane core;
-- the current small-core/primitives shapes lose burst/agility distinctions in the declared collision pairs;
-- global multiplicative condition stacking creates a non-local penalty in the held-out tool diagnostic.
+- feasibility before uncertainty;
+- determinism;
+- label/order independence;
+- locality;
+- extension isolation;
+- structural collision facts;
+- policy/evidence consistency.
 
-The claims that still require later tuning/playtest evidence are the final base-stat ontology, exact demand weights, exact condition multipliers, difficulty scale, outcome bands, and stochastic probability calibration.
+They cannot by themselves establish:
 
-This distinction avoids an endless evaluation treadmill: architectural substrate can be governed before player telemetry, while tuning values need not block architecture indefinitely.
+- final actor stat ontology;
+- exact condition multipliers;
+- exact task weights;
+- exact difficulty scale;
+- player-facing probability buckets;
+- production balance.
 
-## 9. Governance recommendation
+Those later tuning questions should not be confused with architectural truth, but neither should they be silently promoted into architecture by a synthetic evaluator.
 
-The attribute evidence is now genuinely two-sided. The rich vector earns held-out discrimination that the other two declared candidates do not, but it pays 10 durable dimensions and 25 held-out representation weights versus 6/17 for the smallest candidate. Synthetic collision probes cannot decide whether those extra axes belong in durable actor truth or should be represented by explicit derived/skill/technique semantics. The attribute decision should therefore remain open rather than pretending this suite resolved that ontology question.
+## 10. Governance recommendation
 
-For math, the held-out evidence supports splitting architecture from later tuning. `DETERMINISTIC_MARGIN` is monotonic, auditable, local in the tested condition path, and sufficient to carry an authoritative ordering/margin substrate. Seeded stochastic replayability can remain a separately governed optional presentation/uncertainty layer whose buckets require later calibration. This is a recommendation to Control Tower, not an enacted split and not I2 authorization.
+The attribute evidence remains two-sided. Extra axes can earn collision discrimination, but the durable-surface and tuning burden tradeoff is unresolved by synthetic evidence alone.
+
+For math, the existing governed resolution gate explicitly requires deterministic-baseline validity **and** absence of stack non-locality. The baseline evidence is good, but the full gate is not satisfied. CAP-EVAL-002 therefore keeps the math OPEN_DECISION open rather than weakening or bypassing the preregistered gate after observing the results.
 
 ATTR recommendation class: `KEEP_ATTR_OPEN`
 
-MATH recommendation class: `RECOMMEND_RESOLVE_MATH_DETERMINISTIC_MARGIN_SUBSTRATE_WITH_SEPARATE_STOCHASTIC_TUNING`
+MATH recommendation class: `KEEP_MATH_OPEN`
 
 `RUNTIME_SEMANTICS_UNCHANGED=true`
 
