@@ -1,0 +1,541 @@
+{
+  "suite_id": "AWRSE-CAP-EVAL-002-ROBUSTNESS",
+  "suite_version": "1.0.0",
+  "status": "EVALUATION_ONLY_NON_CANONICAL",
+  "release_base": "32e2a1a830f0685af207275da0ad4849e7637ea4",
+  "predecessor": {
+    "issue": 24,
+    "pr": 25,
+    "accepted_head": "6e665ca3f02795564119383f52f7643190997eec",
+    "merge_commit": "32e2a1a830f0685af207275da0ad4849e7637ea4",
+    "eval_spec": "evals/CAPABILITY-OPEN-DECISION-EVALS.json",
+    "evaluator": "evals/capability_open_decision_eval.py",
+    "report": "docs/research/CAPABILITY-OPEN-DECISION-EVALUATION.md",
+    "read_only": true
+  },
+  "source_open_decision_refs": [
+    "OD-CAPABILITY-ATTR-001",
+    "OD-CAPABILITY-MATH-001"
+  ],
+  "candidate_status_required": "EVALUATION_CANDIDATE_ONLY",
+  "representation_candidate_refs": [
+    "DEMAND_PRIMITIVES_V1",
+    "SMALL_CORE_V1",
+    "RICH_GENRE_NEUTRAL_V1"
+  ],
+  "math_policy_candidate_refs": [
+    "DETERMINISTIC_MARGIN_V1",
+    "ADDITIVE_MULTIPLICATIVE_STACK_V1",
+    "TAGGED_PRIORITY_V1",
+    "BOUNDED_SEEDED_STOCHASTIC_V1"
+  ],
+  "provenance": {
+    "evaluation_ruleset_version": "CAP-EVAL-002/1.0.0",
+    "serialization": "UTF8_CANONICAL_JSON_SORTED_KEYS_COMPACT",
+    "seed_salt": "CAP-EVAL-002-FIXED-SEED-V1",
+    "network_dependency": false,
+    "model_dependency": false,
+    "wall_clock_dependency": false,
+    "environment_dependency": false
+  },
+  "held_out_corpus_declared_before_interpretation": true,
+  "predecessor_task_ids": [
+    "RESTRAINT_FORCE",
+    "RESTRAINT_TECHNIQUE",
+    "RESTRAINT_TOOL",
+    "LIFT_CRATE",
+    "SUSTAINED_CRANK",
+    "DISARM_TRAP",
+    "BEAM_BALANCE",
+    "OBSERVE_TRACKS",
+    "SOLVE_MECHANISM"
+  ],
+  "held_out_actors": [
+    {
+      "actor_id": "BURST_SPECIALIST",
+      "role": "HELDOUT_BURST_SPECIALIST",
+      "representations": {
+        "DEMAND_PRIMITIVES_V1": {
+          "force": 72,
+          "endurance": 62,
+          "manual_precision": 54,
+          "coordination": 66,
+          "balance": 64,
+          "perception": 55,
+          "reasoning": 52,
+          "technique_control": 60,
+          "tool_control": 48
+        },
+        "SMALL_CORE_V1": {
+          "strength": 72,
+          "endurance": 62,
+          "dexterity": 54,
+          "coordination": 66,
+          "perception": 55,
+          "reasoning": 52
+        },
+        "RICH_GENRE_NEUTRAL_V1": {
+          "strength": 72,
+          "power": 94,
+          "endurance": 62,
+          "agility": 66,
+          "dexterity": 54,
+          "coordination": 66,
+          "balance": 64,
+          "perception": 55,
+          "reasoning": 52,
+          "composure": 64
+        }
+      },
+      "skills": {
+        "athletics": 76,
+        "precision_work": 48,
+        "tool_sequence": 44,
+        "observation": 50,
+        "analysis": 50,
+        "team_coordination": 58,
+        "burst_execution": 88,
+        "agility_drill": 58
+      },
+      "available_tools": [],
+      "extension_inputs": {
+        "wuxia": {"qinggong_control": 35, "internal_force_control": 42, "internal_force_resource": 38},
+        "xianxia": {"qi_control": 28, "formation_control": 30, "qi_resource": 26},
+        "sf": {"hacking": 32, "piloting": 36, "cybernetic_assist": 30}
+      }
+    },
+    {
+      "actor_id": "STEADY_STRONG",
+      "role": "HELDOUT_STEADY_STRENGTH",
+      "representations": {
+        "DEMAND_PRIMITIVES_V1": {
+          "force": 72,
+          "endurance": 78,
+          "manual_precision": 54,
+          "coordination": 66,
+          "balance": 64,
+          "perception": 55,
+          "reasoning": 52,
+          "technique_control": 60,
+          "tool_control": 48
+        },
+        "SMALL_CORE_V1": {
+          "strength": 72,
+          "endurance": 78,
+          "dexterity": 54,
+          "coordination": 66,
+          "perception": 55,
+          "reasoning": 52
+        },
+        "RICH_GENRE_NEUTRAL_V1": {
+          "strength": 72,
+          "power": 56,
+          "endurance": 78,
+          "agility": 66,
+          "dexterity": 54,
+          "coordination": 66,
+          "balance": 64,
+          "perception": 55,
+          "reasoning": 52,
+          "composure": 64
+        }
+      },
+      "skills": {
+        "athletics": 76,
+        "precision_work": 48,
+        "tool_sequence": 44,
+        "observation": 50,
+        "analysis": 50,
+        "team_coordination": 62,
+        "burst_execution": 50,
+        "agility_drill": 58
+      },
+      "available_tools": [],
+      "extension_inputs": {
+        "wuxia": {"qinggong_control": 32, "internal_force_control": 40, "internal_force_resource": 38},
+        "xianxia": {"qi_control": 30, "formation_control": 32, "qi_resource": 30},
+        "sf": {"hacking": 30, "piloting": 32, "cybernetic_assist": 30}
+      }
+    },
+    {
+      "actor_id": "FIELD_TECH",
+      "role": "HELDOUT_FIELD_TECHNICIAN",
+      "representations": {
+        "DEMAND_PRIMITIVES_V1": {
+          "force": 48,
+          "endurance": 60,
+          "manual_precision": 86,
+          "coordination": 74,
+          "balance": 60,
+          "perception": 78,
+          "reasoning": 88,
+          "technique_control": 80,
+          "tool_control": 92
+        },
+        "SMALL_CORE_V1": {
+          "strength": 48,
+          "endurance": 60,
+          "dexterity": 88,
+          "coordination": 74,
+          "perception": 78,
+          "reasoning": 88
+        },
+        "RICH_GENRE_NEUTRAL_V1": {
+          "strength": 48,
+          "power": 46,
+          "endurance": 60,
+          "agility": 64,
+          "dexterity": 88,
+          "coordination": 74,
+          "balance": 60,
+          "perception": 78,
+          "reasoning": 88,
+          "composure": 82
+        }
+      },
+      "skills": {
+        "athletics": 48,
+        "precision_work": 92,
+        "tool_sequence": 94,
+        "observation": 82,
+        "analysis": 92,
+        "team_coordination": 78,
+        "burst_execution": 42,
+        "agility_drill": 58
+      },
+      "available_tools": ["MULTITOOL_KIT"],
+      "extension_inputs": {
+        "wuxia": {"qinggong_control": 44, "internal_force_control": 50, "internal_force_resource": 46},
+        "xianxia": {"qi_control": 72, "formation_control": 88, "qi_resource": 74},
+        "sf": {"hacking": 94, "piloting": 82, "cybernetic_assist": 76}
+      }
+    },
+    {
+      "actor_id": "SCOUT",
+      "role": "HELDOUT_SCOUT",
+      "representations": {
+        "DEMAND_PRIMITIVES_V1": {
+          "force": 54,
+          "endurance": 72,
+          "manual_precision": 74,
+          "coordination": 88,
+          "balance": 82,
+          "perception": 92,
+          "reasoning": 70,
+          "technique_control": 76,
+          "tool_control": 68
+        },
+        "SMALL_CORE_V1": {
+          "strength": 54,
+          "endurance": 72,
+          "dexterity": 78,
+          "coordination": 88,
+          "perception": 92,
+          "reasoning": 70
+        },
+        "RICH_GENRE_NEUTRAL_V1": {
+          "strength": 54,
+          "power": 60,
+          "endurance": 72,
+          "agility": 92,
+          "dexterity": 78,
+          "coordination": 88,
+          "balance": 82,
+          "perception": 92,
+          "reasoning": 70,
+          "composure": 76
+        }
+      },
+      "skills": {
+        "athletics": 72,
+        "precision_work": 74,
+        "tool_sequence": 66,
+        "observation": 94,
+        "analysis": 72,
+        "team_coordination": 86,
+        "burst_execution": 62,
+        "agility_drill": 94
+      },
+      "available_tools": ["MULTITOOL_KIT"],
+      "extension_inputs": {
+        "wuxia": {"qinggong_control": 92, "internal_force_control": 72, "internal_force_resource": 70},
+        "xianxia": {"qi_control": 58, "formation_control": 54, "qi_resource": 56},
+        "sf": {"hacking": 62, "piloting": 90, "cybernetic_assist": 68}
+      }
+    }
+  ],
+  "held_out_tasks": [
+    {
+      "task_id": "BREACH_DOOR_BURST",
+      "family": "EXPLOSIVE_RAPID_FORCE",
+      "method_class": "BURST_FORCE",
+      "description": "Deliver a short explosive impulse before a reinforced latch resets.",
+      "difficulty": 68,
+      "required_tool": null,
+      "required_body_tags": ["force", "burst", "upper_limb_force"],
+      "skill_weights": {"burst_execution": 0.65, "athletics": 0.35},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"force": 0.75, "coordination": 0.25},
+        "SMALL_CORE_V1": {"strength": 0.75, "coordination": 0.25},
+        "RICH_GENRE_NEUTRAL_V1": {"power": 0.7, "strength": 0.2, "coordination": 0.1}
+      }
+    },
+    {
+      "task_id": "CROWD_DODGE_CUT",
+      "family": "WHOLE_BODY_CHANGE_OF_DIRECTION",
+      "method_class": "RAPID_AGILITY",
+      "description": "Change direction twice through moving obstacles without losing body control.",
+      "difficulty": 64,
+      "required_tool": null,
+      "required_body_tags": ["mobility", "coordination"],
+      "skill_weights": {"agility_drill": 0.65, "athletics": 0.35},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"coordination": 0.6, "balance": 0.4},
+        "SMALL_CORE_V1": {"coordination": 0.7, "dexterity": 0.3},
+        "RICH_GENRE_NEUTRAL_V1": {"agility": 0.65, "coordination": 0.25, "balance": 0.1}
+      }
+    },
+    {
+      "task_id": "TIMED_NEEDLE_ALIGNMENT",
+      "family": "PRECISION_UNDER_TIME_PRESSURE",
+      "method_class": "TIMED_PRECISION",
+      "description": "Align a moving fine mechanism inside a short timing window.",
+      "difficulty": 70,
+      "required_tool": null,
+      "required_body_tags": ["manual", "hand_function", "coordination"],
+      "skill_weights": {"precision_work": 0.75, "analysis": 0.25},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"manual_precision": 0.6, "coordination": 0.25, "reasoning": 0.15},
+        "SMALL_CORE_V1": {"dexterity": 0.6, "coordination": 0.25, "reasoning": 0.15},
+        "RICH_GENRE_NEUTRAL_V1": {"dexterity": 0.55, "coordination": 0.25, "composure": 0.1, "reasoning": 0.1}
+      }
+    },
+    {
+      "task_id": "VALVE_BYPASS_SEQUENCE",
+      "family": "MULTI_STAGE_TOOL_HARD_PREREQUISITE",
+      "method_class": "TOOL_SEQUENCE",
+      "description": "Inspect, isolate and bypass a jammed valve in a fixed three-stage tool sequence.",
+      "difficulty": 72,
+      "required_tool": "MULTITOOL_KIT",
+      "required_body_tags": ["manual", "hand_function", "tool"],
+      "skill_weights": {"tool_sequence": 0.7, "analysis": 0.3},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"tool_control": 0.55, "manual_precision": 0.25, "reasoning": 0.2},
+        "SMALL_CORE_V1": {"dexterity": 0.55, "reasoning": 0.3, "coordination": 0.15},
+        "RICH_GENRE_NEUTRAL_V1": {"dexterity": 0.45, "reasoning": 0.3, "perception": 0.15, "coordination": 0.1}
+      }
+    },
+    {
+      "task_id": "FOG_SIGNAL_DISCRIMINATION",
+      "family": "NOISY_AMBIGUOUS_OBSERVATION",
+      "method_class": "NOISY_OBSERVATION",
+      "description": "Discriminate a weak repeated signal from ambiguous environmental noise.",
+      "difficulty": 67,
+      "required_tool": null,
+      "required_body_tags": ["perception", "cognitive"],
+      "skill_weights": {"observation": 0.7, "analysis": 0.3},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"perception": 0.7, "reasoning": 0.3},
+        "SMALL_CORE_V1": {"perception": 0.7, "reasoning": 0.3},
+        "RICH_GENRE_NEUTRAL_V1": {"perception": 0.65, "reasoning": 0.25, "composure": 0.1}
+      }
+    },
+    {
+      "task_id": "LOGIC_GRID_WITH_WRIST_SPLINT",
+      "family": "REASONING_IRRELEVANT_PHYSICAL_IMPAIRMENT",
+      "method_class": "PURE_REASONING",
+      "description": "Solve a symbolic constraint grid while a wrist impairment is present but functionally irrelevant.",
+      "difficulty": 69,
+      "required_tool": null,
+      "required_body_tags": ["reasoning", "cognitive"],
+      "skill_weights": {"analysis": 1.0},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"reasoning": 0.85, "perception": 0.15},
+        "SMALL_CORE_V1": {"reasoning": 0.85, "perception": 0.15},
+        "RICH_GENRE_NEUTRAL_V1": {"reasoning": 0.75, "perception": 0.15, "composure": 0.1}
+      }
+    },
+    {
+      "task_id": "ROPE_BRIDGE_HAUL",
+      "family": "SUSTAINED_COORDINATED_PHYSICAL",
+      "method_class": "SUSTAINED_CONTROL",
+      "description": "Maintain coordinated tension while hauling a bridge line over a sustained interval.",
+      "difficulty": 66,
+      "required_tool": null,
+      "required_body_tags": ["endurance", "coordination", "force"],
+      "skill_weights": {"athletics": 0.65, "team_coordination": 0.35},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"endurance": 0.45, "force": 0.3, "coordination": 0.25},
+        "SMALL_CORE_V1": {"endurance": 0.45, "strength": 0.3, "coordination": 0.25},
+        "RICH_GENRE_NEUTRAL_V1": {"endurance": 0.4, "strength": 0.25, "coordination": 0.2, "balance": 0.15}
+      }
+    },
+    {
+      "task_id": "TWO_PERSON_STRETCHER_SYNC",
+      "family": "ASSISTANCE_TEAMWORK_REPRESENTATION_PRESSURE",
+      "method_class": "ASSISTANCE_PRESSURE_ONLY",
+      "description": "Represent one actor's synchronization contribution to a two-person carry without implementing PARTY runtime.",
+      "difficulty": 62,
+      "required_tool": null,
+      "required_body_tags": ["coordination", "endurance"],
+      "skill_weights": {"team_coordination": 0.7, "athletics": 0.3},
+      "representation_weights": {
+        "DEMAND_PRIMITIVES_V1": {"coordination": 0.55, "endurance": 0.45},
+        "SMALL_CORE_V1": {"coordination": 0.55, "endurance": 0.45},
+        "RICH_GENRE_NEUTRAL_V1": {"coordination": 0.45, "endurance": 0.35, "balance": 0.2}
+      }
+    }
+  ],
+  "qualitative_relations": [
+    {
+      "relation_id": "TECH_TOOL_SEQUENCE",
+      "task_id": "VALVE_BYPASS_SEQUENCE",
+      "left_actor": "FIELD_TECH",
+      "right_actor": "BURST_SPECIALIST",
+      "direction": "LEFT_GT_RIGHT",
+      "reason": "Declared manual/tool/analysis inputs differ materially."
+    },
+    {
+      "relation_id": "SCOUT_NOISY_OBSERVE",
+      "task_id": "FOG_SIGNAL_DISCRIMINATION",
+      "left_actor": "SCOUT",
+      "right_actor": "BURST_SPECIALIST",
+      "direction": "LEFT_GT_RIGHT",
+      "reason": "Declared perception/observation inputs differ materially."
+    },
+    {
+      "relation_id": "TECH_REASONING",
+      "task_id": "LOGIC_GRID_WITH_WRIST_SPLINT",
+      "left_actor": "FIELD_TECH",
+      "right_actor": "BURST_SPECIALIST",
+      "direction": "LEFT_GT_RIGHT",
+      "reason": "Declared reasoning/analysis inputs differ materially."
+    },
+    {
+      "relation_id": "SCOUT_CHANGE_DIRECTION",
+      "task_id": "CROWD_DODGE_CUT",
+      "left_actor": "SCOUT",
+      "right_actor": "STEADY_STRONG",
+      "direction": "LEFT_GT_RIGHT",
+      "reason": "Declared rapid-control inputs differ materially."
+    }
+  ],
+  "collision_probes": [
+    {
+      "probe_id": "BURST_COLLISION",
+      "actor_left": "BURST_SPECIALIST",
+      "actor_right": "STEADY_STRONG",
+      "task_id": "BREACH_DOOR_BURST",
+      "semantic_axis": "power",
+      "question": "Can the declared representation distinguish equal slow-force inputs from materially different explosive power without actor-name or hidden-weight logic?"
+    },
+    {
+      "probe_id": "AGILITY_BALANCE_COLLISION",
+      "actor_left": "SCOUT",
+      "actor_right": "STEADY_STRONG",
+      "task_id": "CROWD_DODGE_CUT",
+      "semantic_axis": "agility",
+      "question": "Can the declared representation distinguish rapid change-of-direction from a profile with the same coarse coordination/balance surface?"
+    }
+  ],
+  "genre_extension_fixtures": [
+    {
+      "extension_id": "WUXIA_QINGGONG",
+      "genre": "WUXIA",
+      "actor_id": "SCOUT",
+      "base_task_id": "CROWD_DODGE_CUT",
+      "extension_skill_weights": {"qinggong_control": 0.65, "internal_force_control": 0.35},
+      "extension_resource_key": "internal_force_resource",
+      "extension_weight": 0.25,
+      "pollution_rule": "EXTENSION_INPUTS_STAY_OUTSIDE_MUNDANE_BASE_REPRESENTATION"
+    },
+    {
+      "extension_id": "XIANXIA_FORMATION",
+      "genre": "XIANXIA",
+      "actor_id": "FIELD_TECH",
+      "base_task_id": "LOGIC_GRID_WITH_WRIST_SPLINT",
+      "extension_skill_weights": {"qi_control": 0.4, "formation_control": 0.6},
+      "extension_resource_key": "qi_resource",
+      "extension_weight": 0.25,
+      "pollution_rule": "EXTENSION_INPUTS_STAY_OUTSIDE_MUNDANE_BASE_REPRESENTATION"
+    },
+    {
+      "extension_id": "SF_HACK_PILOT",
+      "genre": "SF",
+      "actor_id": "FIELD_TECH",
+      "base_task_id": "VALVE_BYPASS_SEQUENCE",
+      "extension_skill_weights": {"hacking": 0.6, "piloting": 0.4},
+      "extension_resource_key": "cybernetic_assist",
+      "extension_weight": 0.25,
+      "pollution_rule": "EXTENSION_INPUTS_STAY_OUTSIDE_MUNDANE_BASE_REPRESENTATION"
+    }
+  ],
+  "parameter_perturbation_grid": {
+    "actor_offsets": [-5, 0, 5],
+    "difficulty_offsets": [-5, 0, 5],
+    "weight_scale_factors": [0.9, 1.0, 1.1],
+    "stability_band": 2.0,
+    "fragile_reversal_threshold": 0.85,
+    "condition_ids": ["HAND_FUNCTION_IMPAIRMENT", "LEG_MOBILITY_IMPAIRMENT"]
+  },
+  "overfit_guards": [
+    "HELDOUT_TASKS_LOADED_FROM_GOVERNED_SPEC",
+    "NO_EXPECTED_WINNER_FIELD_OR_CANDIDATE_BRANCH",
+    "CANDIDATE_ORDER_INVARIANT",
+    "TASK_ORDER_INVARIANT",
+    "NO_CANDIDATE_SPECIFIC_TASK_OMISSION",
+    "ACTOR_RENAME_INVARIANT",
+    "TASK_RENAME_INVARIANT",
+    "CANDIDATE_RENAME_INVARIANT",
+    "FRESH_PROCESS_EXACT_OUTPUT"
+  ],
+  "genre_core_pollution_guard": {
+    "extension_inputs_must_remain_outside_representations": true,
+    "mundane_receipt_must_ignore_extension_inputs": true,
+    "base_representation_snapshot_must_not_change": true
+  },
+  "recommendation_policy": {
+    "attr_allowed_prefixes": ["RECOMMEND_RESOLVE_ATTR_", "NARROW_ATTR_TO_", "KEEP_ATTR_OPEN"],
+    "math_allowed_prefixes": ["RECOMMEND_RESOLVE_MATH_", "NARROW_MATH_TO_", "KEEP_MATH_OPEN"],
+    "attr_resolution_requires_all_heldout_relations_and_collision_coverage_without_fragile_reversal": true,
+    "math_resolution_requires_deterministic_baseline_monotonic_and_stack_nonlocality_absent": true,
+    "recommendation_is_not_resolution_authority": true
+  },
+  "governance_locks": {
+    "RUNTIME_SEMANTICS_UNCHANGED": true,
+    "OPEN_DECISION_STATUS_UNCHANGED": true,
+    "NO_I2_RUNTIME_IMPLEMENTED": true,
+    "all_candidates_non_canonical": true
+  },
+  "condition_probes": [
+    {
+      "condition_id": "HAND_FUNCTION_IMPAIRMENT",
+      "status": "EVALUATION_PROBE_ONLY",
+      "affected_tags": ["hand_function", "upper_limb_force"],
+      "multiplier": 0.65
+    },
+    {
+      "condition_id": "LEG_MOBILITY_IMPAIRMENT",
+      "status": "EVALUATION_PROBE_ONLY",
+      "affected_tags": ["balance", "mobility"],
+      "multiplier": 0.65
+    }
+  ],
+  "math_diagnostic_cases": {
+    "representation_family": "SMALL_MUNDANE_CORE_VECTOR",
+    "monotonic_cases": [
+      {"actor_id": "FIELD_TECH", "task_id": "TIMED_NEEDLE_ALIGNMENT"},
+      {"actor_id": "BURST_SPECIALIST", "task_id": "BREACH_DOOR_BURST"}
+    ],
+    "reasoning_isolation_case": {
+      "actor_id": "FIELD_TECH",
+      "task_id": "LOGIC_GRID_WITH_WRIST_SPLINT",
+      "condition_id": "HAND_FUNCTION_IMPAIRMENT"
+    },
+    "relevant_tool_condition_case": {
+      "actor_id": "FIELD_TECH",
+      "task_id": "VALVE_BYPASS_SEQUENCE",
+      "condition_id": "HAND_FUNCTION_IMPAIRMENT"
+    }
+  }
+}
