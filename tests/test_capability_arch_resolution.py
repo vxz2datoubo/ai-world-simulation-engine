@@ -202,9 +202,12 @@ def test_profile_schema_ruleset_change_has_compatible_migration_and_golden_repla
     assert "Legacy v1.0 profiles remain replayable only" in trace
     assert profile_migration["legacy_replay_policy"].startswith("LEGACY_R001_R002_REPLAY_ONLY")
     assert profile_migration["vnext_profile_contract_version"] == "1.1.0-candidate"
-    assert {"profile_schema_ref", "ruleset_family_ref"} <= set(profile_migration["vnext_required_fields"])
+    assert set(profile_migration["vnext_required_fields"]) == {
+        "actor_id", "profile_version", "profile_schema_ref", "ruleset_family_ref", "base_attribute_map", "source_event_refs"
+    }
+    assert set(profile_migration["vnext_required_field_admission_rules"]) == set(profile_migration["vnext_required_fields"])
     assert "EXPLICIT_COMPATIBILITY_OR_TRANSFORMATION_EVIDENCE_REQUIRED" in profile_migration["transformation_requirement"]
-    assert profile_migration["failure_policy"] == "UNKNOWN_OR_MISMATCHED_PROFILE_SCHEMA_OR_RULESET_FAMILY_FAILS_CLOSED"
+    assert profile_migration["failure_policy"] == "UNKNOWN_OR_MISMATCHED_OR_INCOMPLETE_PROFILE_SCHEMA_OR_RULESET_FAMILY_FAILS_CLOSED"
     assert "NO_I2_USE_OF_LEGACY_PROFILE" in profile_migration["runtime_activation"]
 
     profile_rule = suite["machine_semantics"]["assertion_rule_registry"]["fighter_and_scholar_profiles_are_not_interchangeable"]
@@ -222,14 +225,50 @@ def _profile_provenance_fixture_receipt(contract, case):
     def compatible(schema_ref, ruleset_ref):
         return ruleset_ref in set(allowed_by_schema.get(schema_ref, []))
 
-    if case["input_profile_contract_version"] == "1.1.0-candidate":
+    def has_nonempty_string(field):
+        return isinstance(case.get(field), str) and bool(case[field].strip())
+
+    def has_nonempty_map(field):
+        return isinstance(case.get(field), dict) and bool(case[field])
+
+    def has_nonempty_event_refs(field):
+        value = case.get(field)
+        return isinstance(value, list) and bool(value) and all(isinstance(ref, str) and ref for ref in value)
+
+    def complete_vnext_profile_shape():
+        validators = {
+            "NONEMPTY_STRING": has_nonempty_string,
+            "EXACT_VNEXT_PROFILE_CONTRACT_VERSION": lambda field: case.get(field) == migration["vnext_profile_contract_version"],
+            "NONEMPTY_MAP": has_nonempty_map,
+            "NONEMPTY_EVENT_REF_LIST": has_nonempty_event_refs,
+        }
+        for field in migration["vnext_required_fields"]:
+            rule = migration["vnext_required_field_admission_rules"][field]
+            if not validators[rule](field):
+                return False
+        return set(case["source_event_refs"]) <= set(case.get("authorized_source_event_refs", []))
+
+    def complete_legacy_profile_shape():
+        return (
+            all(has_nonempty_string(field) for field in ("actor_id", "profile_version"))
+            and case.get("profile_version") == case["input_profile_contract_version"]
+            and has_nonempty_map("base_attribute_map")
+            and has_nonempty_event_refs("source_event_refs")
+            and set(case["source_event_refs"]) <= set(case.get("authorized_source_event_refs", []))
+        )
+
+    if case["input_profile_contract_version"] == migration["vnext_profile_contract_version"]:
         if not case.get("profile_schema_ref") or not case.get("ruleset_family_ref"):
             return {"admission": "REJECT_FAIL_CLOSED_MISSING_PROFILE_SCHEMA_OR_RULESET", "replay_profile": "NONE"}
+        if not complete_vnext_profile_shape():
+            return {"admission": "REJECT_FAIL_CLOSED_INCOMPLETE_PROFILE_SHAPE", "replay_profile": "NONE"}
         if not compatible(case["profile_schema_ref"], case["ruleset_family_ref"]):
             return {"admission": "REJECT_FAIL_CLOSED_SCHEMA_RULESET_MISMATCH", "replay_profile": "NONE"}
         return {"admission": "ACCEPT_V1_1_PROFILE", "replay_profile": "V1_1_SCHEMA_AND_RULESET_BOUND"}
 
-    assert case["input_profile_contract_version"] == "1.0.0-candidate"
+    assert case["input_profile_contract_version"] == migration["legacy_profile_contract_version"]
+    if not complete_legacy_profile_shape():
+        return {"admission": "REJECT_FAIL_CLOSED_INCOMPLETE_LEGACY_PROFILE_SHAPE", "replay_profile": "LEGACY_ONLY"}
     evidence_refs = set(case.get("transformation_evidence_refs", []))
     if not evidence_refs or not evidence_refs <= set(case["authorized_source_event_refs"]):
         return {"admission": "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE", "replay_profile": "LEGACY_ONLY"}
@@ -241,6 +280,12 @@ def _profile_provenance_fixture_receipt(contract, case):
     for evidence_ref in evidence_refs:
         evidence = evidence_registry.get(evidence_ref)
         if not evidence or evidence["event_type"] != "PROFILE_SCHEMA_RULESET_MIGRATION_AUTHORIZED":
+            return {"admission": "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE", "replay_profile": "LEGACY_ONLY"}
+        if evidence["from_profile_contract_version"] != case["input_profile_contract_version"]:
+            return {"admission": "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE", "replay_profile": "LEGACY_ONLY"}
+        if case["actor_id"] not in evidence["allowed_actor_ids"]:
+            return {"admission": "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE", "replay_profile": "LEGACY_ONLY"}
+        if not set(case["source_event_refs"]) <= set(evidence["allowed_source_profile_event_refs"]):
             return {"admission": "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE", "replay_profile": "LEGACY_ONLY"}
         if case["target_profile_schema_ref"] not in evidence["allowed_target_profile_schema_refs"]:
             return {"admission": "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE", "replay_profile": "LEGACY_ONLY"}
@@ -263,6 +308,12 @@ def test_profile_provenance_golden_fixtures_execute_matching_missing_mismatch_an
         "FS-P5-UNAUTHORIZED-LEGACY-EVIDENCE",
         "FS-P6-UNRELATED-LEGACY-EVIDENCE",
         "FS-P7-PARTIAL-LEGACY-EVIDENCE",
+        "FS-P8-MISSING-V1_1-ACTOR-ID",
+        "FS-P9-WRONG-V1_1-PROFILE-VERSION",
+        "FS-P10-EMPTY-V1_1-ATTRIBUTE-MAP",
+        "FS-P11-EMPTY-V1_1-SOURCE-REFS",
+        "FS-P12-LEGACY-EVIDENCE-SOURCE-VERSION-MISMATCH",
+        "FS-P13-LEGACY-EVIDENCE-OTHER-ACTOR",
     }
     for case in cases:
         assert case["evaluation_scope"] == "CONTRACT_ADMISSION_FIXTURE_ONLY_NOT_RUNTIME"
@@ -274,4 +325,8 @@ def test_profile_provenance_golden_fixtures_execute_matching_missing_mismatch_an
     assert by_id["FS-P3-MISMATCHED-PROVENANCE"]["ruleset_family_ref"] == "RULESET-FAMILY-B@1"
     assert by_id["FS-P4-EVIDENCED-LEGACY-TRANSFORMATION"]["transformation_evidence_refs"] == ["E_PROFILE_MIGRATION_AUTHORIZED"]
     assert _profile_provenance_fixture_receipt(contract, {**by_id["FS-P1-MATCHING-V1_1"], "ruleset_family_ref": "RULESET-FAMILY-B@1"})["admission"] == "REJECT_FAIL_CLOSED_SCHEMA_RULESET_MISMATCH"
+    assert _profile_provenance_fixture_receipt(contract, {**by_id["FS-P1-MATCHING-V1_1"], "base_attribute_map": {}})["admission"] == "REJECT_FAIL_CLOSED_INCOMPLETE_PROFILE_SHAPE"
     assert _profile_provenance_fixture_receipt(contract, {**by_id["FS-P4-EVIDENCED-LEGACY-TRANSFORMATION"], "transformation_evidence_refs": ["E_UNAUTHORIZED_TRANSFORMATION"]})["admission"] == "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE"
+    mismatched_source_version = json.loads(json.dumps(contract))
+    mismatched_source_version["versioning_and_migration"]["actor_base_profile_migration"]["authorized_transformation_evidence_registry"]["E_PROFILE_MIGRATION_AUTHORIZED"]["from_profile_contract_version"] = "0.9.0-candidate"
+    assert _profile_provenance_fixture_receipt(mismatched_source_version, by_id["FS-P4-EVIDENCED-LEGACY-TRANSFORMATION"])["admission"] == "REJECT_FAIL_CLOSED_UNAUTHORIZED_TRANSFORMATION_EVIDENCE"

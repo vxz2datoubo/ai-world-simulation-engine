@@ -457,17 +457,17 @@ def test_b04_resolved_capability_decisions_are_machine_classified_without_erasin
     bindings = load_json(DECISION_BINDING_PATH)
     lifecycle = contract["decision_lifecycle_registry"]
 
-    assert contract["contract_version"] == "1.6.0-candidate"
+    assert contract["contract_version"] == "1.7.0-candidate"
     assert contract["versioning_and_migration"]["contract_version_lineage"] == {
-        "previous_contract_version": "1.5.0-candidate",
+        "previous_contract_version": "1.6.0-candidate",
         "semantic_delta": [
-            "AUTHORITATIVE_PROFILE_SCHEMA_TO_RULESET_COMPATIBILITY_MAPPING",
-            "AUTHORIZED_LEGACY_TRANSFORMATION_EVIDENCE_CLOSURE",
+            "V1_1_COMPLETE_PROFILE_SHAPE_ADMISSION",
+            "LEGACY_TRANSFORMATION_SOURCE_VERSION_AND_PROFILE_BINDING",
             "FAIL_CLOSED_GOLDEN_PROFILE_PROVENANCE_RECEIPTS",
         ],
         "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_PRE_LIFECYCLE_AND_POST_LIFECYCLE_RECEIPTS",
     }
-    assert suite["suite_version"] == "1.4.0-candidate"
+    assert suite["suite_version"] == "1.5.0-candidate"
     assert suite["required_contract_version"] == contract["contract_version"]
     assert bindings["required_contract_version"] == contract["contract_version"]
     assert suite["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"
