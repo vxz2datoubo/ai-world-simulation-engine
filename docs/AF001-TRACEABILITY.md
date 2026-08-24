@@ -157,11 +157,11 @@ Human-readable scenario prose remains in the eval registry. Each scenario also h
 
 ### FIGHTER_VS_SCHOLAR dependency disposition
 
-The Golden file is not rewritten in this governance-only slice because its current machine contract is already compatible with the Control Tower decision:
-- it already binds `ActorBaseProfile`, `SkillLedger`, `DerivedCapability`, `ActionDemandProfile` and `ActionResolutionReceipt` as separate type refs;
-- it already requires method/demand before outcome and feasibility before stochastic/graded resolution;
-- it already requires deterministic replay when randomness is used;
-- its human replay expectation already binds same ruleset/seed provenance;
+The Golden file is revised in this governance-only slice so the Control Tower decision is executable at the contract boundary:
+- it binds `ActorBaseProfile`, `SkillLedger`, `DerivedCapability`, `ActionDemandProfile` and `ActionResolutionReceipt` as separate type refs;
+- it requires method/demand before outcome and feasibility before stochastic/graded resolution;
+- it requires deterministic replay when randomness is used;
+- it adds profile-schema/ruleset replay-admission fixtures for matching v1.1 provenance, missing provenance, mismatched provenance and an explicitly evidenced legacy-to-v1.1 transformation;
 - it explicitly remains `CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED`.
 
 Its retained references to `OD-CAPABILITY-ATTR-001` and `OD-CAPABILITY-MATH-001` now mean `HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER`.
@@ -180,7 +180,7 @@ The retained decision refs therefore preserve history and force future I2A imple
 
 Breaking authority/identity/event/ownership/provenance changes require explicit migration spec, replay/rebuild impact analysis, affected Golden updates and fresh independent review. Source events never change in place. Snapshots/caches may be rebuilt from exact source cursor/version.
 
-`CAPABILITY-ARCH-RESOLUTION-001` deliberately performs no machine-contract schema migration. It changes governance meaning while preserving the existing compatible AF-C interface surface. Runtime semantics remain unchanged.
+`CAPABILITY-ARCH-RESOLUTION-001` performs a compatible machine-contract migration from the legacy v1.0 `ActorBaseProfile` shape to the v1.1 profile-schema/ruleset provenance shape. Legacy profiles remain valid for accepted legacy replay only; transformation requires explicit authorized evidence, and missing or mismatched v1.1 provenance fails closed. The contract, Golden fixtures and replay-impact record are versioned together. Runtime semantics remain unchanged and this migration does not authorize I2.
 
 ## 11. Historical R001/R002 non-regression map
 

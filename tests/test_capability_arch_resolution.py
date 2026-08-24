@@ -212,3 +212,43 @@ def test_profile_schema_ruleset_change_has_compatible_migration_and_golden_repla
         assertion["assertion"] == "profile_schema_and_ruleset_rehydrate_or_fail_closed"
         for assertion in fighter["machine_spec"]["replay_restart_assertions"]
     )
+
+
+def _profile_provenance_fixture_receipt(case):
+    if case["input_profile_contract_version"] == "1.1.0-candidate":
+        if not case.get("profile_schema_ref") or not case.get("ruleset_family_ref"):
+            return {"admission": "REJECT_FAIL_CLOSED_MISSING_PROFILE_SCHEMA_OR_RULESET", "replay_profile": "NONE"}
+        if case["schema_ruleset_compatibility"] != "MATCH":
+            return {"admission": "REJECT_FAIL_CLOSED_SCHEMA_RULESET_MISMATCH", "replay_profile": "NONE"}
+        return {"admission": "ACCEPT_V1_1_PROFILE", "replay_profile": "V1_1_SCHEMA_AND_RULESET_BOUND"}
+
+    assert case["input_profile_contract_version"] == "1.0.0-candidate"
+    if not case.get("transformation_evidence_refs"):
+        return {"admission": "REJECT_FAIL_CLOSED_MISSING_TRANSFORMATION_EVIDENCE", "replay_profile": "LEGACY_ONLY"}
+    if not case.get("target_profile_schema_ref") or not case.get("target_ruleset_family_ref"):
+        return {"admission": "REJECT_FAIL_CLOSED_MISSING_PROFILE_SCHEMA_OR_RULESET", "replay_profile": "LEGACY_ONLY"}
+    if case["schema_ruleset_compatibility"] != "MATCH":
+        return {"admission": "REJECT_FAIL_CLOSED_SCHEMA_RULESET_MISMATCH", "replay_profile": "LEGACY_ONLY"}
+    return {"admission": "ACCEPT_EXPLICIT_LEGACY_TO_V1_1_TRANSFORMATION", "replay_profile": "V1_1_SCHEMA_AND_RULESET_BOUND"}
+
+
+def test_profile_provenance_golden_fixtures_execute_matching_missing_mismatch_and_legacy_cases():
+    suite = load_json(GOLDEN_PATH)
+    cases = suite["scenarios"]["FIGHTER_VS_SCHOLAR"]["machine_spec"]["profile_provenance_replay_cases"]
+    by_id = {case["case_id"]: case for case in cases}
+
+    assert set(by_id) == {
+        "FS-P1-MATCHING-V1_1",
+        "FS-P2-MISSING-PROVENANCE",
+        "FS-P3-MISMATCHED-PROVENANCE",
+        "FS-P4-EVIDENCED-LEGACY-TRANSFORMATION",
+    }
+    for case in cases:
+        assert case["evaluation_scope"] == "CONTRACT_ADMISSION_FIXTURE_ONLY_NOT_RUNTIME"
+        assert case["authorized_source_event_refs"]
+        assert _profile_provenance_fixture_receipt(case) == case["expected_receipt"]
+
+    assert by_id["FS-P1-MATCHING-V1_1"]["schema_ruleset_compatibility"] == "MATCH"
+    assert by_id["FS-P2-MISSING-PROVENANCE"]["profile_schema_ref"] is None
+    assert by_id["FS-P3-MISMATCHED-PROVENANCE"]["schema_ruleset_compatibility"] == "MISMATCH"
+    assert by_id["FS-P4-EVIDENCED-LEGACY-TRANSFORMATION"]["transformation_evidence_refs"] == ["E_PROFILE_MIGRATION_AUTHORIZED"]
