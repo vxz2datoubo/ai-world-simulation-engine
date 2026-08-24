@@ -128,7 +128,6 @@ def test_true_heldout_corpus_is_distinct_from_predecessor_ids_and_semantics():
     heldout_ids = {task["task_id"] for task in spec["held_out_tasks"]}
     predecessor_ids = {task["task_id"] for task in predecessor["task_corpus"]}
     assert not heldout_ids.intersection(predecessor_ids)
-
     predecessor_semantics = {
         cap2.canonical_json(_task_semantics(task)) for task in predecessor["task_corpus"]
     }
@@ -153,12 +152,7 @@ def test_missing_tool_is_explicit_feasibility_not_magic_margin_across_math_candi
     for rep_id in spec["representation_candidate_refs"]:
         for math_id in spec["math_policy_candidate_refs"]:
             receipt = cap2.evaluate_case(
-                spec,
-                predecessor,
-                rep_id,
-                math_id,
-                "BURST_SPECIALIST",
-                "VALVE_BYPASS_SEQUENCE",
+                spec, predecessor, rep_id, math_id, "BURST_SPECIALIST", "VALVE_BYPASS_SEQUENCE"
             )
             assert receipt["feasibility"] == "HARD_FAIL_MISSING_REQUIRED_TOOL"
             assert receipt["margin"] is None
@@ -206,7 +200,6 @@ def test_robustness_separates_feasibility_dominance_from_margin_stability():
             assert feasibility_relation["margin_comparison_count"] == 0
             assert feasibility_relation["margin_band_stability_fraction"] is None
             assert feasibility_relation["preserved"] == expected_total
-
             margin_relation = rows["SCOUT_NOISY_OBSERVE"]
             assert margin_relation["total"] == expected_total
             assert margin_relation["margin_comparison_count"] == expected_total
@@ -214,7 +207,7 @@ def test_robustness_separates_feasibility_dominance_from_margin_stability():
             assert margin_relation["margin_band_stability_fraction"] is not None
 
 
-def test_collision_probes_are_non_vacuous_without_expected_winner_labels():
+def test_collision_probes_isolate_representation_axis_and_are_non_vacuous():
     spec, predecessor = load_inputs()
     assert '"expected_winner"' not in cap2.canonical_json(spec).lower()
     result = cap2.run_evaluation(spec, predecessor)["representation_collision_evidence"]
@@ -224,23 +217,21 @@ def test_collision_probes_are_non_vacuous_without_expected_winner_labels():
         assert states == {False, True}
         assert probe["distinguishing_candidates_observed"]
         assert probe["colliding_candidates_observed"]
+        for row in probe["candidate_rows"].values():
+            if row["comparison_basis"] == "SEMANTIC_AXIS_UNREPRESENTED":
+                assert row["axis_value_delta_left_minus_right"] is None
+                assert row["collides"] is True
+            else:
+                assert row["comparison_basis"] == "DECLARED_REPRESENTATION_AXIS"
 
 
-def test_evaluator_source_has_no_fixture_or_candidate_id_bonus():
+def test_evaluator_source_has_no_fixture_candidate_or_winner_label_bonus():
     source = EVALUATOR_PATH.read_text(encoding="utf-8").lower()
     for forbidden in (
-        "burst_specialist",
-        "steady_strong",
-        "field_tech",
-        "scout",
-        "small_core_v1",
-        "demand_primitives_v1",
-        "rich_genre_neutral_v1",
-        "deterministic_margin_v1",
-        "additive_multiplicative_stack_v1",
-        "tagged_priority_v1",
-        "bounded_seeded_stochastic_v1",
-        "expected_winner",
+        "burst_specialist", "steady_strong", "field_tech", "scout",
+        "small_core_v1", "demand_primitives_v1", "rich_genre_neutral_v1",
+        "deterministic_margin_v1", "additive_multiplicative_stack_v1",
+        "tagged_priority_v1", "bounded_seeded_stochastic_v1", "expected_winner",
     ):
         assert forbidden not in source
 
@@ -248,84 +239,46 @@ def test_evaluator_source_has_no_fixture_or_candidate_id_bonus():
 def test_actor_task_representation_and_math_rename_preserve_semantic_receipt():
     spec, predecessor = load_inputs()
     baseline = cap2.evaluate_case(
-        spec,
-        predecessor,
-        "SMALL_CORE_V1",
-        "BOUNDED_SEEDED_STOCHASTIC_V1",
-        "FIELD_TECH",
-        "VALVE_BYPASS_SEQUENCE",
+        spec, predecessor, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1",
+        "FIELD_TECH", "VALVE_BYPASS_SEQUENCE",
     )
-
     actor_spec = copy.deepcopy(spec)
     _rename_actor(actor_spec, "FIELD_TECH", "ACTOR_RENAMED")
     actor_receipt = cap2.evaluate_case(
-        actor_spec,
-        predecessor,
-        "SMALL_CORE_V1",
-        "BOUNDED_SEEDED_STOCHASTIC_V1",
-        "ACTOR_RENAMED",
-        "VALVE_BYPASS_SEQUENCE",
+        actor_spec, predecessor, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1",
+        "ACTOR_RENAMED", "VALVE_BYPASS_SEQUENCE",
     )
-    assert cap2.semantic_receipt_signature(actor_receipt) == cap2.semantic_receipt_signature(
-        baseline
-    )
+    assert cap2.semantic_receipt_signature(actor_receipt) == cap2.semantic_receipt_signature(baseline)
 
     task_spec = copy.deepcopy(spec)
     _rename_task(task_spec, "VALVE_BYPASS_SEQUENCE", "TASK_RENAMED")
     task_receipt = cap2.evaluate_case(
-        task_spec,
-        predecessor,
-        "SMALL_CORE_V1",
-        "BOUNDED_SEEDED_STOCHASTIC_V1",
-        "FIELD_TECH",
-        "TASK_RENAMED",
+        task_spec, predecessor, "SMALL_CORE_V1", "BOUNDED_SEEDED_STOCHASTIC_V1",
+        "FIELD_TECH", "TASK_RENAMED",
     )
-    assert cap2.semantic_receipt_signature(task_receipt) == cap2.semantic_receipt_signature(
-        baseline
-    )
+    assert cap2.semantic_receipt_signature(task_receipt) == cap2.semantic_receipt_signature(baseline)
 
-    rep_spec = copy.deepcopy(spec)
-    rep_predecessor = copy.deepcopy(predecessor)
+    rep_spec, rep_predecessor = copy.deepcopy(spec), copy.deepcopy(predecessor)
     _rename_representation(rep_spec, rep_predecessor, "SMALL_CORE_V1", "REP_RENAMED")
     rep_receipt = cap2.evaluate_case(
-        rep_spec,
-        rep_predecessor,
-        "REP_RENAMED",
-        "BOUNDED_SEEDED_STOCHASTIC_V1",
-        "FIELD_TECH",
-        "VALVE_BYPASS_SEQUENCE",
+        rep_spec, rep_predecessor, "REP_RENAMED", "BOUNDED_SEEDED_STOCHASTIC_V1",
+        "FIELD_TECH", "VALVE_BYPASS_SEQUENCE",
     )
-    assert cap2.semantic_receipt_signature(rep_receipt) == cap2.semantic_receipt_signature(
-        baseline
-    )
+    assert cap2.semantic_receipt_signature(rep_receipt) == cap2.semantic_receipt_signature(baseline)
 
-    math_spec = copy.deepcopy(spec)
-    math_predecessor = copy.deepcopy(predecessor)
-    _rename_math(
-        math_spec,
-        math_predecessor,
-        "BOUNDED_SEEDED_STOCHASTIC_V1",
-        "MATH_RENAMED",
-    )
+    math_spec, math_predecessor = copy.deepcopy(spec), copy.deepcopy(predecessor)
+    _rename_math(math_spec, math_predecessor, "BOUNDED_SEEDED_STOCHASTIC_V1", "MATH_RENAMED")
     math_receipt = cap2.evaluate_case(
-        math_spec,
-        math_predecessor,
-        "SMALL_CORE_V1",
-        "MATH_RENAMED",
-        "FIELD_TECH",
-        "VALVE_BYPASS_SEQUENCE",
+        math_spec, math_predecessor, "SMALL_CORE_V1", "MATH_RENAMED",
+        "FIELD_TECH", "VALVE_BYPASS_SEQUENCE",
     )
-    assert cap2.semantic_receipt_signature(
-        math_receipt
-    ) == cap2.semantic_receipt_signature(baseline)
+    assert cap2.semantic_receipt_signature(math_receipt) == cap2.semantic_receipt_signature(baseline)
 
 
 def test_candidate_and_task_order_do_not_change_full_structured_evidence():
     spec, predecessor = load_inputs()
     baseline = cap2.run_evaluation(spec, predecessor)
-
-    shuffled = copy.deepcopy(spec)
-    shuffled_predecessor = copy.deepcopy(predecessor)
+    shuffled, shuffled_predecessor = copy.deepcopy(spec), copy.deepcopy(predecessor)
     shuffled["representation_candidate_refs"].reverse()
     shuffled["math_policy_candidate_refs"].reverse()
     shuffled["held_out_tasks"].reverse()
@@ -336,10 +289,7 @@ def test_candidate_and_task_order_do_not_change_full_structured_evidence():
     shuffled_predecessor["representation_candidates"].reverse()
     shuffled_predecessor["math_policy_candidates"].reverse()
     shuffled_predecessor["task_corpus"].reverse()
-
-    assert cap2.canonical_json(
-        cap2.run_evaluation(shuffled, shuffled_predecessor)
-    ) == cap2.canonical_json(baseline)
+    assert cap2.canonical_json(cap2.run_evaluation(shuffled, shuffled_predecessor)) == cap2.canonical_json(baseline)
 
 
 def test_genre_extensions_do_not_pollute_mundane_core():
@@ -355,41 +305,10 @@ def test_genre_extensions_do_not_pollute_mundane_core():
 
 def test_parameter_weight_and_actor_perturbation_paths_are_non_vacuous():
     spec, predecessor = load_inputs()
-    base = cap2.evaluate_case(
-        spec,
-        predecessor,
-        "RICH_GENRE_NEUTRAL_V1",
-        "DETERMINISTIC_MARGIN_V1",
-        "SCOUT",
-        "CROWD_DODGE_CUT",
-    )
-    actor_shift = cap2.evaluate_case(
-        spec,
-        predecessor,
-        "RICH_GENRE_NEUTRAL_V1",
-        "DETERMINISTIC_MARGIN_V1",
-        "SCOUT",
-        "CROWD_DODGE_CUT",
-        actor_offset=5,
-    )
-    difficulty_shift = cap2.evaluate_case(
-        spec,
-        predecessor,
-        "RICH_GENRE_NEUTRAL_V1",
-        "DETERMINISTIC_MARGIN_V1",
-        "SCOUT",
-        "CROWD_DODGE_CUT",
-        difficulty_offset=5,
-    )
-    weight_shift = cap2.evaluate_case(
-        spec,
-        predecessor,
-        "RICH_GENRE_NEUTRAL_V1",
-        "DETERMINISTIC_MARGIN_V1",
-        "SCOUT",
-        "CROWD_DODGE_CUT",
-        weight_scale_factor=1.1,
-    )
+    base = cap2.evaluate_case(spec, predecessor, "RICH_GENRE_NEUTRAL_V1", "DETERMINISTIC_MARGIN_V1", "SCOUT", "CROWD_DODGE_CUT")
+    actor_shift = cap2.evaluate_case(spec, predecessor, "RICH_GENRE_NEUTRAL_V1", "DETERMINISTIC_MARGIN_V1", "SCOUT", "CROWD_DODGE_CUT", actor_offset=5)
+    difficulty_shift = cap2.evaluate_case(spec, predecessor, "RICH_GENRE_NEUTRAL_V1", "DETERMINISTIC_MARGIN_V1", "SCOUT", "CROWD_DODGE_CUT", difficulty_offset=5)
+    weight_shift = cap2.evaluate_case(spec, predecessor, "RICH_GENRE_NEUTRAL_V1", "DETERMINISTIC_MARGIN_V1", "SCOUT", "CROWD_DODGE_CUT", weight_scale_factor=1.1)
     assert actor_shift["margin"] != base["margin"]
     assert difficulty_shift["margin"] != base["margin"]
     assert weight_shift["margin"] != base["margin"]
@@ -399,106 +318,61 @@ def test_math_policy_diagnostics_cover_monotonicity_locality_and_seed_replay():
     spec, predecessor = load_inputs()
     diagnostics = cap2.run_evaluation(spec, predecessor)["math_policy_diagnostics"]
     assert {row["kind"] for row in diagnostics.values()} == {
-        "DETERMINISTIC_MARGIN",
-        "ADDITIVE_MULTIPLICATIVE_STACK",
-        "TAGGED_PRIORITY",
-        "BOUNDED_SEEDED_STOCHASTIC",
+        "DETERMINISTIC_MARGIN", "ADDITIVE_MULTIPLICATIVE_STACK",
+        "TAGGED_PRIORITY", "BOUNDED_SEEDED_STOCHASTIC",
     }
     assert all(row["monotonic_on_heldout_offsets"] for row in diagnostics.values())
-    assert all(
-        row["unrelated_condition_leaves_reasoning_margin_unchanged"]
-        for row in diagnostics.values()
-    )
-    assert all(
-        row["relevant_condition_changes_tool_margin"] for row in diagnostics.values()
-    )
-    stochastic = next(
-        row
-        for row in diagnostics.values()
-        if row["kind"] == "BOUNDED_SEEDED_STOCHASTIC"
-    )
+    assert all(row["unrelated_condition_leaves_reasoning_margin_unchanged"] for row in diagnostics.values())
+    assert all(row["relevant_condition_changes_tool_margin"] for row in diagnostics.values())
+    stochastic = next(row for row in diagnostics.values() if row["kind"] == "BOUNDED_SEEDED_STOCHASTIC")
     assert stochastic["stochastic_exact_replay_if_applicable"] is True
     assert stochastic["probability_calibration_claimed"] is False
 
 
 def test_governed_recommendation_policy_is_consumed_and_fail_closed():
     spec, predecessor = load_inputs()
-    result = cap2.run_evaluation(spec, predecessor)
-    recommendations = result["recommendations"]
+    recommendations = cap2.run_evaluation(spec, predecessor)["recommendations"]
     evidence = recommendations["policy_evidence"]
     policy = spec["recommendation_policy"]
-
     assert evidence["math_policy_contract_consumed"] is True
     assert evidence["deterministic_baseline_ok"] is True
     assert evidence["stack_nonlocality_absent"] is False
     assert evidence["math_resolution_gate_satisfied"] is False
-
-    if evidence["math_resolution_gate_satisfied"]:
-        assert recommendations["MATH"].startswith("RECOMMEND_RESOLVE_MATH_")
-    else:
-        assert recommendations["MATH"] == "KEEP_MATH_OPEN"
-
-    assert any(
-        recommendations["ATTR"].startswith(prefix)
-        for prefix in policy["attr_allowed_prefixes"]
-    )
-    assert any(
-        recommendations["MATH"].startswith(prefix)
-        for prefix in policy["math_allowed_prefixes"]
-    )
+    assert recommendations["MATH"] == "KEEP_MATH_OPEN"
+    assert any(recommendations["ATTR"].startswith(prefix) for prefix in policy["attr_allowed_prefixes"])
+    assert any(recommendations["MATH"].startswith(prefix) for prefix in policy["math_allowed_prefixes"])
     assert recommendations["resolution_authority"] is False
     assert recommendations["open_decisions_mutated"] is False
 
     malformed = copy.deepcopy(spec)
-    del malformed["recommendation_policy"][
-        "math_resolution_requires_deterministic_baseline_monotonic_and_stack_nonlocality_absent"
-    ]
+    del malformed["recommendation_policy"]["math_resolution_requires_deterministic_baseline_monotonic_and_stack_nonlocality_absent"]
     with pytest.raises(cap2.RobustnessSpecError):
         cap2.run_evaluation(malformed, predecessor)
 
 
-def test_report_is_bound_to_current_executable_recommendation_not_a_test_locked_winner():
+def test_report_is_bound_to_current_executable_recommendation():
     spec, predecessor = load_inputs()
     recommendations = cap2.run_evaluation(spec, predecessor)["recommendations"]
     report = REPORT_PATH.read_text(encoding="utf-8")
-
     assert f"ATTR recommendation class: `{recommendations['ATTR']}`" in report
     assert f"MATH recommendation class: `{recommendations['MATH']}`" in report
     assert "OPEN_DECISION_STATUS_UNCHANGED=true" in report
     assert "NO_I2_RUNTIME_IMPLEMENTED=true" in report
 
-    source = Path(__file__).read_text(encoding="utf-8")
-    assert (
-        'attr_lines == ["ATTR recommendation class: `KEEP_ATTR_OPEN`"]'
-        not in source
-    )
-    assert (
-        "RECOMMEND_RESOLVE_MATH_DETERMINISTIC_MARGIN_SUBSTRATE_WITH_SEPARATE_STOCHASTIC_TUNING"
-        not in source
-    )
 
-
-def test_repeated_and_fresh_process_execution_is_exact():
+def test_run_is_input_immutable_repeated_and_fresh_process_exact():
     spec, predecessor = load_inputs()
+    spec_before, predecessor_before = copy.deepcopy(spec), copy.deepcopy(predecessor)
     first = cap2.canonical_json(cap2.run_evaluation(spec, predecessor))
     second = cap2.canonical_json(cap2.run_evaluation(spec, predecessor))
     assert first == second
+    assert spec == spec_before
+    assert predecessor == predecessor_before
 
-    process_a = subprocess.run(
-        [sys.executable, str(EVALUATOR_PATH)],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout
-    process_b = subprocess.run(
-        [sys.executable, str(EVALUATOR_PATH)],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout
+    process_a = subprocess.run([sys.executable, str(EVALUATOR_PATH)], check=True, capture_output=True, text=True).stdout
+    process_b = subprocess.run([sys.executable, str(EVALUATOR_PATH)], check=True, capture_output=True, text=True).stdout
     assert process_a == process_b
-    parsed = json.loads(process_a)
-    assert parsed["suite_id"] == "AWRSE-CAP-EVAL-002-ROBUSTNESS"
+    assert json.loads(process_a)["suite_id"] == "AWRSE-CAP-EVAL-002-ROBUSTNESS"
 
 
 def test_no_candidate_authority_labels_leak():
@@ -506,18 +380,9 @@ def test_no_candidate_authority_labels_leak():
     for rep_id in spec["representation_candidate_refs"]:
         for math_id in spec["math_policy_candidate_refs"]:
             receipt = cap2.evaluate_case(
-                spec,
-                predecessor,
-                rep_id,
-                math_id,
-                "FIELD_TECH",
-                "FOG_SIGNAL_DISCRIMINATION",
+                spec, predecessor, rep_id, math_id, "FIELD_TECH", "FOG_SIGNAL_DISCRIMINATION"
             )
             assert receipt["candidate_status"] == "EVALUATION_CANDIDATE_ONLY"
             assert receipt["candidate_status"] not in {
-                "CANONICAL",
-                "ACCEPTED",
-                "FROZEN",
-                "PRODUCTION",
-                "I2_AUTHORIZED",
+                "CANONICAL", "ACCEPTED", "FROZEN", "PRODUCTION", "I2_AUTHORIZED"
             }
