@@ -66,8 +66,8 @@ def test_historical_open_decision_evidence_is_preserved_but_split_by_status():
         assert "Issue #24 / merged PR #25 CAP-EVAL-001" in section
         assert "Issue #26 / merged PR #27 CAP-EVAL-002" in section
         assert "5004524795" in section
-        assert "91a46c7c1ac8a5c7e13f389a81497a5307166ca0" in section
 
+    assert "91a46c7c1ac8a5c7e13f389a81497a5307166ca0" in trace
     assert "DEFERRED_GENRE_EXTENSION_POLICY" in attr
     assert "stack-nonlocality failure" in math
     assert "not evidence against the deterministic feasibility/margin substrate" in math
