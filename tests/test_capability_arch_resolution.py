@@ -10,6 +10,7 @@ CONTRACT_PATH = ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
 GOLDEN_PATH = ROOT / "evals" / "AF001-GOLDEN-SCENARIOS.json"
 CAP_EVAL_001_PATH = ROOT / "evals" / "CAPABILITY-OPEN-DECISION-EVALS.json"
 CAP_EVAL_002_PATH = ROOT / "evals" / "CAPABILITY-ROBUSTNESS-EVALS.json"
+HANDOFF_PATH = ROOT / "AI_HANDOFF.yaml"
 
 ATTR_OD = "OD-CAPABILITY-ATTR-001"
 MATH_OD = "OD-CAPABILITY-MATH-001"
@@ -168,3 +169,19 @@ def test_i2_authority_and_runtime_locks_remain_closed():
 
     assert "It does **not** establish `I2_RUNTIME_IMPLEMENTATION_AUTHORIZED`" in architecture
     assert "It is not `I2_RUNTIME_IMPLEMENTATION_AUTHORIZED`" in trace
+
+
+def test_remediation_handoff_preserves_independent_review_and_closed_authority():
+    handoff = HANDOFF_PATH.read_text(encoding="utf-8")
+
+    for marker in (
+        "agent_id: CODEX",
+        "source_agent: CODEX",
+        "target_agent: GPT_INDEPENDENT_REVIEWER",
+        "reviewer: GPT_INDEPENDENT_REVIEWER_REQUIRED",
+        "handoff_status: READY_FOR_INDEPENDENT_REVIEW",
+        "runtime_authority: NOT_GRANTED",
+        "merge_authority: NOT_GRANTED",
+        "independent_review_required: true",
+    ):
+        assert marker in handoff

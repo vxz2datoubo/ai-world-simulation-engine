@@ -1,0 +1,19 @@
+handoff_id: CAPABILITY-ARCHITECTURE-MACHINE-REMEDIATION-0001
+agent_id: CODEX
+source_agent: CODEX
+target_agent: GPT_INDEPENDENT_REVIEWER
+reviewer: GPT_INDEPENDENT_REVIEWER_REQUIRED
+repository: vxz2datoubo/ai-world-simulation-engine
+pull_request: 31
+base_ref: 335da1322480291d72d944d7fb552a1360ec510e
+handoff_status: READY_FOR_INDEPENDENT_REVIEW
+scope: "Machine-readable decision lifecycle and ActorBaseProfile provenance remediation only."
+runtime_authority: NOT_GRANTED
+merge_authority: NOT_GRANTED
+production_action: NONE
+independent_review_required: true
+review_focus:
+  - "Historical OPEN_DECISION evidence is preserved while current architectural status is machine-readable."
+  - "Deferred ruleset and player-balance choices remain unselected."
+  - "ActorBaseProfile schema and ruleset-family provenance fail closed when absent or mismatched."
+  - "No I2 runtime implementation or authorization is introduced."
