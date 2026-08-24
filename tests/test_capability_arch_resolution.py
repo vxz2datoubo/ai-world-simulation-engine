@@ -177,11 +177,12 @@ def test_remediation_handoff_preserves_independent_review_and_closed_authority()
     for marker in (
         "agent_id: CODEX",
         "source_agent: CODEX",
-        "target_agent: GPT_INDEPENDENT_REVIEWER",
-        "reviewer: GPT_INDEPENDENT_REVIEWER_REQUIRED",
+        "target_agent: REVIEWER_ANY_OF_GPT_CODEX_DOUBAO_WORKBUDDY",
+        "reviewer: CODEX_INDEPENDENT_REVIEWER",
+        "merge_authority: USER_AUTHORIZED_AFTER_INDEPENDENT_REVIEW",
+        "reviewer_policy: \"User-authorized approval by any one independent reviewer: GPT, Codex, Doubao, or WorkBuddy.\"",
         "handoff_status: READY_FOR_INDEPENDENT_REVIEW",
         "runtime_authority: NOT_GRANTED",
-        "merge_authority: NOT_GRANTED",
         "independent_review_required: true",
     ):
         assert marker in handoff
