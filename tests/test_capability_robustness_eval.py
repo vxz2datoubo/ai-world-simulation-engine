@@ -282,11 +282,11 @@ def test_missing_tool_hard_fails_before_seeded_stochastic_mapping():
     assert receipt["sampled_outcome"] is None
 
 
-def test_recommendations_are_classes_not_resolution_authority():
+def test_recommendations_are_exact_classes_and_not_resolution_authority():
     spec, predecessor = load_inputs()
     recommendation = cap2.run_evaluation(spec, predecessor)["recommendations"]
-    assert recommendation["ATTR"].startswith(("RECOMMEND_RESOLVE_ATTR_", "NARROW_ATTR_TO_", "KEEP_ATTR_OPEN"))
-    assert recommendation["MATH"].startswith(("RECOMMEND_RESOLVE_MATH_", "NARROW_MATH_TO_", "KEEP_MATH_OPEN"))
+    assert recommendation["ATTR"] == "KEEP_ATTR_OPEN"
+    assert recommendation["MATH"] == "RECOMMEND_RESOLVE_MATH_DETERMINISTIC_MARGIN_SUBSTRATE_WITH_SEPARATE_STOCHASTIC_TUNING"
     assert recommendation["resolution_authority"] is False
     assert recommendation["open_decisions_mutated"] is False
 
