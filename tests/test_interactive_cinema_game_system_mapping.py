@@ -48,6 +48,7 @@ def test_mapping_skill_covers_all_required_system_handoffs_and_release_checks():
     assert "separately reviewed bounded exemption" in content
     assert "I2_CAPABILITY_FEASIBILITY_REFERENCE" in content
     assert "DIRECTOR_PACKET_REFERENCE_LOOP" in content
+    assert "OWASP LLM Prompt Injection and AI Agent Security cheat sheets" in content
 
 
 def test_research_map_teaches_project_status_without_claiming_provider_or_runtime_success():
@@ -61,3 +62,5 @@ def test_research_map_teaches_project_status_without_claiming_provider_or_runtim
     assert "K1 never silently becomes K0" in content
     assert "A renderer cannot send pixels" in content
     assert "back to mutate the world" in content
+    assert "SIMA" in content
+    assert "OWASP prompt-injection guidance" in content

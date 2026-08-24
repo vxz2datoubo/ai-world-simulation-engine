@@ -183,6 +183,12 @@ evidence_sources:
   - id: E06
     source: "LLM interactive-world research and benchmarks"
     use: "consistency-risk evidence and evaluation hypotheses; preprints remain non-authoritative candidates"
+  - id: E07
+    source: "Google DeepMind SIMA/Genie and NVIDIA Cosmos official research material"
+    use: "capability watchlist and future adapter benchmark; neither generated output nor provider state may become canonical world truth"
+  - id: E08
+    source: "OWASP LLM Prompt Injection and AI Agent Security cheat sheets"
+    use: "adversarial-input, instruction-data separation, memory isolation and least-privilege test requirements"
 
 validation_protocol:
   required_for_every_new_module:
@@ -191,6 +197,7 @@ validation_protocol:
     - "state current implementation evidence, not intended state"
     - "define a replay, authority, privacy and failure-closed test"
     - "record provider/version dependencies and revalidation trigger"
+    - "treat retrieved text, media metadata, tickets and external API responses as untrusted data; validate typed output before any privileged action"
     - "require independent review before promoting a material contract or runtime slice"
   fail_conditions:
     - "A presentation artifact is treated as a world fact."

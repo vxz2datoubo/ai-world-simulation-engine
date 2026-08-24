@@ -104,6 +104,22 @@ mechanism-level learning. Its internal rule that observation, interpretation,
 prompt hypothesis and unknown must remain separate matches this map's K0–K3
 discipline.
 
+6. Google DeepMind's [SIMA](https://deepmind.google/blog/sima-generalist-ai-agent-for-3d-virtual-environments/)
+and [Genie 3](https://deepmind.google/blog/genie-3-a-new-frontier-for-world-models/),
+and NVIDIA's [Cosmos](https://research.nvidia.com/labs/dir/cosmos1/), are useful
+signals of rapidly improving interactive and world-model capability. They do not
+alter the authority diagram: any such model belongs behind a versioned adapter and
+must be assessed against AWRSE packets, replay consistency, latency and cost. Its
+output cannot become a canonical world event merely because it looks plausible.
+
+7. [OWASP prompt-injection guidance](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html)
+and its [AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html)
+add a mandatory hostile-input frame. Player text, retrieved knowledge, media
+metadata, tickets and external API responses are data, never authority or
+instructions. A future agent or renderer integration needs typed-output checks,
+least-privilege tool boundaries, memory isolation and prompt-injection regression
+cases before it can act on any project-controlled resource.
+
 ## The next honest release sequence
 
 1. **Repair PR #29.** Make AF-C lifecycle and `ActorBaseProfile` provenance
