@@ -172,18 +172,20 @@ def test_i2_authority_and_runtime_locks_remain_closed():
     assert "It is not `I2_RUNTIME_IMPLEMENTATION_AUTHORIZED`" in trace
 
 
-def test_remediation_handoff_preserves_independent_review_and_closed_authority():
+def test_i2a_control_tower_handoff_preserves_independent_review_and_bounded_authority():
     handoff = HANDOFF_PATH.read_text(encoding="utf-8")
 
     for marker in (
         "agent_id: CODEX",
         "source_agent: CODEX",
+        "handoff_id: I2A-CAPABILITY-CONTROL-TOWER-0001",
         "target_agent: REVIEWER_ANY_OF_GPT_CODEX_DOUBAO_WORKBUDDY",
         "reviewer: CODEX_INDEPENDENT_REVIEWER",
+        "control_tower_issue: 33",
+        "runtime_authority: I2A_BOUNDED_NON_PRODUCTION_ONLY",
         "merge_authority: USER_AUTHORIZED_AFTER_INDEPENDENT_REVIEW",
         "reviewer_policy: \"User-authorized approval by any one independent reviewer: GPT, Codex, Doubao, or WorkBuddy.\"",
         "handoff_status: READY_FOR_INDEPENDENT_REVIEW",
-        "runtime_authority: NOT_GRANTED",
         "independent_review_required: true",
     ):
         assert marker in handoff

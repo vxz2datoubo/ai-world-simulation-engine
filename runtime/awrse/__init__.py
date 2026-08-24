@@ -1,4 +1,15 @@
 from .compiler import ActionCompiler
+from .capability import (
+    I2A_PROFILE_ID,
+    I2A_PROFILE_VERSION,
+    CapabilityReplayEvidence,
+    export_i2a_replay_package,
+    import_i2a_replay_package,
+    policy_from_af_c_contract,
+    rehydrate_i2a_replay_package,
+    resolve_i2a_feasibility,
+    validate_actor_base_profile,
+)
 from .engine import SimulationEngine
 from .model import (
     Action,
@@ -28,9 +39,12 @@ from .replay_inspection import ReplayDivergence, ReplayInspectionCheckpoint, Rep
 __all__ = [
     "Action",
     "ActionCompiler",
+    "CapabilityReplayEvidence",
     "ActorState",
     "AuthorityScope",
     "LEGACY_EVENT_PROFILE_ID",
+    "I2A_PROFILE_ID",
+    "I2A_PROFILE_VERSION",
     "NPCMindState",
     "ObjectState",
     "PERSISTENCE_PROFILE_ID",
@@ -51,9 +65,15 @@ __all__ = [
     "capture_pristine_baseline",
     "compare_replays",
     "export_solo_replay_package",
+    "export_i2a_replay_package",
+    "import_i2a_replay_package",
     "import_solo_replay_package",
     "inspect_replays",
     "inspect_timeline",
+    "policy_from_af_c_contract",
+    "rehydrate_i2a_replay_package",
     "rehydrate_solo_replay_package",
     "validate_render_claims",
+    "resolve_i2a_feasibility",
+    "validate_actor_base_profile",
 ]

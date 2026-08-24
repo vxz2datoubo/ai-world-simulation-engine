@@ -2,7 +2,7 @@
 
 Status: `ACCEPTED REFERENCE FOUNDATION / NOT PRODUCTION READY`
 
-The canonical AWRSE runtime now contains accepted bounded foundations from R001, R002, R003-I1A and R003-I1B.
+The canonical AWRSE runtime now contains accepted bounded foundations from R001, R002, R003-I1A, R003-I1B, and the I2A Control Tower slice.
 
 Accepted reference foundation:
 
@@ -10,6 +10,7 @@ Accepted reference foundation:
 - R002: accepted spatial/possession/knowledge-provenance hardening and associated deterministic runtime invariants
 - R003-I1A: deterministic SOLO persistence envelope plus exact restart/rehydration reference that returns through canonical replay rather than materialized-state authority
 - R003-I1B: deterministic read-only replay inspection and differential evaluation over canonical replay-produced state
+- I2A: deterministic AF-C profile admission, hard-prerequisite feasibility, and replay-verified receipt only; it deliberately does not calculate numeric capability, margins, outcomes, hazards, balancing, or randomness
 
 This runtime remains deliberately **bounded and not production ready**. It is a reference world-truth substrate, not the finished game, full physics engine, autonomous society, production persistence service, Capability system, Memory system, Narrative Opportunity runtime, World Echo runtime, AI Director adapter, H3/Matrix integration, or PARTY/PUBLIC implementation.
 

@@ -1,20 +1,20 @@
-handoff_id: CAPABILITY-ARCHITECTURE-MACHINE-REMEDIATION-0001
+handoff_id: I2A-CAPABILITY-CONTROL-TOWER-0001
 agent_id: CODEX
 source_agent: CODEX
 target_agent: REVIEWER_ANY_OF_GPT_CODEX_DOUBAO_WORKBUDDY
 reviewer: CODEX_INDEPENDENT_REVIEWER
 repository: vxz2datoubo/ai-world-simulation-engine
-pull_request: 31
-base_ref: 335da1322480291d72d944d7fb552a1360ec510e
+control_tower_issue: 33
+base_ref: 70e5b4cca3fb75e179bff8faef819dd20b6727c7
 handoff_status: READY_FOR_INDEPENDENT_REVIEW
-scope: "Machine-readable decision lifecycle and ActorBaseProfile provenance remediation only."
-runtime_authority: NOT_GRANTED
+scope: "I2A deterministic in-process profile admission, hard-prerequisite feasibility, and replayable receipt only."
+runtime_authority: I2A_BOUNDED_NON_PRODUCTION_ONLY
 merge_authority: USER_AUTHORIZED_AFTER_INDEPENDENT_REVIEW
 production_action: NONE
 independent_review_required: true
 reviewer_policy: "User-authorized approval by any one independent reviewer: GPT, Codex, Doubao, or WorkBuddy."
 review_focus:
-  - "Historical OPEN_DECISION evidence is preserved while current architectural status is machine-readable."
-  - "Deferred ruleset and player-balance choices remain unselected."
-  - "ActorBaseProfile schema and ruleset-family provenance fail closed when absent or mismatched."
-  - "No I2 runtime implementation or authorization is introduced."
+  - "ActorBaseProfile admission derives only from the versioned AF-C compatibility policy and fails closed."
+  - "Hard prerequisites resolve before any outcome, hazard, margin, balancing, or randomness calculation."
+  - "Capability replay packages validate canonical inputs and receipts without becoming mutable world authority."
+  - "No external service, provider, deployment, production action, or I2 scope expansion is introduced."
