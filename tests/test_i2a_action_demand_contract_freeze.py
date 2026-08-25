@@ -145,7 +145,7 @@ def test_binding_is_exactly_parented_and_runtime_authority_remains_locked():
 
     assert binding["binding_version"] == "1.0.0-candidate"
     assert binding["parent_machine_contract"]["contract_id"] == parent["contract_id"]
-    assert binding["parent_machine_contract"]["contract_version"] == parent["contract_version"] == "1.8.0-candidate"
+    assert binding["parent_machine_contract"]["contract_version"] == parent["contract_version"] == "1.9.0-candidate"
     assert binding["parent_machine_contract"]["type_ref"] == "AF001.ActionDemandProfile"
     assert binding["parent_machine_contract"]["type_version"] == parent["type_registry"]["ActionDemandProfile"]["version"] == "1.0.0-candidate"
     assert fixtures["required_binding"]["binding_version"] == binding["binding_version"]
