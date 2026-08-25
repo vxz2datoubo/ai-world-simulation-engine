@@ -1,9 +1,9 @@
 {
   "registry_id": "AWRSE-AF001-DECISION-LIFECYCLE-BINDINGS",
-  "version": "1.0.0-candidate",
+  "version": "1.1.0-candidate",
   "status": "ARCHITECTURE_FREEZE_CANDIDATE",
   "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
-  "required_contract_version": "1.7.0-candidate",
+  "required_contract_version": "1.8.0-candidate",
   "purpose": "Classify durable historical decision references without treating resolved architectural substrate as an unresolved architecture blocker.",
   "legacy_golden_field": "open_decision_dependencies",
   "legacy_field_rule": "A listed reference remains open only when it is absent from the scenario historical_decision_dependencies binding. Bound historical references retain traceability but are not current architecture blockers.",
