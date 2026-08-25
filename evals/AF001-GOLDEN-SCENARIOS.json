@@ -1,11 +1,22 @@
 {
   "eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
-  "suite_version": "1.6.0-candidate",
+  "suite_version": "1.7.0-candidate",
   "status": "ARCHITECTURE_FREEZE_EXECUTABLE_SPEC_CANDIDATE",
   "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
-  "required_contract_version": "1.8.0-candidate",
+  "required_contract_version": "1.9.0-candidate",
   "decision_lifecycle_binding_registry": "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json",
   "foundation_eval_registry": "evals/AWRSE-CORE-EVALS.yaml",
+  "registered_fixture_extensions": {
+    "AWRSE-AF001-ACTION-DEMAND-PROJECTION-FIXTURES": {
+      "path": "evals/AF001-ACTION-DEMAND-PROJECTION-FIXTURES.json",
+      "fixture_version": "1.0.0-candidate",
+      "parent_eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
+      "parent_suite_version": "1.7.0-candidate",
+      "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
+      "authority": "GOLDEN_EXECUTABLE_SPEC_REGISTRY_DELEGATED_EXTENSION"
+    }
+  },
+  "fixture_extension_authority_rule": "ONLY_FIXTURE_EXTENSIONS_EXPLICITLY_REGISTERED_BY_THIS_GOLDEN_EXECUTABLE_SPEC_REGISTRY_ARE_CANONICAL; CHILD_TO_PARENT_SELF_DECLARATION_ALONE_CONFERS_NO_AUTHORITY",
   "required_fields_per_scenario": [
     "initial_canonical_state",
     "allowed_player_intents",
@@ -273,6 +284,7 @@
     "ALL_OPEN_DECISION_DEPENDENCIES_RESOLVE",
     "FORBIDDEN_PREDICATES_ARE_MACHINE_CHECKABLE",
     "SKILL_LEDGER_ADMISSION_FIXTURES_BOUND_TO_FIGHTER_VS_SCHOLAR",
+    "ACTION_DEMAND_PROJECTION_FIXTURE_EXTENSION_EXPLICITLY_REGISTERED_BY_CANONICAL_SUITE",
     "NO_SCENARIO_CLAIMS_RUNTIME_IMPLEMENTATION_BEYOND_ACCEPTED_R001_R002_FOUNDATION"
   ]
 }
