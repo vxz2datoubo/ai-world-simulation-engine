@@ -454,18 +454,19 @@ def test_b04_resolved_capability_decisions_are_machine_classified_without_erasin
     bindings = load_json(DECISION_BINDING_PATH)
     lifecycle = contract["decision_lifecycle_registry"]
 
-    assert contract["contract_version"] == "1.8.0-candidate"
+    assert contract["contract_version"] == "1.9.0-candidate"
     assert contract["versioning_and_migration"]["contract_version_lineage"] == {
-        "previous_contract_version": "1.7.0-candidate",
+        "previous_contract_version": "1.8.0-candidate",
         "semantic_delta": [
-            "SKILL_LEDGER_V1_1_ADMISSION_SHAPE_AND_PROVENANCE_FREEZE",
-            "DUPLICATE_SKILL_ID_FAIL_CLOSED",
-            "DETERMINISTIC_VALIDATED_SKILL_VALUE_PROJECTION_WITHOUT_SECOND_AUTHORITY",
+            "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",
+            "ACTION_DEMAND_PROJECTION_EXTENSION_AUTHORITY_IS_PARENT_REGISTERED_AND_VERSION_BOUND",
+            "PRE_REGISTRATION_1_8_PARENT_VERSION_CANNOT_AUTHORIZE_NEW_EXTENSION",
         ],
-        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_SKILL_LEDGER_ADMISSION_AND_PROJECTION_RULES_FROM_PRE_FREEZE_INTERFACES",
+        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_ACTION_DEMAND_EXTENSION_AUTHORITY_FROM_PRE_REGISTRATION_1_8_STATE",
     }
-    assert suite["suite_version"] == "1.6.0-candidate"
+    assert suite["suite_version"] == "1.7.0-candidate"
     assert suite["required_contract_version"] == contract["contract_version"]
+    assert bindings["version"] == "1.2.0-candidate"
     assert bindings["required_contract_version"] == contract["contract_version"]
     assert suite["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"
     assert contract["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"
