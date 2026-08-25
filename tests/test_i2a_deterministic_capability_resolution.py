@@ -107,6 +107,28 @@ def test_i2a_duplicate_demand_references_fail_closed(required_attributes, requir
         )
 
 
+def test_i2a_very_large_finite_integer_capability_is_supported():
+    capability = 10**1000
+    result = resolve_capability(
+        capability_envelope=_envelope({"strength": capability}, {}),
+        action_demand_profile=_demand(("strength",), (), 1),
+        provenance=PROVENANCE,
+    )
+    assert result.effective_capability == capability
+    assert result.margin == capability - 1
+
+
+def test_i2a_very_large_finite_integer_difficulty_is_supported():
+    difficulty = 10**1000
+    result = resolve_capability(
+        capability_envelope=_envelope({"strength": difficulty + 5}, {}),
+        action_demand_profile=_demand(("strength",), (), difficulty),
+        provenance=PROVENANCE,
+    )
+    assert result.effective_capability == difficulty + 5
+    assert result.margin == 5
+
+
 @pytest.mark.parametrize("value", [True, "5", math.nan, math.inf, -math.inf])
 def test_i2a_invalid_required_capability_value_rejected(value):
     with pytest.raises(ValueError, match="I2A_CAPABILITY_VALUE_INVALID"):
