@@ -22,6 +22,7 @@ def _contract_extension_is_canonical(parent, child, expected_path: str) -> bool:
         and registration.get("binding_version") == child.get("binding_version")
         and registration.get("parent_contract_id") == parent.get("contract_id")
         and registration.get("parent_contract_version") == parent.get("contract_version")
+        and child.get("parent_machine_contract", {}).get("contract_version") == parent.get("contract_version")
         and registration.get("authority") == "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION"
         and registration.get("runtime_implementation_authorized") is False
     )
@@ -35,6 +36,7 @@ def _fixture_extension_is_canonical(parent, fixture, binding) -> bool:
         and registration.get("fixture_version") == fixture.get("fixture_version")
         and registration.get("parent_eval_suite_id") == parent.get("eval_suite_id")
         and registration.get("parent_suite_version") == parent.get("suite_version")
+        and fixture.get("parent_golden_registry_version") == parent.get("suite_version")
         and registration.get("binding_id") == binding.get("binding_id")
         and registration.get("authority") == "GOLDEN_EXECUTABLE_SPEC_REGISTRY_DELEGATED_EXTENSION"
     )
@@ -64,6 +66,7 @@ def test_canonical_golden_registry_explicitly_delegates_action_demand_fixtures()
     contract = _load(CONTRACT_REGISTRY)
     assert contract["artifact_roles"]["evals/AF001-GOLDEN-SCENARIOS.json"] == "GOLDEN_EXECUTABLE_SPEC_REGISTRY"
     assert _fixture_extension_is_canonical(golden, fixture, binding)
+    assert golden["required_contract_version"] == contract["contract_version"]
     assert golden["fixture_extension_authority_rule"] == (
         "ONLY_FIXTURE_EXTENSIONS_EXPLICITLY_REGISTERED_BY_THIS_GOLDEN_EXECUTABLE_SPEC_REGISTRY_ARE_CANONICAL; "
         "CHILD_TO_PARENT_SELF_DECLARATION_ALONE_CONFERS_NO_AUTHORITY"
@@ -93,3 +96,29 @@ def test_orphan_sidecar_cannot_self_declare_canonical_authority():
         "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json",
     )
     assert not _fixture_extension_is_canonical(golden, orphan_fixture, binding)
+
+
+def test_pre_registration_parent_version_tuple_cannot_authorize_new_extensions():
+    parent = _load(CONTRACT_REGISTRY)
+    binding = _load(BINDING)
+    golden = _load(GOLDEN_REGISTRY)
+    fixture = _load(FIXTURES)
+
+    assert parent["contract_version"] == "1.9.0-candidate"
+    assert parent["versioning_and_migration"]["contract_version_lineage"]["previous_contract_version"] == "1.8.0-candidate"
+    assert binding["parent_machine_contract"]["contract_version"] == "1.9.0-candidate"
+    assert golden["suite_version"] == "1.7.0-candidate"
+    assert golden["required_contract_version"] == "1.9.0-candidate"
+    assert fixture["parent_golden_registry_version"] == "1.7.0-candidate"
+
+    pre_registration_parent = copy.deepcopy(parent)
+    pre_registration_parent["contract_version"] = "1.8.0-candidate"
+    assert not _contract_extension_is_canonical(
+        pre_registration_parent,
+        binding,
+        "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json",
+    )
+
+    pre_registration_golden = copy.deepcopy(golden)
+    pre_registration_golden["suite_version"] = "1.6.0-candidate"
+    assert not _fixture_extension_is_canonical(pre_registration_golden, fixture, binding)
