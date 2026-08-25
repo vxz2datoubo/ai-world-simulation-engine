@@ -129,6 +129,24 @@ def test_i2a_very_large_finite_integer_difficulty_is_supported():
     assert result.margin == 5
 
 
+def test_i2a_mixed_huge_integer_and_float_arithmetic_fails_closed():
+    with pytest.raises(ValueError, match="I2A_CAPABILITY_ARITHMETIC_INVALID"):
+        resolve_capability(
+            capability_envelope=_envelope({"strength": 10**1000}, {"climb": 1.0}),
+            action_demand_profile=_demand(("strength",), ("climb",), 1),
+            provenance=PROVENANCE,
+        )
+
+
+def test_i2a_finite_float_inputs_cannot_produce_nonfinite_effective_capability():
+    with pytest.raises(ValueError, match="I2A_CAPABILITY_ARITHMETIC_INVALID"):
+        resolve_capability(
+            capability_envelope=_envelope({"strength": 1e308}, {"climb": 1e308}),
+            action_demand_profile=_demand(("strength",), ("climb",), 0.0),
+            provenance=PROVENANCE,
+        )
+
+
 @pytest.mark.parametrize("value", [True, "5", math.nan, math.inf, -math.inf])
 def test_i2a_invalid_required_capability_value_rejected(value):
     with pytest.raises(ValueError, match="I2A_CAPABILITY_VALUE_INVALID"):
