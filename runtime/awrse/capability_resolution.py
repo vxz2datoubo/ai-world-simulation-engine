@@ -57,6 +57,22 @@ def _require_finite_number(value: Any, error: str) -> int | float:
     return value
 
 
+def _checked_add(left: int | float, right: int | float) -> int | float:
+    try:
+        result = left + right
+    except (OverflowError, TypeError, ValueError):
+        raise ValueError("I2A_CAPABILITY_ARITHMETIC_INVALID") from None
+    return _require_finite_number(result, "I2A_CAPABILITY_ARITHMETIC_INVALID")
+
+
+def _checked_subtract(left: int | float, right: int | float) -> int | float:
+    try:
+        result = left - right
+    except (OverflowError, TypeError, ValueError):
+        raise ValueError("I2A_CAPABILITY_ARITHMETIC_INVALID") from None
+    return _require_finite_number(result, "I2A_CAPABILITY_ARITHMETIC_INVALID")
+
+
 def resolve_capability(
     *,
     capability_envelope: Mapping[str, Any],
@@ -115,6 +131,8 @@ def resolve_capability(
         for key in required_skills
     ]
 
-    effective = sum(selected_attributes) + sum(selected_skills)
-    margin = effective - difficulty
+    effective: int | float = 0
+    for value in (*selected_attributes, *selected_skills):
+        effective = _checked_add(effective, value)
+    margin = _checked_subtract(effective, difficulty)
     return CapabilityResolution(True, effective, margin, dict(provenance))
