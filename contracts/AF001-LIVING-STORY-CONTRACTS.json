@@ -9,6 +9,18 @@
     "evals/AF001-GOLDEN-SCENARIOS.json": "GOLDEN_EXECUTABLE_SPEC_REGISTRY",
     "docs/AF001-TRACEABILITY.md": "TRACEABILITY_OPEN_DECISION_REGISTRY"
   },
+  "registered_contract_extensions": {
+    "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING": {
+      "path": "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json",
+      "binding_version": "1.0.0-candidate",
+      "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "parent_contract_version": "1.8.0-candidate",
+      "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",
+      "scope": "AF-C_ACTION_DEMAND_PROFILE_TO_EXISTING_CAPABILITY_RESOLVER_PROJECTION",
+      "runtime_implementation_authorized": false
+    }
+  },
+  "contract_extension_authority_rule": "ONLY_EXTENSIONS_EXPLICITLY_REGISTERED_BY_THIS_MACHINE_CONTRACT_REGISTRY_ARE_CANONICAL; CHILD_TO_PARENT_SELF_DECLARATION_ALONE_CONFERS_NO_AUTHORITY",
   "canonical_architecture_master": "ARCHITECTURE.md",
   "decision_lifecycle_registry": {
     "OD-CAPABILITY-ATTR-001": {"historical_status":"OPEN_DECISION","current_architecture_status":"RESOLVED_ARCHITECTURAL_SUBSTRATE","architecture_blocking_class":"HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER","deferred_policy_tracks":["DEFERRED_RULESET_TUNING","DEFERRED_PLAYER_BALANCE","DEFERRED_GENRE_EXTENSION_POLICY"],"runtime_binding_requirement":"EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME"},
