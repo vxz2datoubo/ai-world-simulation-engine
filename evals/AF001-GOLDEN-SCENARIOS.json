@@ -1,9 +1,9 @@
 {
   "eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
-  "suite_version": "1.6.0-candidate",
+  "suite_version": "1.7.0-candidate",
   "status": "ARCHITECTURE_FREEZE_EXECUTABLE_SPEC_CANDIDATE",
   "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
-  "required_contract_version": "1.8.0-candidate",
+  "required_contract_version": "1.9.0-candidate",
   "decision_lifecycle_binding_registry": "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json",
   "foundation_eval_registry": "evals/AWRSE-CORE-EVALS.yaml",
   "registered_fixture_extensions": {
@@ -11,7 +11,7 @@
       "path": "evals/AF001-ACTION-DEMAND-PROJECTION-FIXTURES.json",
       "fixture_version": "1.0.0-candidate",
       "parent_eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
-      "parent_suite_version": "1.6.0-candidate",
+      "parent_suite_version": "1.7.0-candidate",
       "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
       "authority": "GOLDEN_EXECUTABLE_SPEC_REGISTRY_DELEGATED_EXTENSION"
     }
