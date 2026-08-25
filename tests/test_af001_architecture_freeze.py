@@ -135,9 +135,6 @@ def _field_ref_resolves(contract, ref):
 def _state_ownership_reference_errors(contract):
     errors = []
     external = set(contract["governed_reference_semantics"]["external_foundation_refs"])
-    # Rebuild-direction prose uses explicit _TO_/_AND_/_OR_/_BY_ connectors.
-    # The lazy field matcher must stop before those connectors so every Type.field
-    # operand is validated independently instead of swallowing the connector text.
     ref_pattern = re.compile(
         r"([A-Z][A-Za-z0-9-]*\.[A-Za-z_][A-Za-z0-9_]*?)(?=_TO_|_AND_|_OR_|_BY_|$)"
     )
@@ -457,17 +454,17 @@ def test_b04_resolved_capability_decisions_are_machine_classified_without_erasin
     bindings = load_json(DECISION_BINDING_PATH)
     lifecycle = contract["decision_lifecycle_registry"]
 
-    assert contract["contract_version"] == "1.7.0-candidate"
+    assert contract["contract_version"] == "1.8.0-candidate"
     assert contract["versioning_and_migration"]["contract_version_lineage"] == {
-        "previous_contract_version": "1.6.0-candidate",
+        "previous_contract_version": "1.7.0-candidate",
         "semantic_delta": [
-            "V1_1_COMPLETE_PROFILE_SHAPE_ADMISSION",
-            "LEGACY_TRANSFORMATION_SOURCE_VERSION_AND_PROFILE_BINDING",
-            "FAIL_CLOSED_GOLDEN_PROFILE_PROVENANCE_RECEIPTS",
+            "SKILL_LEDGER_V1_1_ADMISSION_SHAPE_AND_PROVENANCE_FREEZE",
+            "DUPLICATE_SKILL_ID_FAIL_CLOSED",
+            "DETERMINISTIC_VALIDATED_SKILL_VALUE_PROJECTION_WITHOUT_SECOND_AUTHORITY",
         ],
-        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_PRE_LIFECYCLE_AND_POST_LIFECYCLE_RECEIPTS",
+        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_SKILL_LEDGER_ADMISSION_AND_PROJECTION_RULES_FROM_PRE_FREEZE_INTERFACES",
     }
-    assert suite["suite_version"] == "1.5.0-candidate"
+    assert suite["suite_version"] == "1.6.0-candidate"
     assert suite["required_contract_version"] == contract["contract_version"]
     assert bindings["required_contract_version"] == contract["contract_version"]
     assert suite["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"
