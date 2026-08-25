@@ -33,7 +33,7 @@ def _nonempty(value):
 def _mapping_keys(value, error):
     if not isinstance(value, dict):
         raise ValueError(error)
-    keys = tuple(value.keys())
+    keys = tuple(sorted(value.keys()))
     if any(not _nonempty(key) for key in keys):
         raise ValueError(error)
     if len(keys) != len(set(keys)):
@@ -165,8 +165,8 @@ def test_binding_freezes_projection_without_authorizing_weight_semantics():
 
     assert decisions["resolver_projection_authorized"] is True
     assert decisions["projection_is_non_authoritative"] is True
-    assert decisions["required_attributes_source"] == "ORDERED_KEYS_OF_ActionDemandProfile.attribute_weights_ONLY"
-    assert decisions["required_skills_source"] == "ORDERED_KEYS_OF_ActionDemandProfile.skill_weights_ONLY"
+    assert decisions["required_attributes_source"] == "CANONICALLY_SORTED_KEYS_OF_ActionDemandProfile.attribute_weights_ONLY"
+    assert decisions["required_skills_source"] == "CANONICALLY_SORTED_KEYS_OF_ActionDemandProfile.skill_weights_ONLY"
     assert decisions["weight_values_consumed"] is False
     assert decisions["weight_semantics_status"] == "DEFERRED_RULESET_TUNING"
     assert decisions["difficulty_source"] == "CAPABILITY_STATE_RESOLUTION_VERSIONED_DEMAND_BINDING"
@@ -280,10 +280,17 @@ def test_projection_is_deterministic_mutation_isolated_and_scoped_to_references(
         key: capability_envelope["validated_skill_ledger_values"][key]
         for key in receipt.required_skills
     }
-    assert selected_attributes == {"strength": 3, "agility": 4}
+    assert selected_attributes == {"agility": 4, "strength": 3}
     assert selected_skills == {"climb": 5}
     assert "charisma" not in selected_attributes
     assert "poetry" not in selected_skills
+
+    reordered = copy.deepcopy(case["demand"])
+    reordered["attribute_weights"] = {"agility": -999, "strength": 999}
+    reordered["skill_weights"] = {"climb": 123456}
+    reordered_receipt = _contract_gate_projection(reordered, copy.deepcopy(case["context"]))
+    assert reordered_receipt == first
+    assert reordered_receipt.required_attributes == ("agility", "strength")
 
     try:
         receipt.provenance["ruleset_version"] = "caller-overwrite"
