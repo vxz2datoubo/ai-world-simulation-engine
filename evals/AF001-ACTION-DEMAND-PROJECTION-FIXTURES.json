@@ -1,0 +1,167 @@
+{
+  "fixture_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-FIXTURES",
+  "fixture_version": "1.0.0-candidate",
+  "fixture_role": "GOLDEN_EXECUTABLE_SPEC_EXTENSION_NON_COMPETING",
+  "parent_golden_registry": "evals/AF001-GOLDEN-SCENARIOS.json",
+  "required_binding": {
+    "path": "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json",
+    "binding_version": "1.0.0-candidate"
+  },
+  "evaluation_scope": "CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+  "cases": [
+    {
+      "case_id": "ADP-01-VALID-BOUNDED-PROJECTION",
+      "demand": {
+        "demand_id": "climb-wall-standard",
+        "action_family": "CLIMB",
+        "method_id": "HAND_AND_FOOT_CLIMB",
+        "hard_prerequisites": ["HAS_REACHABLE_SURFACE"],
+        "attribute_weights": {"strength": 999, "agility": -999},
+        "skill_weights": {"climb": 123456},
+        "required_body_functions": ["UPPER_LIMB", "LOWER_LIMB"],
+        "hazard_profile": "hazard:falling-v1",
+        "ruleset_version": "ruleset:small-core-v1"
+      },
+      "context": {
+        "source_demand_ref": "demand-ref:climb-wall-standard@ruleset:small-core-v1",
+        "hard_prerequisite_receipt_ref": "feasibility:climb-wall-standard:passed",
+        "replay_input_ref": "replay:adp-01",
+        "difficulty_binding": {
+          "demand_id": "climb-wall-standard",
+          "action_family": "CLIMB",
+          "method_id": "HAND_AND_FOOT_CLIMB",
+          "ruleset_version": "ruleset:small-core-v1",
+          "difficulty_source_ref": "difficulty-binding:climb-wall-standard@ruleset:small-core-v1",
+          "difficulty_or_resistance": 7
+        }
+      },
+      "expected": {
+        "required_attributes": ["strength", "agility"],
+        "required_skills": ["climb"],
+        "difficulty_or_resistance": 7,
+        "weight_values_consumed": false
+      }
+    },
+    {
+      "case_id": "ADP-02-MALFORMED-ATTRIBUTE-REFERENCE",
+      "demand": {
+        "demand_id": "bad-attr",
+        "action_family": "CLIMB",
+        "method_id": "HAND_AND_FOOT_CLIMB",
+        "hard_prerequisites": [],
+        "attribute_weights": {"": 1},
+        "skill_weights": {"climb": 1},
+        "required_body_functions": [],
+        "hazard_profile": null,
+        "ruleset_version": "ruleset:small-core-v1"
+      },
+      "expected_error": "I2A_REQUIRED_ATTRIBUTES_INVALID"
+    },
+    {
+      "case_id": "ADP-03-MALFORMED-SKILL-REFERENCE",
+      "demand": {
+        "demand_id": "bad-skill",
+        "action_family": "CLIMB",
+        "method_id": "HAND_AND_FOOT_CLIMB",
+        "hard_prerequisites": [],
+        "attribute_weights": {"strength": 1},
+        "skill_weights": {"": 1},
+        "required_body_functions": [],
+        "hazard_profile": null,
+        "ruleset_version": "ruleset:small-core-v1"
+      },
+      "expected_error": "I2A_REQUIRED_SKILLS_INVALID"
+    },
+    {
+      "case_id": "ADP-04-EMPTY-BOUNDED-REFERENCE-SET",
+      "demand": {
+        "demand_id": "no-capability-surface",
+        "action_family": "WAIT",
+        "method_id": "WAIT",
+        "hard_prerequisites": [],
+        "attribute_weights": {},
+        "skill_weights": {},
+        "required_body_functions": [],
+        "hazard_profile": null,
+        "ruleset_version": "ruleset:small-core-v1"
+      },
+      "expected_error": "I2A_EMPTY_BOUNDED_DEMAND_REFERENCE_SET"
+    },
+    {
+      "case_id": "ADP-05-HARD-PREREQUISITE-UNATTESTED",
+      "demand": {
+        "demand_id": "locked-climb",
+        "action_family": "CLIMB",
+        "method_id": "HAND_AND_FOOT_CLIMB",
+        "hard_prerequisites": ["HAS_REACHABLE_SURFACE"],
+        "attribute_weights": {"strength": 1},
+        "skill_weights": {"climb": 1},
+        "required_body_functions": [],
+        "hazard_profile": null,
+        "ruleset_version": "ruleset:small-core-v1"
+      },
+      "context": {
+        "hard_prerequisite_receipt_ref": ""
+      },
+      "expected_error": "I2A_HARD_PREREQUISITE_ATTESTATION_REQUIRED"
+    },
+    {
+      "case_id": "ADP-06-DIFFICULTY-BINDING-MISMATCH",
+      "demand": {
+        "demand_id": "climb-wall-standard",
+        "action_family": "CLIMB",
+        "method_id": "HAND_AND_FOOT_CLIMB",
+        "hard_prerequisites": [],
+        "attribute_weights": {"strength": 1},
+        "skill_weights": {"climb": 1},
+        "required_body_functions": [],
+        "hazard_profile": null,
+        "ruleset_version": "ruleset:small-core-v1"
+      },
+      "context": {
+        "hard_prerequisite_receipt_ref": "NOT_APPLICABLE",
+        "difficulty_binding": {
+          "demand_id": "other-demand",
+          "action_family": "CLIMB",
+          "method_id": "HAND_AND_FOOT_CLIMB",
+          "ruleset_version": "ruleset:small-core-v1",
+          "difficulty_source_ref": "difficulty-binding:other-demand",
+          "difficulty_or_resistance": 7
+        }
+      },
+      "expected_error": "I2A_DEMAND_DIFFICULTY_BINDING_MISMATCH"
+    },
+    {
+      "case_id": "ADP-07-HUGE-INTEGER-DIFFICULTY-TOTAL",
+      "demand": {
+        "demand_id": "huge-difficulty",
+        "action_family": "LIFT",
+        "method_id": "DIRECT_LIFT",
+        "hard_prerequisites": [],
+        "attribute_weights": {"strength": 0},
+        "skill_weights": {},
+        "required_body_functions": [],
+        "hazard_profile": null,
+        "ruleset_version": "ruleset:small-core-v1"
+      },
+      "context": {
+        "source_demand_ref": "demand-ref:huge-difficulty",
+        "hard_prerequisite_receipt_ref": "NOT_APPLICABLE",
+        "replay_input_ref": "replay:adp-07",
+        "difficulty_binding": {
+          "demand_id": "huge-difficulty",
+          "action_family": "LIFT",
+          "method_id": "DIRECT_LIFT",
+          "ruleset_version": "ruleset:small-core-v1",
+          "difficulty_source_ref": "difficulty-binding:huge-difficulty",
+          "difficulty_or_resistance": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        }
+      },
+      "expected": {
+        "required_attributes": ["strength"],
+        "required_skills": [],
+        "difficulty_or_resistance": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      }
+    }
+  ]
+}
