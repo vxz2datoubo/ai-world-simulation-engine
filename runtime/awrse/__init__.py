@@ -1,3 +1,10 @@
+from .capability_resolution import (
+    CapabilityResolution,
+    NO_I2_RUNTIME_IMPLEMENTED,
+    I2_RUNTIME_AUTHORITY_NOT_GRANTED,
+    RUNTIME_SEMANTICS_UNCHANGED,
+    resolve_capability,
+)
 from .compiler import ActionCompiler
 from .engine import SimulationEngine
 from .model import (
@@ -30,6 +37,11 @@ __all__ = [
     "ActionCompiler",
     "ActorState",
     "AuthorityScope",
+    "CapabilityResolution",
+    "I2_RUNTIME_AUTHORITY_NOT_GRANTED",
+    "NO_I2_RUNTIME_IMPLEMENTED",
+    "RUNTIME_SEMANTICS_UNCHANGED",
+    "resolve_capability",
     "LEGACY_EVENT_PROFILE_ID",
     "NPCMindState",
     "ObjectState",
