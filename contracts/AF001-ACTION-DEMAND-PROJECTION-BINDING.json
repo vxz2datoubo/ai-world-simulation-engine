@@ -1,0 +1,101 @@
+{
+  "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
+  "binding_version": "1.0.0-candidate",
+  "status": "ARCHITECTURE_CONTRACT_FREEZE_ONLY",
+  "runtime_implementation_authorized": false,
+  "authority_locks": {
+    "I2_RUNTIME_AUTHORITY_NOT_GRANTED": true,
+    "NO_I2_RUNTIME_IMPLEMENTED": true,
+    "RUNTIME_SEMANTICS_UNCHANGED": true
+  },
+  "artifact_role": "BOUNDING_CONTRACT_EXTENSION_NON_COMPETING",
+  "canonical_architecture_master": "ARCHITECTURE.md",
+  "parent_machine_contract": {
+    "path": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
+    "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+    "contract_version": "1.8.0-candidate",
+    "type_ref": "AF001.ActionDemandProfile",
+    "type_version": "1.0.0-candidate"
+  },
+  "governance_issue_ref": "#47",
+  "source_evidence": [
+    "ARCHITECTURE.md#5-AF-C-capability-injury-and-status",
+    "docs/AF001-TRACEABILITY.md#OD-CAPABILITY-MATH-001",
+    "runtime/awrse/capability_resolution.py"
+  ],
+  "canonical_decisions": {
+    "resolver_projection_authorized": true,
+    "projection_is_non_authoritative": true,
+    "required_attributes_source": "ORDERED_KEYS_OF_ActionDemandProfile.attribute_weights_ONLY",
+    "required_skills_source": "ORDERED_KEYS_OF_ActionDemandProfile.skill_weights_ONLY",
+    "weight_values_consumed": false,
+    "weight_semantics_status": "DEFERRED_RULESET_TUNING",
+    "hard_prerequisites_policy": "UPSTREAM_HARD_FEASIBILITY_GATE_PRECEDES_PROJECTION_AND_IS_NOT_FLATTENED_INTO_REQUIRED_ATTRIBUTE_OR_SKILL_REFS",
+    "difficulty_source": "CAPABILITY_STATE_RESOLUTION_VERSIONED_DEMAND_BINDING",
+    "difficulty_identity_key": [
+      "demand_id",
+      "action_family",
+      "method_id",
+      "ruleset_version"
+    ],
+    "difficulty_formula_or_tuning_status": "DEFERRED_RULESET_TUNING",
+    "duplicate_reference_policy": "REJECT_DUPLICATES_WITHIN_EACH_TYPED_NAMESPACE_FAIL_CLOSED; ATTRIBUTE_AND_SKILL_NAMESPACES_REMAIN_DISTINCT",
+    "empty_projection_policy": "REJECT_FAIL_CLOSED_IF_NO_REQUIRED_ATTRIBUTE_OR_SKILL_REFERENCE_EXISTS",
+    "mutation_policy": "PROJECTED_RECEIPT_IS_IMMUTABLE_SNAPSHOT_AND_CALLER_MUTATION_CANNOT_CHANGE_IT",
+    "replay_policy": "IDENTICAL_VERSIONED_DEMAND_AND_IDENTICAL_BOUND_DIFFICULTY_EVIDENCE_PRODUCE_BYTE_EQUIVALENT_LOGICAL_PROJECTION",
+    "second_authority_policy": "PROJECTION_CANNOT_MINT_REFS_DIFFICULTY_RULESET_OR_PREREQUISITE_SUCCESS_AND_CANNOT_MUTATE_ActionDemandProfile"
+  },
+  "projection_schema": {
+    "schema_id": "AF001.ActionDemandResolverProjection",
+    "schema_version": "1.0.0-candidate",
+    "consumer": "runtime.awrse.capability_resolution.resolve_capability",
+    "consumer_fields": [
+      "required_attributes",
+      "required_skills",
+      "difficulty_or_resistance"
+    ],
+    "required_provenance": [
+      "source_demand_ref",
+      "demand_id",
+      "action_family",
+      "method_id",
+      "ruleset_version",
+      "difficulty_source_ref",
+      "replay_input_ref",
+      "hard_prerequisite_receipt_ref"
+    ],
+    "hard_prerequisite_receipt_rule": "NONEMPTY_REF_REQUIRED_WHEN_hard_prerequisites_NONEMPTY; EXACT_LITERAL_NOT_APPLICABLE_REQUIRED_WHEN_EMPTY",
+    "reference_shape": "ORDERED_UNIQUE_NONEMPTY_STRING_IDS",
+    "numeric_shape": "FINITE_NON_BOOLEAN_INT_OR_FLOAT; PYTHON_INT_IS_TOTAL_AND_UNBOUNDED_AT_THIS_CONTRACT_GATE",
+    "difficulty_binding_rule": "DIFFICULTY_VALUE_MUST_BE_MATERIALIZED_BY_CAPABILITY_STATE_RESOLUTION_FROM_A_VERSIONED_BINDING_MATCHING_THE_EXACT_DIFFICULTY_IDENTITY_KEY; CALLER_OR_NARRATIVE_OVERRIDE_FORBIDDEN",
+    "weight_projection_rule": "ONLY_MAPPING_KEYS_ARE_PROJECTED; WEIGHT_VALUES_ARE_OPAQUE_AND_UNCONSUMED_IN_THIS_BOUNDED_SLICE",
+    "hard_prerequisite_projection_rule": "NO_HARD_PREREQUISITE_IS_CONVERTED_TO_A_GRADED_REFERENCE; FAILED_OR_UNATTESTED_HARD_PREREQUISITES WITHHOLD_THE_PROJECTION",
+    "authority_rule": "DERIVED_READ_ONLY_PROJECTION_ONLY; ACTION_DEMAND_PROFILE_AND VERSIONED RULESET DEMAND BINDING REMAIN THE AUTHORITATIVE SOURCES"
+  },
+  "fail_closed_codes": {
+    "malformed_demand": "I2A_DEMAND_BINDING_MALFORMED",
+    "malformed_attribute_refs": "I2A_REQUIRED_ATTRIBUTES_INVALID",
+    "malformed_skill_refs": "I2A_REQUIRED_SKILLS_INVALID",
+    "duplicate_reference": "I2A_DUPLICATE_DEMAND_REFERENCE",
+    "empty_reference_set": "I2A_EMPTY_BOUNDED_DEMAND_REFERENCE_SET",
+    "hard_prerequisite_unattested": "I2A_HARD_PREREQUISITE_ATTESTATION_REQUIRED",
+    "difficulty_binding_mismatch": "I2A_DEMAND_DIFFICULTY_BINDING_MISMATCH",
+    "difficulty_missing": "I2A_DEMAND_DIFFICULTY_REQUIRED",
+    "difficulty_invalid": "I2A_DEMAND_DIFFICULTY_INVALID"
+  },
+  "explicitly_deferred": [
+    "ATTRIBUTE_WEIGHT_VALUES",
+    "SKILL_WEIGHT_VALUES",
+    "WEIGHT_NORMALIZATION",
+    "WEIGHTED_SUM_POLICY",
+    "STACKING_POLICY",
+    "DIFFICULTY_FORMULA",
+    "DIFFICULTY_TUNING",
+    "OUTCOME_THRESHOLDS",
+    "PROBABILITY",
+    "HAZARD_RESOLUTION",
+    "BODY_FUNCTION_GAMEPLAY",
+    "XP_PROGRESSION_TRAINING",
+    "BALANCE_CALIBRATION"
+  ]
+}
