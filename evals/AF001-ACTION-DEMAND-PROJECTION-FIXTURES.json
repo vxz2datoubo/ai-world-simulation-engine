@@ -3,6 +3,7 @@
   "fixture_version": "1.0.0-candidate",
   "fixture_role": "GOLDEN_EXECUTABLE_SPEC_EXTENSION_NON_COMPETING",
   "parent_golden_registry": "evals/AF001-GOLDEN-SCENARIOS.json",
+  "parent_golden_registry_version": "1.7.0-candidate",
   "required_binding": {
     "path": "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json",
     "binding_version": "1.0.0-candidate"
