@@ -37,7 +37,7 @@ def test_i2a_resolution_replays_same_canonical_inputs():
 
 
 def test_i2a_rejects_unprovenance_bound_capability_maps():
-    with pytest.raises(ValueError, match="I2A_CAPABILITY_ENVELOPE_REQUIRED"):
+    with pytest.raises(ValueError, match="I2A_VALIDATED_CAPABILITY_INPUT_REQUIRED"):
         resolve_capability(
             capability_envelope={
                 "base_attribute_map": {"strength": 99},
