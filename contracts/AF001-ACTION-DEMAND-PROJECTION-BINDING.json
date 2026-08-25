@@ -26,8 +26,8 @@
   "canonical_decisions": {
     "resolver_projection_authorized": true,
     "projection_is_non_authoritative": true,
-    "required_attributes_source": "ORDERED_KEYS_OF_ActionDemandProfile.attribute_weights_ONLY",
-    "required_skills_source": "ORDERED_KEYS_OF_ActionDemandProfile.skill_weights_ONLY",
+    "required_attributes_source": "CANONICALLY_SORTED_KEYS_OF_ActionDemandProfile.attribute_weights_ONLY",
+    "required_skills_source": "CANONICALLY_SORTED_KEYS_OF_ActionDemandProfile.skill_weights_ONLY",
     "weight_values_consumed": false,
     "weight_semantics_status": "DEFERRED_RULESET_TUNING",
     "hard_prerequisites_policy": "UPSTREAM_HARD_FEASIBILITY_GATE_PRECEDES_PROJECTION_AND_IS_NOT_FLATTENED_INTO_REQUIRED_ATTRIBUTE_OR_SKILL_REFS",
@@ -65,10 +65,10 @@
       "hard_prerequisite_receipt_ref"
     ],
     "hard_prerequisite_receipt_rule": "NONEMPTY_REF_REQUIRED_WHEN_hard_prerequisites_NONEMPTY; EXACT_LITERAL_NOT_APPLICABLE_REQUIRED_WHEN_EMPTY",
-    "reference_shape": "ORDERED_UNIQUE_NONEMPTY_STRING_IDS",
+    "reference_shape": "CANONICALLY_LEXICOGRAPHICALLY_SORTED_UNIQUE_NONEMPTY_STRING_IDS",
     "numeric_shape": "FINITE_NON_BOOLEAN_INT_OR_FLOAT; PYTHON_INT_IS_TOTAL_AND_UNBOUNDED_AT_THIS_CONTRACT_GATE",
     "difficulty_binding_rule": "DIFFICULTY_VALUE_MUST_BE_MATERIALIZED_BY_CAPABILITY_STATE_RESOLUTION_FROM_A_VERSIONED_BINDING_MATCHING_THE_EXACT_DIFFICULTY_IDENTITY_KEY; CALLER_OR_NARRATIVE_OVERRIDE_FORBIDDEN",
-    "weight_projection_rule": "ONLY_MAPPING_KEYS_ARE_PROJECTED; WEIGHT_VALUES_ARE_OPAQUE_AND_UNCONSUMED_IN_THIS_BOUNDED_SLICE",
+    "weight_projection_rule": "ONLY_MAPPING_KEYS_ARE_PROJECTED; KEYS_ARE_CANONICALLY_LEXICOGRAPHICALLY_SORTED_BEFORE_RESOLVER_CONSUMPTION; WEIGHT_VALUES_ARE_OPAQUE_AND_UNCONSUMED_IN_THIS_BOUNDED_SLICE",
     "hard_prerequisite_projection_rule": "NO_HARD_PREREQUISITE_IS_CONVERTED_TO_A_GRADED_REFERENCE; FAILED_OR_UNATTESTED_HARD_PREREQUISITES WITHHOLD_THE_PROJECTION",
     "authority_rule": "DERIVED_READ_ONLY_PROJECTION_ONLY; ACTION_DEMAND_PROFILE_AND VERSIONED RULESET DEMAND BINDING REMAIN THE AUTHORITATIVE SOURCES"
   },
