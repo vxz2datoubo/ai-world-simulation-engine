@@ -36,7 +36,7 @@
         }
       },
       "expected": {
-        "required_attributes": ["strength", "agility"],
+        "required_attributes": ["agility", "strength"],
         "required_skills": ["climb"],
         "difficulty_or_resistance": 7,
         "weight_values_consumed": false
