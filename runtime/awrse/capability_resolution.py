@@ -50,6 +50,8 @@ def _require_demand_references(value: Any, error: str) -> tuple[str, ...]:
 def _require_finite_number(value: Any, error: str) -> int | float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(error)
+    if isinstance(value, int):
+        return value
     if not math.isfinite(value):
         raise ValueError(error)
     return value
