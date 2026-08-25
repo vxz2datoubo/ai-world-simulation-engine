@@ -25,6 +25,7 @@ RUNTIME_SEMANTICS_UNCHANGED = True
 _ROOT = Path(__file__).resolve().parents[2]
 _CANONICAL_CONTRACT_PATH = _ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
 _PROJECTION_BINDING_PATH = _ROOT / "contracts" / "AF001-ACTION-DEMAND-PROJECTION-BINDING.json"
+_CONTRACT_RELATIVE_PATH = "contracts/AF001-LIVING-STORY-CONTRACTS.json"
 _BINDING_RELATIVE_PATH = "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json"
 _EXPECTED_AUTHORITY_LOCKS = {
     "I2_RUNTIME_AUTHORITY_NOT_GRANTED": True,
@@ -104,7 +105,8 @@ def _load_canonical_authority() -> tuple[str, str, str, str]:
 
     contract_id = _require_nonempty_string(contract.get("contract_id"), contract_error)
     contract_version = _require_nonempty_string(contract.get("contract_version"), contract_error)
-    if contract.get("artifact_roles", {}).get(_CANONICAL_CONTRACT_PATH.relative_to(_ROOT).as_posix()) != "MACHINE_CONTRACT_REGISTRY":
+    artifact_roles = contract.get("artifact_roles")
+    if not isinstance(artifact_roles, Mapping) or artifact_roles.get(_CONTRACT_RELATIVE_PATH) != "MACHINE_CONTRACT_REGISTRY":
         raise ValueError(contract_error)
 
     type_registry = contract.get("type_registry")
@@ -147,7 +149,7 @@ def _load_canonical_authority() -> tuple[str, str, str, str]:
     if not isinstance(parent, Mapping):
         raise ValueError(binding_error)
     if (
-        parent.get("path") != _CANONICAL_CONTRACT_PATH.relative_to(_ROOT).as_posix()
+        parent.get("path") != _CONTRACT_RELATIVE_PATH
         or parent.get("contract_id") != contract_id
         or parent.get("contract_version") != contract_version
         or parent.get("type_ref") != "AF001.ActionDemandProfile"
