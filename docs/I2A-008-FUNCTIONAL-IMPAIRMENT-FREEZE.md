@@ -49,3 +49,5 @@ The Issue #55 remediation preserves the same PR/branch and restores incidental A
 The AF001 semantic contract version remains `1.9.0-candidate`, while the post-I2A-008 extension-authority graph carries the separate machine-verifiable discriminator `AF001-AUTHORITY-GRAPH-1.9-I2A008@1`. The existing general ActionDemand extension authority rule is unchanged. Functional-impairment extension authority additionally requires an exact `(contract_id, contract_version, authority_graph_version)` match. A pre-I2A-008 AF001 1.9 document lacks that discriminator and cannot authorize this extension. This removes replay/provenance ambiguity without inventing a top-level AF001 semantic-version migration.
 
 The discriminator is part of the canonical authorization identity for this extension, not a runtime capability grant. Missing or mismatched discriminator evidence fails closed.
+
+Final validation is bound to the PR exact head and must be read from the exact-head CI provenance artifacts; no earlier head is release evidence.
