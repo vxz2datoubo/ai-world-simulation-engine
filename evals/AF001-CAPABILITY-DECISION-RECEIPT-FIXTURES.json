@@ -35,7 +35,9 @@
       "source_event_refs": [
         "E_PROFILE_CREATED",
         "E_PROFILE_TRAINED"
-      ]
+      ],
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate"
     },
     "skill_ledger_evidence": {
       "actor_id": "ACTOR-FIGHTER-001",
@@ -57,7 +59,9 @@
           ]
         }
       ],
-      "source_event_cursor": "CURSOR-SKILL-10"
+      "source_event_cursor": "CURSOR-SKILL-10",
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate"
     },
     "action_demand_evidence": {
       "demand_id": "DEMAND-CUT-001",
@@ -79,7 +83,11 @@
       "source_demand_ref": "DEMAND-SOURCE-001",
       "difficulty_source_ref": "DIFFICULTY-BINDING-001",
       "replay_input_ref": "REPLAY-INPUT-001",
-      "hard_prerequisite_receipt_ref": "NOT_APPLICABLE"
+      "hard_prerequisite_receipt_ref": "NOT_APPLICABLE",
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate",
+      "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
+      "binding_version": "1.0.0-candidate"
     },
     "functional_impairment_evidence": {
       "state": "PROVIDED_APPLICABLE",
@@ -104,7 +112,12 @@
         ],
         "source_demand_ref": "DEMAND-SOURCE-001",
         "replay_input_ref": "REPLAY-INPUT-001",
-        "numeric_effect_status": "DEFERRED_RULESET_TUNING"
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING",
+        "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+        "canonical_contract_version": "1.9.0-candidate",
+        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
+        "binding_version": "1.0.0-candidate"
       }
     },
     "expected_result": {
@@ -133,7 +146,12 @@
         ],
         "source_demand_ref": "DEMAND-SOURCE-001",
         "replay_input_ref": "REPLAY-INPUT-001",
-        "numeric_effect_status": "DEFERRED_RULESET_TUNING"
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING",
+        "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+        "canonical_contract_version": "1.9.0-candidate",
+        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
+        "binding_version": "1.0.0-candidate"
       }
     },
     "expected_result": {
@@ -188,7 +206,11 @@
     {"case_id": "CDR-17-R003-I1A-UNTOUCHED", "proof": "R003_I1A_PERSISTENCE_REFERENCE_AND_RUNTIME_BLOBS_REMAIN_EXACT"},
     {"case_id": "CDR-18-NO-RUNTIME-FILES-CHANGED", "proof": "RUNTIME_TREE_SHA_REMAINS_EXACT_CANONICAL_BASE_TREE"},
     {"case_id": "CDR-19-AUTHORITY-LOCKS-PRESERVED", "proof": "ALL_THREE_I2_AUTHORITY_LOCKS_REMAIN_TRUE"},
-    {"case_id": "CDR-20-ABSENT-VS-ZERO-APPLICABILITY-DISTINCT", "proof": "ABSENT_AND_PROVIDED_ZERO_APPLICABILITY_HAVE_DISTINCT_IDENTITIES_WITH_EQUAL_NUMERIC_RESULT"}
+    {"case_id": "CDR-20-ABSENT-VS-ZERO-APPLICABILITY-DISTINCT", "proof": "ABSENT_AND_PROVIDED_ZERO_APPLICABILITY_HAVE_DISTINCT_IDENTITIES_WITH_EQUAL_NUMERIC_RESULT"},
+    {"case_id": "CDR-21-ACTOR-ADMISSION-AUTHORITY-DRIFT-FAILS-CLOSED", "proof": "ACTOR_ADMISSION_CANONICAL_CONTRACT_IDENTITY_DRIFT_FAILS_CLOSED_BEFORE_DIGEST"},
+    {"case_id": "CDR-22-SKILL-ADMISSION-AUTHORITY-DRIFT-FAILS-CLOSED", "proof": "SKILL_ADMISSION_CANONICAL_CONTRACT_IDENTITY_DRIFT_FAILS_CLOSED_BEFORE_DIGEST"},
+    {"case_id": "CDR-23-ACTION-DEMAND-ADMISSION-BINDING-DRIFT-FAILS-CLOSED", "proof": "ACTION_DEMAND_ADMISSION_BINDING_IDENTITY_DRIFT_FAILS_CLOSED_BEFORE_DIGEST" },
+    {"case_id": "CDR-24-FUNCTIONAL-IMPAIRMENT-ADMISSION-AUTHORITY-DRIFT-FAILS-CLOSED", "proof": "FUNCTIONAL_IMPAIRMENT_ADMISSION_AUTHORITY_GRAPH_OR_BINDING_DRIFT_FAILS_CLOSED_BEFORE_DIGEST"}
   ],
   "explicit_non_goals": [
     "RUNTIME_RECEIPT_SERIALIZATION",

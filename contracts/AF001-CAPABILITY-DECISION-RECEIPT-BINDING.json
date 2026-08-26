@@ -50,6 +50,31 @@
       "version": "1.0.0-candidate"
     }
   },
+  "upstream_admission_authority_identity": {
+    "identity_rule": "EACH_BOUND_UPSTREAM_EVIDENCE_OBJECT_MUST_PRESERVE_THE_EXACT_AUTHORITY_IDENTITY_FIELDS_CARRIED_BY_ITS_ACCEPTED_TYPED_ADMISSION_RECEIPT; REDUCED_CALLER_SHAPES_CANNOT_RECONSTITUTE_ADMISSION_AUTHORITY",
+    "ActorBaseProfileAdmissionReceipt": {
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate"
+    },
+    "SkillLedgerAdmissionReceipt": {
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate"
+    },
+    "ActionDemandAdmissionReceipt": {
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate",
+      "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
+      "binding_version": "1.0.0-candidate"
+    },
+    "FunctionalImpairmentAdmissionReceipt": {
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate",
+      "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+      "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
+      "binding_version": "1.0.0-candidate"
+    },
+    "drift_policy": "ANY_MISSING_OR_MISMATCHED_UPSTREAM_ADMISSION_AUTHORITY_IDENTITY_FAILS_CLOSED_BEFORE_DIGEST_MATERIALIZATION"
+  },
   "resolver_reference": {
     "resolver_id": "AWRSE-I2A-DETERMINISTIC-CAPABILITY-RESOLVER",
     "resolver_version": "1.0.0-candidate",
@@ -92,13 +117,17 @@
       "profile_schema_ref",
       "ruleset_family_ref",
       "admitted_base_attribute_map",
-      "source_event_refs"
+      "source_event_refs",
+      "canonical_contract_id",
+      "canonical_contract_version"
     ],
     "skill_ledger_evidence_required_fields": [
       "actor_id",
       "schema_version",
       "admitted_skill_entries",
-      "source_event_cursor"
+      "source_event_cursor",
+      "canonical_contract_id",
+      "canonical_contract_version"
     ],
     "skill_entry_required_fields": [
       "skill_id",
@@ -118,7 +147,11 @@
       "source_demand_ref",
       "difficulty_source_ref",
       "replay_input_ref",
-      "hard_prerequisite_receipt_ref"
+      "hard_prerequisite_receipt_ref",
+      "canonical_contract_id",
+      "canonical_contract_version",
+      "binding_id",
+      "binding_version"
     ],
     "functional_impairment_evidence_states": [
       "ABSENT",
@@ -135,8 +168,14 @@
       "source_event_refs",
       "source_demand_ref",
       "replay_input_ref",
-      "numeric_effect_status"
-    ]
+      "numeric_effect_status",
+      "canonical_contract_id",
+      "canonical_contract_version",
+      "authority_graph_version",
+      "binding_id",
+      "binding_version"
+    ],
+    "authority_identity_requirement": "BUSINESS_OR_SEMANTIC_FIELDS_ARE_INSUFFICIENT; THE_COMPLETE_AUTHORITY_IDENTITY_FIELDS_FROM_THE_ACCEPTED_TYPED_ADMISSION_RECEIPT_ARE_REQUIRED_AND_DIGESTED"
   },
   "canonical_digest": {
     "digest_field": "input_digest_sha256",
@@ -147,6 +186,7 @@
     "compact_separators": true,
     "non_finite_numbers_forbidden": true,
     "input_material_excludes_materialized_result": true,
+    "input_material_includes_complete_upstream_admission_authority_identity": true,
     "canonicalization_rules": {
       "mapping_keys": "LEXICOGRAPHIC_BY_CANONICAL_JSON_OBJECT_KEY_ORDER",
       "required_attributes": "LEXICOGRAPHIC_UNIQUE_NONEMPTY_STRING_REFS_FROM_UPSTREAM_MAPPING_KEYS",
@@ -159,10 +199,11 @@
       "actor_profile_source_event_refs": "ORDER_PRESERVED_SEMANTIC_SEQUENCE",
       "skill_ledger_admitted_skill_entries": "ORDER_PRESERVED_SEMANTIC_SEQUENCE",
       "skill_entry_source_event_refs": "ORDER_PRESERVED_SEMANTIC_SEQUENCE",
-      "hard_prerequisites": "ORDER_PRESERVED_AS_ADMITTED_UPSTREAM"
+      "hard_prerequisites": "ORDER_PRESERVED_AS_ADMITTED_UPSTREAM",
+      "upstream_admission_authority_identity": "EXACT_LITERAL_IDENTITY_FIELDS_PRESERVED_AND_INCLUDED_WITHOUT_CALLER_REINTERPRETATION"
     },
-    "identity_rule": "IDENTICAL_CANONICAL_ADMITTED_INPUTS_PLUS_EXACT_AUTHORITY_AND_RESOLVER_TUPLE_PRODUCE_IDENTICAL_LOGICAL_INPUT_DIGEST",
-    "tamper_rule": "ANY_SEMANTIC_CHANGE_TO_BOUND_ADMITTED_EVIDENCE_AUTHORITY_EPOCH_OR_RESOLVER_IDENTITY_CHANGES_OR_INVALIDATES_RECEIPT_IDENTITY"
+    "identity_rule": "IDENTICAL_CANONICAL_ADMITTED_INPUTS_INCLUDING_COMPLETE_UPSTREAM_ADMISSION_AUTHORITY_IDENTITY_PLUS_EXACT_I2A010_AUTHORITY_AND_RESOLVER_TUPLE_PRODUCE_IDENTICAL_LOGICAL_INPUT_DIGEST",
+    "tamper_rule": "ANY_SEMANTIC_OR_UPSTREAM_ADMISSION_AUTHORITY_CHANGE_AUTHORITY_EPOCH_OR_RESOLVER_IDENTITY_CHANGE_INVALIDATES_OR_CHANGES_RECEIPT_IDENTITY"
   },
   "result_binding": {
     "recompute_required": true,
@@ -206,12 +247,14 @@
     "receipt_can_author_world_state_truth": false,
     "receipt_can_mutate_upstream_truth": false,
     "caller_mutation_after_materialization_changes_receipt": false,
+    "reduced_caller_evidence_can_reconstitute_upstream_admission_authority": false,
     "replay_against_drifted_schema_ruleset_authority_or_resolver": "FAIL_CLOSED"
   },
   "fail_closed_codes": {
     "parent_registration_missing_or_mismatched": "I2A_CAPABILITY_DECISION_RECEIPT_CANONICAL_BINDING_INVALID",
     "authority_epoch_missing_or_mismatched": "I2A_CAPABILITY_DECISION_RECEIPT_AUTHORITY_EPOCH_MISMATCH",
     "source_type_version_mismatch": "I2A_CAPABILITY_DECISION_RECEIPT_SOURCE_TYPE_VERSION_MISMATCH",
+    "upstream_admission_authority_mismatch": "I2A_CAPABILITY_DECISION_RECEIPT_UPSTREAM_ADMISSION_AUTHORITY_MISMATCH",
     "resolver_identity_mismatch": "I2A_CAPABILITY_DECISION_RECEIPT_RESOLVER_MISMATCH",
     "actor_binding_mismatch": "I2A_CAPABILITY_DECISION_RECEIPT_ACTOR_BINDING_MISMATCH",
     "demand_binding_mismatch": "I2A_CAPABILITY_DECISION_RECEIPT_DEMAND_BINDING_MISMATCH",
