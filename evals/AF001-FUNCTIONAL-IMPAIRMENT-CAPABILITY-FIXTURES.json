@@ -320,5 +320,6 @@
       ],
       "expected_error": "I2A_FUNCTIONAL_IMPAIRMENT_NUMERIC_OVERRIDE_NOT_AUTHORIZED"
     }
-  ]
+  ],
+  "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1"
 }

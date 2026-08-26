@@ -19,6 +19,8 @@ EXPECTED_LOCKS = {
     "RUNTIME_SEMANTICS_UNCHANGED": True,
 }
 
+AUTHORITY_GRAPH_VERSION = "AF001-AUTHORITY-GRAPH-1.9-I2A008@1"
+
 
 def _load(path):
     return json.loads(path.read_text(encoding="utf-8"))
@@ -45,13 +47,16 @@ def _validate_authority(parent, binding):
         raise ValueError(error)
     if (
         parent.get("contract_id") != "AWRSE-AF001-LIVING-STORY-CONTRACTS"
+        or parent.get("authority_graph_version") != AUTHORITY_GRAPH_VERSION
         or parent.get("contract_version") != binding.get("parent_machine_contract", {}).get("contract_version")
+        or binding.get("parent_machine_contract", {}).get("authority_graph_version") != parent.get("authority_graph_version")
         or binding.get("parent_machine_contract", {}).get("contract_id") != parent.get("contract_id")
         or binding.get("parent_machine_contract", {}).get("path") != "contracts/AF001-LIVING-STORY-CONTRACTS.json"
         or registration.get("path") != "contracts/AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING.json"
         or registration.get("binding_version") != binding.get("binding_version")
         or registration.get("parent_contract_id") != parent.get("contract_id")
         or registration.get("parent_contract_version") != parent.get("contract_version")
+        or registration.get("parent_authority_graph_version") != parent.get("authority_graph_version")
         or registration.get("authority") != "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION"
         or registration.get("registration_class") != "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION"
         or registration.get("governance_issue_ref") != "#53"
@@ -70,6 +75,18 @@ def _validate_authority(parent, binding):
         or parent.get("contract_version") != "1.9.0-candidate"
         or not isinstance(delta, list)
         or "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION" not in delta
+    ):
+        raise ValueError(error)
+
+    graph = parent.get("versioning_and_migration", {}).get("authority_graph_discriminator")
+    if (
+        not isinstance(graph, Mapping)
+        or graph.get("field") != "authority_graph_version"
+        or graph.get("current") != AUTHORITY_GRAPH_VERSION
+        or graph.get("pre_i2a008_state") != "FIELD_ABSENT"
+        or graph.get("authorization_tuple") != ["contract_id", "contract_version", "authority_graph_version"]
+        or "PRE_I2A008_1_9_WITHOUT_AUTHORITY_GRAPH_DISCRIMINATOR_CANNOT_AUTHORIZE_FUNCTIONAL_IMPAIRMENT_EXTENSION" not in graph.get("functional_impairment_authorization_rule", "")
+        or "PRE_I2A008_1_9_WITHOUT_AUTHORITY_GRAPH_DISCRIMINATOR_CANNOT_AUTHORIZE" not in parent.get("functional_impairment_extension_authority_rule", "")
     ):
         raise ValueError(error)
 
@@ -199,9 +216,13 @@ def test_parent_registers_functional_impairment_binding_and_preserves_action_dem
     _validate_source_type_bindings(parent, binding)
 
     action_registration = parent["registered_contract_extensions"][action_binding["binding_id"]]
+    fixture = _load(FIXTURES_PATH)
     assert action_registration["parent_contract_version"] == "1.9.0-candidate"
     assert action_binding["parent_machine_contract"]["contract_version"] == "1.9.0-candidate"
     assert parent["contract_version"] == "1.9.0-candidate"
+    assert parent["authority_graph_version"] == AUTHORITY_GRAPH_VERSION
+    assert binding["parent_machine_contract"]["authority_graph_version"] == AUTHORITY_GRAPH_VERSION
+    assert fixture["parent_authority_graph_version"] == AUTHORITY_GRAPH_VERSION
 
 
 def test_orphan_and_pre_registration_parent_cannot_authorize_new_binding():
@@ -217,6 +238,17 @@ def test_orphan_and_pre_registration_parent_cannot_authorize_new_binding():
     mismatched_parent["registered_contract_extensions"][binding["binding_id"]]["parent_contract_version"] = "1.8.0-candidate"
     with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID$"):
         _validate_authority(mismatched_parent, binding)
+
+    pre_i2a008_same_contract_version = copy.deepcopy(parent)
+    pre_i2a008_same_contract_version.pop("authority_graph_version")
+    pre_i2a008_same_contract_version["versioning_and_migration"].pop("authority_graph_discriminator")
+    with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID$"):
+        _validate_authority(pre_i2a008_same_contract_version, binding)
+
+    mismatched_graph = copy.deepcopy(parent)
+    mismatched_graph["registered_contract_extensions"][binding["binding_id"]]["parent_authority_graph_version"] = "AF001-AUTHORITY-GRAPH-1.9-PRE-I2A008@0"
+    with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID$"):
+        _validate_authority(mismatched_graph, binding)
 
 
 def test_source_type_versions_are_exact_and_fail_closed_when_mismatched():
