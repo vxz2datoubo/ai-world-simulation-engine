@@ -18,6 +18,11 @@ REQUIRED_PARENT_TYPES = {
     "ResponseConcept",
     "PlayerAutoExpressionPolicy",
 }
+SUPPORTED_ACQUISITION_PROVENANCE = {
+    "SAW": "SAW",
+    "WAS_TOLD": "WAS_TOLD",
+    "DOCUMENTED": "DOCUMENTED",
+}
 
 
 def load_json(path: Path):
@@ -57,15 +62,46 @@ def _validate(doc):
     world_history = p["world_history"]
     delta = p["environmental_delta"]
     known_world_events = set(world_history["known_event_refs"])
+    validated_memory_modes = {}
 
-    for memory in memories.values():
-        for perception_ref in memory["source_perception_refs"]:
+    for memory_id, memory in memories.items():
+        perception_refs = memory["source_perception_refs"]
+        if not perception_refs:
+            return "MEMORY_REQUIRES_ACQUISITION_EVIDENCE"
+
+        acquisition_perceptions = []
+        for perception_ref in perception_refs:
             if perception_ref not in perceptions:
                 return "MEMORY_PERCEPTION_REF_UNKNOWN"
-            if perceptions[perception_ref]["npc_id"] != memory["npc_id"]:
+            perception = perceptions[perception_ref]
+            if perception["npc_id"] != memory["npc_id"]:
                 return "MEMORY_PERCEPTION_OWNER_MISMATCH"
-        if not memory["source_perception_refs"]:
-            return "MEMORY_REQUIRES_ACQUISITION_EVIDENCE"
+            acquisition_perceptions.append(perception)
+
+        acquisition_event_refs = [perception["source_event_ref"] for perception in acquisition_perceptions]
+        if any(event_ref not in known_world_events for event_ref in acquisition_event_refs):
+            return "MEMORY_ACQUISITION_EVENT_UNKNOWN"
+
+        memory_event_refs = memory["source_world_event_refs"]
+        if not isinstance(memory_event_refs, list) or not memory_event_refs:
+            return "MEMORY_SOURCE_WORLD_EVENT_MISMATCH"
+        if any(not isinstance(event_ref, str) or not event_ref for event_ref in memory_event_refs):
+            return "MEMORY_SOURCE_WORLD_EVENT_MISMATCH"
+        if len(memory_event_refs) != len(set(memory_event_refs)):
+            return "MEMORY_SOURCE_WORLD_EVENT_MISMATCH"
+        if set(memory_event_refs) != set(acquisition_event_refs):
+            return "MEMORY_SOURCE_WORLD_EVENT_MISMATCH"
+
+        acquisition_modes = {perception["mode"] for perception in acquisition_perceptions}
+        if len(acquisition_modes) != 1:
+            return "MEMORY_ACQUISITION_MODE_AMBIGUOUS"
+        acquisition_mode = next(iter(acquisition_modes))
+        expected_provenance = SUPPORTED_ACQUISITION_PROVENANCE.get(acquisition_mode)
+        if expected_provenance is None:
+            return "MEMORY_ACQUISITION_MODE_UNSUPPORTED"
+        if memory["provenance_kind"] != expected_provenance:
+            return "MEMORY_PROVENANCE_ACQUISITION_MISMATCH"
+        validated_memory_modes[memory_id] = acquisition_mode
 
     for belief in beliefs.values():
         for evidence_ref in belief["supporting_refs"] + belief["contradicting_refs"]:
@@ -98,7 +134,7 @@ def _validate(doc):
         if attr["kind"] == "WITNESSED_CAUSE":
             if not attr["evidence_memory_refs"]:
                 return "WITNESS_ATTRIBUTION_REQUIRES_DIRECT_EVIDENCE"
-            if any(memories[m]["provenance_kind"] != "SAW" for m in attr["evidence_memory_refs"]):
+            if any(validated_memory_modes.get(memory_ref) != "SAW" for memory_ref in attr["evidence_memory_refs"]):
                 return "WITNESS_ATTRIBUTION_REQUIRES_DIRECT_EVIDENCE"
             if attr["certainty"] != "DIRECT":
                 return "WITNESS_ATTRIBUTION_REQUIRES_DIRECT_EVIDENCE"
@@ -315,6 +351,50 @@ def test_same_world_fact_produces_three_epistemically_distinct_valid_reactions()
     assert attrs["NPC-RUMOR"]["certainty"] == "HEDGED"
     assert attrs["NPC-NEWCOMER"]["certainty"] == "UNKNOWN"
     assert _validate(doc) is None
+
+
+def test_valid_memory_acquisition_modes_remain_distinct():
+    doc = load_json(EVAL_PATH)
+    objects = doc["synthetic_fixture"]["canonical_objects"]
+    perceptions = by_id(objects["NPCPerceptionEvent"], "perception_id")
+    memories = by_id(objects["NPCEpisodicMemory"], "memory_id")
+    assert perceptions["P-WITNESS"]["mode"] == memories["M-WITNESS"]["provenance_kind"] == "SAW"
+    assert perceptions["P-RUMOR"]["mode"] == memories["M-RUMOR"]["provenance_kind"] == "WAS_TOLD"
+    assert perceptions["P-CORRECTION"]["mode"] == memories["M-CORRECTION"]["provenance_kind"] == "DOCUMENTED"
+    assert _validate(doc) is None
+
+
+def test_memory_source_world_event_must_match_acquisition_perception():
+    doc = load_json(EVAL_PATH)
+    memory = next(m for m in doc["synthetic_fixture"]["canonical_objects"]["NPCEpisodicMemory"] if m["memory_id"] == "M-RUMOR")
+    memory["source_world_event_refs"] = ["E-DOOR-BREAK"]
+    assert _validate(doc) == "MEMORY_SOURCE_WORLD_EVENT_MISMATCH"
+
+
+def test_unknown_memory_source_world_event_fails_closed():
+    doc = load_json(EVAL_PATH)
+    memory = next(m for m in doc["synthetic_fixture"]["canonical_objects"]["NPCEpisodicMemory"] if m["memory_id"] == "M-RUMOR")
+    memory["source_world_event_refs"] = ["E-UNKNOWN"]
+    assert _validate(doc) == "MEMORY_SOURCE_WORLD_EVENT_MISMATCH"
+
+
+def test_rumor_perception_cannot_forge_saw_memory_and_witness_attribution():
+    doc = load_json(EVAL_PATH)
+    objects = doc["synthetic_fixture"]["canonical_objects"]
+    projections = doc["synthetic_fixture"]["eval_only_projections"]
+    memory = next(m for m in objects["NPCEpisodicMemory"] if m["memory_id"] == "M-RUMOR")
+    memory["provenance_kind"] = "SAW"
+    attribution = next(a for a in projections["attributions"] if a["attribution_id"] == "ATTR-RUMOR")
+    attribution["kind"] = "WITNESSED_CAUSE"
+    attribution["certainty"] = "DIRECT"
+    assert _validate(doc) == "MEMORY_PROVENANCE_ACQUISITION_MISMATCH"
+
+
+def test_memory_cannot_borrow_foreign_npc_acquisition_event():
+    doc = load_json(EVAL_PATH)
+    memory = next(m for m in doc["synthetic_fixture"]["canonical_objects"]["NPCEpisodicMemory"] if m["memory_id"] == "M-RUMOR")
+    memory["source_world_event_refs"] = ["E-DOOR-BREAK"]
+    assert _validate(doc) == "MEMORY_SOURCE_WORLD_EVENT_MISMATCH"
 
 
 def test_private_player_commentary_is_not_world_speech():
