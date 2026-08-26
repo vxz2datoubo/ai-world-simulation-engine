@@ -17,6 +17,8 @@ jobs:
         with:
           ref: gpt/i2a-008-functional-impairment-freeze
           fetch-depth: 0
+      - name: Install test runner
+        run: python -m pip install pytest
       - name: Build bounded additive remediation from canonical main
         shell: bash
         run: |
@@ -36,36 +38,25 @@ jobs:
           test_path = root/'tests/test_i2a_functional_impairment_contract.py'
           docs_path = root/'docs/I2A-008-FUNCTIONAL-IMPAIRMENT-FREEZE.md'
 
-          parent = json.loads(Path('/tmp/main-af001.json').read_text())
-          registration = {
-              'path': 'contracts/AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING.json',
-              'binding_version': '1.0.0-candidate',
-              'parent_contract_id': 'AWRSE-AF001-LIVING-STORY-CONTRACTS',
-              'parent_contract_version': '1.9.0-candidate',
-              'authority': 'MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION',
-              'scope': 'AF-C_FUNCTION_LOCAL_INJURY_EVIDENCE_TO_CURRENT_CAPABILITY_APPLICABILITY_PROJECTION',
-              'registration_class': 'ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION',
-              'governance_issue_ref': '#53',
-              'runtime_implementation_authorized': False,
-          }
-          parent['registered_contract_extensions']['AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING'] = registration
-          required_invariants = [
-              'BASE_CAPABILITY_NE_CURRENT_EFFECTIVE_CAPABILITY',
-              'FUNCTIONAL_IMPAIRMENT_IS_FUNCTION_LOCAL',
-              'UNRELATED_FUNCTION_IMPAIRMENT_HAS_ZERO_EFFECT',
-              'FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT',
-              'NARRATIVE_RENDERER_CANNOT_AUTHOR_IMPAIRMENT',
-              'IMPAIRMENT_NUMERIC_EFFECTS_REQUIRE_EXPLICIT_VERSIONED_RULESET_BINDING',
-          ]
-          invariants = parent['freeze_domains']['AF-C']['invariants']
-          for item in required_invariants:
-              if item not in invariants:
-                  invariants.append(item)
+          parent_text = Path('/tmp/main-af001.json').read_text()
+          parent = json.loads(parent_text)
           assert parent['contract_version'] == '1.9.0-candidate'
           assert parent['registered_contract_extensions']['AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING']['parent_contract_version'] == '1.9.0-candidate'
-          lineage = parent['versioning_and_migration']['contract_version_lineage']
-          assert lineage['previous_contract_version'] == '1.8.0-candidate'
-          parent_path.write_text(json.dumps(parent, indent=2) + '\n')
+          assert parent['versioning_and_migration']['contract_version_lineage']['previous_contract_version'] == '1.8.0-candidate'
+
+          registration_needle = '''      "scope": "AF-C_ACTION_DEMAND_PROFILE_TO_EXISTING_CAPABILITY_RESOLVER_PROJECTION",\n      "runtime_implementation_authorized": false\n    }\n  },'''
+          registration_replacement = '''      "scope": "AF-C_ACTION_DEMAND_PROFILE_TO_EXISTING_CAPABILITY_RESOLVER_PROJECTION",\n      "runtime_implementation_authorized": false\n    },\n    "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING": {\n      "path": "contracts/AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING.json",\n      "binding_version": "1.0.0-candidate",\n      "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",\n      "parent_contract_version": "1.9.0-candidate",\n      "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",\n      "scope": "AF-C_FUNCTION_LOCAL_INJURY_EVIDENCE_TO_CURRENT_CAPABILITY_APPLICABILITY_PROJECTION",\n      "registration_class": "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION",\n      "governance_issue_ref": "#53",\n      "runtime_implementation_authorized": false\n    }\n  },'''
+          if parent_text.count(registration_needle) != 1:
+              raise SystemExit('canonical registration insertion point not unique')
+          parent_text = parent_text.replace(registration_needle, registration_replacement, 1)
+
+          invariant_needle = '"VALIDATED_SKILL_VALUES_ARE_DERIVED_READ_ONLY_PROJECTION_NOT_SECOND_AUTHORITY"]'
+          invariant_replacement = '"VALIDATED_SKILL_VALUES_ARE_DERIVED_READ_ONLY_PROJECTION_NOT_SECOND_AUTHORITY","BASE_CAPABILITY_NE_CURRENT_EFFECTIVE_CAPABILITY","FUNCTIONAL_IMPAIRMENT_IS_FUNCTION_LOCAL","UNRELATED_FUNCTION_IMPAIRMENT_HAS_ZERO_EFFECT","FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT","NARRATIVE_RENDERER_CANNOT_AUTHOR_IMPAIRMENT","IMPAIRMENT_NUMERIC_EFFECTS_REQUIRE_EXPLICIT_VERSIONED_RULESET_BINDING"]'
+          if parent_text.count(invariant_needle) != 1:
+              raise SystemExit('canonical AF-C invariant insertion point not unique')
+          parent_text = parent_text.replace(invariant_needle, invariant_replacement, 1)
+          json.loads(parent_text)
+          parent_path.write_text(parent_text)
 
           binding = json.loads(binding_path.read_text())
           binding['parent_machine_contract']['contract_version'] = '1.9.0-candidate'
@@ -98,7 +89,9 @@ jobs:
 
           if docs_path.exists():
               docs = docs_path.read_text().replace('1.10.0-candidate', '1.9.0-candidate')
-              docs += '\n\n## Additive parent-version remediation\n\nI2A-008 is registered as an `ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION` under canonical AF001 `1.9.0-candidate`; it is not a top-level parent-version migration. Existing ActionDemand authority and version lineage remain unchanged.\n'
+              marker = '## Additive parent-version remediation'
+              if marker not in docs:
+                  docs += '\n\n## Additive parent-version remediation\n\nI2A-008 is registered as an `ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION` under canonical AF001 `1.9.0-candidate`; it is not a top-level parent-version migration. Existing ActionDemand authority and version lineage remain unchanged.\n'
               docs_path.write_text(docs)
           PY
           rm -f .github/workflows/i2a008-remediation.yml .i2a008-remediation-trigger
