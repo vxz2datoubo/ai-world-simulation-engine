@@ -3,8 +3,11 @@
 This module validates an untrusted AF-C ActionDemandProfile-shaped input
 against the canonical AF001 machine contract and its parent-registered
 ActionDemand projection binding. It materializes only the frozen,
-non-authoritative resolver projection. It does not implement gameplay,
-weighting, difficulty formulas, probability, hazard, persistence, or migration.
+non-authoritative resolver projection. The admission receipt also preserves the
+canonicalized required_body_functions evidence needed by downstream bounded
+structural projections; those refs do not change resolver semantics. It does
+not implement gameplay, weighting, difficulty formulas, probability, hazard,
+persistence, or migration.
 """
 
 from __future__ import annotations
