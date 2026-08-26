@@ -50,4 +50,4 @@ The AF001 semantic contract version remains `1.9.0-candidate`, while the post-I2
 
 The discriminator is part of the canonical authorization identity for this extension, not a runtime capability grant. Missing or mismatched discriminator evidence fails closed.
 
-Final validation is bound to the PR exact head and must be read from the exact-head CI provenance artifacts; no earlier head is release evidence.
+Final release evidence is the exact-head CI provenance for the candidate reviewed by the independent verifier; earlier heads are not release evidence.
