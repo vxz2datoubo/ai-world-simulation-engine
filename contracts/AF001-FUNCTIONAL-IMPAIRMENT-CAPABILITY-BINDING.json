@@ -13,7 +13,7 @@
   "parent_machine_contract": {
     "path": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
     "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-    "contract_version": "1.10.0-candidate"
+    "contract_version": "1.9.0-candidate"
   },
   "governance_issue_ref": "#53",
   "source_evidence": [
@@ -26,12 +26,30 @@
     "contracts/AF001-LIVING-STORY-CONTRACTS.json#type_registry.DressingState"
   ],
   "source_type_bindings": {
-    "ActorBaseProfile": {"type_id": "AF001.ActorBaseProfile", "version": "1.1.0-candidate"},
-    "SkillLedger": {"type_id": "AF001.SkillLedger", "version": "1.1.0-candidate"},
-    "DerivedCapability": {"type_id": "AF001.DerivedCapability", "version": "1.0.0-candidate"},
-    "ActionDemandProfile": {"type_id": "AF001.ActionDemandProfile", "version": "1.0.0-candidate"},
-    "InjuryState": {"type_id": "AF001.InjuryState", "version": "1.0.0-candidate"},
-    "DressingState": {"type_id": "AF001.DressingState", "version": "1.0.0-candidate"}
+    "ActorBaseProfile": {
+      "type_id": "AF001.ActorBaseProfile",
+      "version": "1.1.0-candidate"
+    },
+    "SkillLedger": {
+      "type_id": "AF001.SkillLedger",
+      "version": "1.1.0-candidate"
+    },
+    "DerivedCapability": {
+      "type_id": "AF001.DerivedCapability",
+      "version": "1.0.0-candidate"
+    },
+    "ActionDemandProfile": {
+      "type_id": "AF001.ActionDemandProfile",
+      "version": "1.0.0-candidate"
+    },
+    "InjuryState": {
+      "type_id": "AF001.InjuryState",
+      "version": "1.0.0-candidate"
+    },
+    "DressingState": {
+      "type_id": "AF001.DressingState",
+      "version": "1.0.0-candidate"
+    }
   },
   "canonical_decisions": {
     "base_capability_ne_current_effective_capability": true,
@@ -42,7 +60,10 @@
     "presentation_or_dressing_authority_for_impairment": false,
     "required_body_functions_role": "EXACT_FUNCTION_NAMESPACE_APPLICABILITY_FILTER_ONLY",
     "function_identity_rule": "EXACT_NONEMPTY_VERSION_BOUND_STRING_EQUALITY_ONLY_NO_ALIAS_OR_ANATOMY_INFERENCE",
-    "impairment_entry_required_fields": ["impairment_ref", "function_ref"],
+    "impairment_entry_required_fields": [
+      "impairment_ref",
+      "function_ref"
+    ],
     "impairment_entry_shape": "MAPPING_WITH_EXACTLY_REQUIRED_IDENTITY_FIELDS_AND_NO_NUMERIC_PENALTY_AUTHORITY",
     "duplicate_impairment_ref_policy": "REJECT_FAIL_CLOSED_ACROSS_ALL_SOURCE_INJURY_STATES",
     "duplicate_function_refs_with_distinct_impairment_refs_policy": "PRESERVE_DISTINCT_EVIDENCE_REFS_NO_STACKING_SEMANTICS_GRANTED",
@@ -133,5 +154,6 @@
     "PERSISTENCE_BACKEND",
     "MIGRATION_RUNTIME",
     "RENDERER_APPEARANCE_MECHANICS"
-  ]
+  ],
+  "registration_class": "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION"
 }

@@ -3,7 +3,7 @@
   "fixture_suite_version": "1.0.0-candidate",
   "governance_issue_ref": "#53",
   "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-  "parent_contract_version": "1.10.0-candidate",
+  "parent_contract_version": "1.9.0-candidate",
   "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
   "binding_version": "1.0.0-candidate",
   "runtime_implementation_authorized": false,
@@ -20,11 +20,19 @@
       "replay_input_ref": "REPLAY-FIC-01",
       "demand": {
         "demand_id": "DEMAND-ESCAPE-GRIP-001",
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
-      "actor_base_profile": {"strength": 8, "reasoning": 4},
-      "skill_ledger": {"restraint_escape": 6, "investigation": 3},
+      "actor_base_profile": {
+        "strength": 8,
+        "reasoning": 4
+      },
+      "skill_ledger": {
+        "restraint_escape": 6,
+        "investigation": 3
+      },
       "injury_sources": [
         {
           "source_type": "InjuryState",
@@ -35,17 +43,28 @@
           "body_region": "right_hand",
           "severity": "opaque-not-numerically-consumed",
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-RIGHT-GRIP-001", "function_ref": "body.upper_limb.right.grip@1"}
+            {
+              "impairment_ref": "IMPAIR-RIGHT-GRIP-001",
+              "function_ref": "body.upper_limb.right.grip@1"
+            }
           ]
         }
       ],
       "expected": {
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "applicable_impairment_refs_by_function": {
-          "body.upper_limb.right.grip@1": ["IMPAIR-RIGHT-GRIP-001"]
+          "body.upper_limb.right.grip@1": [
+            "IMPAIR-RIGHT-GRIP-001"
+          ]
         },
-        "source_injury_refs": ["INJURY-RIGHT-HAND-001"],
-        "source_event_refs": ["E-INJURY-RIGHT-HAND-001"],
+        "source_injury_refs": [
+          "INJURY-RIGHT-HAND-001"
+        ],
+        "source_event_refs": [
+          "E-INJURY-RIGHT-HAND-001"
+        ],
         "numeric_effect_status": "DEFERRED_RULESET_TUNING"
       }
     },
@@ -56,7 +75,9 @@
       "replay_input_ref": "REPLAY-FIC-02",
       "demand": {
         "demand_id": "DEMAND-REASONING-001",
-        "required_body_functions": ["cognition.reasoning@1"],
+        "required_body_functions": [
+          "cognition.reasoning@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
       "injury_sources": [
@@ -67,15 +88,24 @@
           "actor_id": "ACTOR-FIGHTER-001",
           "source_event_ref": "E-INJURY-RIGHT-HAND-001",
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-RIGHT-GRIP-001", "function_ref": "body.upper_limb.right.grip@1"}
+            {
+              "impairment_ref": "IMPAIR-RIGHT-GRIP-001",
+              "function_ref": "body.upper_limb.right.grip@1"
+            }
           ]
         }
       ],
       "expected": {
-        "required_body_functions": ["cognition.reasoning@1"],
+        "required_body_functions": [
+          "cognition.reasoning@1"
+        ],
         "applicable_impairment_refs_by_function": {},
-        "source_injury_refs": ["INJURY-RIGHT-HAND-001"],
-        "source_event_refs": ["E-INJURY-RIGHT-HAND-001"],
+        "source_injury_refs": [
+          "INJURY-RIGHT-HAND-001"
+        ],
+        "source_event_refs": [
+          "E-INJURY-RIGHT-HAND-001"
+        ],
         "numeric_effect_status": "DEFERRED_RULESET_TUNING"
       }
     },
@@ -86,7 +116,10 @@
       "replay_input_ref": "REPLAY-FIC-03",
       "demand": {
         "demand_id": "DEMAND-UPPER-AND-REASONING-001",
-        "required_body_functions": ["body.upper_limb.right.grip@1", "cognition.reasoning@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1",
+          "cognition.reasoning@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
       "injury_sources": [
@@ -97,15 +130,25 @@
           "actor_id": "ACTOR-FIGHTER-001",
           "source_event_ref": "E-INJURY-LEFT-LEG-001",
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-LEFT-LEG-BALANCE-001", "function_ref": "body.lower_limb.left.balance@1"}
+            {
+              "impairment_ref": "IMPAIR-LEFT-LEG-BALANCE-001",
+              "function_ref": "body.lower_limb.left.balance@1"
+            }
           ]
         }
       ],
       "expected": {
-        "required_body_functions": ["body.upper_limb.right.grip@1", "cognition.reasoning@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1",
+          "cognition.reasoning@1"
+        ],
         "applicable_impairment_refs_by_function": {},
-        "source_injury_refs": ["INJURY-LEFT-LEG-001"],
-        "source_event_refs": ["E-INJURY-LEFT-LEG-001"],
+        "source_injury_refs": [
+          "INJURY-LEFT-LEG-001"
+        ],
+        "source_event_refs": [
+          "E-INJURY-LEFT-LEG-001"
+        ],
         "numeric_effect_status": "DEFERRED_RULESET_TUNING"
       }
     },
@@ -116,7 +159,9 @@
       "replay_input_ref": "REPLAY-FIC-04",
       "demand": {
         "demand_id": "DEMAND-EMPTY-IMPAIRMENT-001",
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
       "injury_sources": [
@@ -130,10 +175,16 @@
         }
       ],
       "expected": {
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "applicable_impairment_refs_by_function": {},
-        "source_injury_refs": ["INJURY-NO-FUNCTIONAL-EFFECT-001"],
-        "source_event_refs": ["E-INJURY-NO-FUNCTIONAL-EFFECT-001"],
+        "source_injury_refs": [
+          "INJURY-NO-FUNCTIONAL-EFFECT-001"
+        ],
+        "source_event_refs": [
+          "E-INJURY-NO-FUNCTIONAL-EFFECT-001"
+        ],
         "numeric_effect_status": "DEFERRED_RULESET_TUNING"
       }
     },
@@ -144,7 +195,9 @@
       "replay_input_ref": "REPLAY-FIC-05",
       "demand": {
         "demand_id": "DEMAND-DUPLICATE-001",
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
       "injury_sources": [
@@ -155,7 +208,10 @@
           "actor_id": "ACTOR-FIGHTER-001",
           "source_event_ref": "E-INJURY-DUP-A",
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-DUP-001", "function_ref": "body.upper_limb.right.grip@1"}
+            {
+              "impairment_ref": "IMPAIR-DUP-001",
+              "function_ref": "body.upper_limb.right.grip@1"
+            }
           ]
         },
         {
@@ -165,7 +221,10 @@
           "actor_id": "ACTOR-FIGHTER-001",
           "source_event_ref": "E-INJURY-DUP-B",
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-DUP-001", "function_ref": "body.upper_limb.right.grip@1"}
+            {
+              "impairment_ref": "IMPAIR-DUP-001",
+              "function_ref": "body.upper_limb.right.grip@1"
+            }
           ]
         }
       ],
@@ -178,7 +237,9 @@
       "replay_input_ref": "REPLAY-FIC-06",
       "demand": {
         "demand_id": "DEMAND-BLANK-001",
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
       "injury_sources": [
@@ -189,7 +250,10 @@
           "actor_id": "ACTOR-FIGHTER-001",
           "source_event_ref": "E-INJURY-BLANK-001",
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-BLANK-001", "function_ref": "   "}
+            {
+              "impairment_ref": "IMPAIR-BLANK-001",
+              "function_ref": "   "
+            }
           ]
         }
       ],
@@ -202,7 +266,9 @@
       "replay_input_ref": "REPLAY-FIC-07",
       "demand": {
         "demand_id": "DEMAND-DRESSING-001",
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
       "injury_sources": [
@@ -214,7 +280,10 @@
           "body_region": "right_forearm",
           "source_treatment_event_ref": "E-DRESSING-001",
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-FORGED-FROM-DRESSING", "function_ref": "body.upper_limb.right.grip@1"}
+            {
+              "impairment_ref": "IMPAIR-FORGED-FROM-DRESSING",
+              "function_ref": "body.upper_limb.right.grip@1"
+            }
           ]
         }
       ],
@@ -227,7 +296,9 @@
       "replay_input_ref": "REPLAY-FIC-08",
       "demand": {
         "demand_id": "DEMAND-NUMERIC-OVERRIDE-001",
-        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "required_body_functions": [
+          "body.upper_limb.right.grip@1"
+        ],
         "ruleset_version": "RULESET-FAMILY-A@1"
       },
       "injury_sources": [
@@ -239,7 +310,11 @@
           "source_event_ref": "E-INJURY-NUMERIC-OVERRIDE-001",
           "severity": 999999,
           "functional_impairments": [
-            {"impairment_ref": "IMPAIR-NUMERIC-OVERRIDE-001", "function_ref": "body.upper_limb.right.grip@1", "penalty": -0.9}
+            {
+              "impairment_ref": "IMPAIR-NUMERIC-OVERRIDE-001",
+              "function_ref": "body.upper_limb.right.grip@1",
+              "penalty": -0.9
+            }
           ]
         }
       ],

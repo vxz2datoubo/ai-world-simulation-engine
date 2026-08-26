@@ -35,3 +35,8 @@ Still deferred:
 `NO_I2_RUNTIME_IMPLEMENTED=true`
 
 `RUNTIME_SEMANTICS_UNCHANGED=true`
+
+
+## Additive parent-version remediation
+
+I2A-008 is registered as an `ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION` under canonical AF001 `1.9.0-candidate`; it is not a top-level parent-version migration. Existing ActionDemand authority and version lineage remain unchanged.

@@ -73,7 +73,7 @@ def test_adp_01_valid_projection_admits_with_exact_canonical_authority():
         "difficulty_or_resistance": 7,
     }
     assert receipt.canonical_contract_id == "AWRSE-AF001-LIVING-STORY-CONTRACTS"
-    assert receipt.canonical_contract_version == "1.10.0-candidate"
+    assert receipt.canonical_contract_version == "1.9.0-candidate"
     assert receipt.binding_id == "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING"
     assert receipt.binding_version == "1.0.0-candidate"
 

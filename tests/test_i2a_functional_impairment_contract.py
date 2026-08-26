@@ -53,6 +53,8 @@ def _validate_authority(parent, binding):
         or registration.get("parent_contract_id") != parent.get("contract_id")
         or registration.get("parent_contract_version") != parent.get("contract_version")
         or registration.get("authority") != "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION"
+        or registration.get("registration_class") != "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION"
+        or registration.get("governance_issue_ref") != "#53"
         or registration.get("runtime_implementation_authorized") is not False
         or binding.get("runtime_implementation_authorized") is not False
         or binding.get("authority_locks") != EXPECTED_LOCKS
@@ -64,10 +66,9 @@ def _validate_authority(parent, binding):
         raise ValueError(error)
     delta = lineage.get("semantic_delta")
     if (
-        lineage.get("previous_contract_version") != "1.9.0-candidate"
-        or parent.get("contract_version") != "1.10.0-candidate"
+        lineage.get("previous_contract_version") != "1.8.0-candidate"
+        or parent.get("contract_version") != "1.9.0-candidate"
         or not isinstance(delta, list)
-        or "FUNCTIONAL_IMPAIRMENT_CAPABILITY_BINDING_CANONICAL_EXTENSION_REGISTRATION" not in delta
         or "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION" not in delta
     ):
         raise ValueError(error)
@@ -198,9 +199,9 @@ def test_parent_registers_functional_impairment_binding_and_preserves_action_dem
     _validate_source_type_bindings(parent, binding)
 
     action_registration = parent["registered_contract_extensions"][action_binding["binding_id"]]
-    assert action_registration["parent_contract_version"] == "1.10.0-candidate"
-    assert action_binding["parent_machine_contract"]["contract_version"] == "1.10.0-candidate"
-    assert parent["contract_version"] == "1.10.0-candidate"
+    assert action_registration["parent_contract_version"] == "1.9.0-candidate"
+    assert action_binding["parent_machine_contract"]["contract_version"] == "1.9.0-candidate"
+    assert parent["contract_version"] == "1.9.0-candidate"
 
 
 def test_orphan_and_pre_registration_parent_cannot_authorize_new_binding():
@@ -212,13 +213,10 @@ def test_orphan_and_pre_registration_parent_cannot_authorize_new_binding():
     with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID$"):
         _validate_authority(orphan, binding)
 
-    old_parent = copy.deepcopy(parent)
-    old_binding = copy.deepcopy(binding)
-    old_parent["contract_version"] = "1.9.0-candidate"
-    old_parent["registered_contract_extensions"][binding["binding_id"]]["parent_contract_version"] = "1.9.0-candidate"
-    old_binding["parent_machine_contract"]["contract_version"] = "1.9.0-candidate"
+    mismatched_parent = copy.deepcopy(parent)
+    mismatched_parent["registered_contract_extensions"][binding["binding_id"]]["parent_contract_version"] = "1.8.0-candidate"
     with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID$"):
-        _validate_authority(old_parent, old_binding)
+        _validate_authority(mismatched_parent, binding)
 
 
 def test_source_type_versions_are_exact_and_fail_closed_when_mismatched():
