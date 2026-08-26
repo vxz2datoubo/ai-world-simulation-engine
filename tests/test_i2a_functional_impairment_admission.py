@@ -49,6 +49,7 @@ def _demand_receipt(case):
         method_id="TEST-METHOD",
         ruleset_version=demand["ruleset_version"],
         hard_prerequisites=(),
+        required_body_functions=tuple(sorted(demand["required_body_functions"])),
         required_attributes=("strength",),
         required_skills=(),
         difficulty_or_resistance=1,
@@ -192,6 +193,38 @@ def test_raw_caller_demand_receipt_and_identity_or_provenance_bypass_fail_closed
         )
 
 
+def test_same_admitted_receipt_cannot_rebind_required_body_functions():
+    case = _cases()["FIC-01-RIGHT-GRIP-RELEVANT"]
+    admitted_receipt = _demand_receipt(case)
+    original = case["demand"]["required_body_functions"]
+    variants = [
+        [],
+        original + ["cognition.reasoning@1"],
+        ["body.lower_limb.left.balance@1"],
+    ]
+    for required_body_functions in variants:
+        forged = copy.deepcopy(case["demand"])
+        forged["required_body_functions"] = required_body_functions
+        with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_DEMAND_BINDING_MISMATCH$"):
+            _admit(case, demand_receipt=admitted_receipt, demand=forged)
+
+
+def test_same_admitted_receipt_accepts_order_only_change():
+    case = copy.deepcopy(_cases()["FIC-01-RIGHT-GRIP-RELEVANT"])
+    case["demand"]["required_body_functions"] = [
+        "cognition.reasoning@1",
+        "body.upper_limb.right.grip@1",
+    ]
+    admitted_receipt = _demand_receipt(case)
+    reordered = copy.deepcopy(case["demand"])
+    reordered["required_body_functions"].reverse()
+    receipt = _admit(case, demand_receipt=admitted_receipt, demand=reordered)
+    assert receipt.required_body_functions == (
+        "body.upper_limb.right.grip@1",
+        "cognition.reasoning@1",
+    )
+
+
 def test_unsupported_injury_version_missing_identity_or_provenance_fail_closed():
     case = _cases()["FIC-01-RIGHT-GRIP-RELEVANT"]
 
@@ -207,11 +240,10 @@ def test_unsupported_injury_version_missing_identity_or_provenance_fail_closed()
             _admit(case, injury_sources=malformed)
 
 
-def test_empty_required_body_functions_is_valid_zero_applicability():
-    case = _cases()["FIC-01-RIGHT-GRIP-RELEVANT"]
-    demand = copy.deepcopy(case["demand"])
-    demand["required_body_functions"] = []
-    receipt = _admit(case, demand=demand)
+def test_empty_required_body_functions_is_valid_zero_applicability_when_admitted_empty():
+    case = copy.deepcopy(_cases()["FIC-01-RIGHT-GRIP-RELEVANT"])
+    case["demand"]["required_body_functions"] = []
+    receipt = _admit(case)
     assert receipt.required_body_functions == ()
     assert dict(receipt.applicable_impairment_refs_by_function) == {}
 
