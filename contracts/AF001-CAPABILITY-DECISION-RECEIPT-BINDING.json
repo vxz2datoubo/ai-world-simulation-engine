@@ -149,9 +149,9 @@
     "input_material_excludes_materialized_result": true,
     "canonicalization_rules": {
       "mapping_keys": "LEXICOGRAPHIC_BY_CANONICAL_JSON_OBJECT_KEY_ORDER",
-      "required_attributes": "LEXICOGRAPHIC_UNIQUE_NONEMPTY_STRING_REFS",
-      "required_skills": "LEXICOGRAPHIC_UNIQUE_NONEMPTY_STRING_REFS",
-      "required_body_functions": "LEXICOGRAPHIC_UNIQUE_NONEMPTY_STRING_REFS",
+      "required_attributes": "LEXICOGRAPHIC_UNIQUE_NONEMPTY_STRING_REFS_FROM_UPSTREAM_MAPPING_KEYS",
+      "required_skills": "LEXICOGRAPHIC_UNIQUE_NONEMPTY_STRING_REFS_FROM_UPSTREAM_MAPPING_KEYS",
+      "required_body_functions": "LEXICOGRAPHIC_NONEMPTY_STRING_REFS_PRESERVE_MULTIPLICITY_AS_ADMITTED_UPSTREAM",
       "functional_impairment_map_keys": "LEXICOGRAPHIC",
       "functional_impairment_refs_per_function": "LEXICOGRAPHIC",
       "functional_impairment_source_injury_refs": "LEXICOGRAPHIC",
