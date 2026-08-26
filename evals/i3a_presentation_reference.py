@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .model import freeze_value, thaw_value
+from awrse.model import freeze_value, thaw_value
 
 
 I3_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED = True
@@ -24,7 +24,7 @@ NO_REAL_RENDERER_IMPLEMENTED = True
 NO_PROVIDER_INTEGRATION = True
 
 _CANONICAL_CONTRACT_PATH = (
-    Path(__file__).resolve().parents[2] / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
+    Path(__file__).resolve().parents[1] / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
 )
 _EXPECTED_TYPES = {
     "ActorPresentationState": ("AF001.ActorPresentationState", "1.0.0-candidate", "PRESENTATION_CANONICAL_STATE"),
