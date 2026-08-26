@@ -62,6 +62,7 @@ class ActionDemandAdmissionReceipt:
     method_id: str
     ruleset_version: str
     hard_prerequisites: tuple[str, ...]
+    required_body_functions: tuple[str, ...]
     required_attributes: tuple[str, ...]
     required_skills: tuple[str, ...]
     difficulty_or_resistance: int | float
@@ -218,6 +219,15 @@ def _require_hard_prerequisites(value: Any) -> tuple[str, ...]:
     return refs
 
 
+def _canonical_string_refs(value: Any, error: str) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ValueError(error)
+    refs = tuple(value)
+    if any(not isinstance(ref, str) or not ref.strip() for ref in refs):
+        raise ValueError(error)
+    return tuple(sorted(refs))
+
+
 def _canonical_mapping_keys(value: Any, error: str) -> tuple[str, ...]:
     if not isinstance(value, Mapping):
         raise ValueError(error)
@@ -260,6 +270,9 @@ def admit_action_demand(
     ruleset_version = _require_nonempty_string(demand.get("ruleset_version"), "I2A_DEMAND_BINDING_MALFORMED")
 
     hard_prerequisites = _require_hard_prerequisites(demand.get("hard_prerequisites"))
+    required_body_functions = _canonical_string_refs(
+        demand.get("required_body_functions"), "I2A_DEMAND_BINDING_MALFORMED"
+    )
     required_attributes = _canonical_mapping_keys(
         demand.get("attribute_weights"), "I2A_REQUIRED_ATTRIBUTES_INVALID"
     )
@@ -326,6 +339,7 @@ def admit_action_demand(
         method_id=method_id,
         ruleset_version=ruleset_version,
         hard_prerequisites=hard_prerequisites,
+        required_body_functions=required_body_functions,
         required_attributes=required_attributes,
         required_skills=required_skills,
         difficulty_or_resistance=difficulty,
