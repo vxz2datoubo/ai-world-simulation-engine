@@ -2,6 +2,8 @@
 
 Governance: Issue #53.
 
+Remediation tracking: Issue #55.
+
 This note records only the bounded architecture disposition represented by the machine contracts and executable fixtures in this branch.
 
 ## Frozen structural boundary
@@ -36,7 +38,8 @@ Still deferred:
 
 `RUNTIME_SEMANTICS_UNCHANGED=true`
 
-
 ## Additive parent-version remediation
 
 I2A-008 is registered as an `ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION` under canonical AF001 `1.9.0-candidate`; it is not a top-level parent-version migration. Existing ActionDemand authority and version lineage remain unchanged.
+
+The Issue #55 remediation preserves the same PR/branch and restores incidental ActionDemand changes to canonical main. Exact-head Python 3.11/3.13 CI and independent review remain mandatory release gates.
