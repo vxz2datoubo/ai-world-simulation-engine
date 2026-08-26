@@ -1,0 +1,228 @@
+{
+  "eval_suite_id": "AWRSE-AF001-CAPABILITY-DECISION-RECEIPT-FIXTURES",
+  "suite_version": "1.0.0-candidate",
+  "governance_issue_ref": "#58",
+  "implementation_scope": "CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+  "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+  "parent_contract_version": "1.9.0-candidate",
+  "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+  "capability_decision_receipt_authority_epoch": "AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1",
+  "binding_id": "AWRSE-AF001-CAPABILITY-DECISION-RECEIPT-BINDING",
+  "binding_version": "1.0.0-candidate",
+  "resolver_id": "AWRSE-I2A-DETERMINISTIC-CAPABILITY-RESOLVER",
+  "resolver_version": "1.0.0-candidate",
+  "authority_locks": {
+    "I2_RUNTIME_AUTHORITY_NOT_GRANTED": true,
+    "NO_I2_RUNTIME_IMPLEMENTED": true,
+    "RUNTIME_SEMANTICS_UNCHANGED": true
+  },
+  "canonical_base": "9379e8d6e4cf085f9c157e59b4c02ae6a0d26d86",
+  "unchanged_evidence": {
+    "runtime_tree_sha": "bbeedc4698c1810673fbacff1d8a6a69d15899d1",
+    "persistence_runtime_blob_sha": "ba1086e01cdca1cba7b42bdda5cb7fbba6a0c4bd",
+    "r003_i1a_reference_blob_sha": "ea66e41c7af50081c62a4af8faee9483b93b158c"
+  },
+  "base_feasible_case": {
+    "actor_profile_evidence": {
+      "actor_id": "ACTOR-FIGHTER-001",
+      "profile_version": "1.1.0-candidate",
+      "profile_schema_ref": "PROFILE-SCHEMA-FAMILY-A@1",
+      "ruleset_family_ref": "RULESET-FAMILY-A@1",
+      "admitted_base_attribute_map": {
+        "reasoning": 3,
+        "strength": 7
+      },
+      "source_event_refs": [
+        "E_PROFILE_CREATED",
+        "E_PROFILE_TRAINED"
+      ],
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate"
+    },
+    "skill_ledger_evidence": {
+      "actor_id": "ACTOR-FIGHTER-001",
+      "schema_version": "1.1.0-candidate",
+      "admitted_skill_entries": [
+        {
+          "skill_id": "blade",
+          "value": 5,
+          "source_event_refs": [
+            "E_SKILL_BLADE_CREATED"
+          ]
+        },
+        {
+          "skill_id": "lore",
+          "value": 8,
+          "source_event_refs": [
+            "E_SKILL_LORE_CREATED",
+            "E_SKILL_LORE_REFINED"
+          ]
+        }
+      ],
+      "source_event_cursor": "CURSOR-SKILL-10",
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate"
+    },
+    "action_demand_evidence": {
+      "demand_id": "DEMAND-CUT-001",
+      "action_family": "CUT",
+      "method_id": "METHOD-BLADE",
+      "ruleset_version": "RULESET-FAMILY-A@1",
+      "hard_prerequisites": [],
+      "required_body_functions": [
+        "VISION",
+        "RIGHT_GRIP"
+      ],
+      "required_attributes": [
+        "strength"
+      ],
+      "required_skills": [
+        "blade"
+      ],
+      "difficulty_or_resistance": 10,
+      "source_demand_ref": "DEMAND-SOURCE-001",
+      "difficulty_source_ref": "DIFFICULTY-BINDING-001",
+      "replay_input_ref": "REPLAY-INPUT-001",
+      "hard_prerequisite_receipt_ref": "NOT_APPLICABLE",
+      "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "canonical_contract_version": "1.9.0-candidate",
+      "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
+      "binding_version": "1.0.0-candidate"
+    },
+    "functional_impairment_evidence": {
+      "state": "PROVIDED_APPLICABLE",
+      "receipt": {
+        "actor_id": "ACTOR-FIGHTER-001",
+        "demand_id": "DEMAND-CUT-001",
+        "ruleset_version": "RULESET-FAMILY-A@1",
+        "required_body_functions": [
+          "VISION",
+          "RIGHT_GRIP"
+        ],
+        "applicable_impairment_refs_by_function": {
+          "RIGHT_GRIP": [
+            "IMP-RIGHT-GRIP-001"
+          ]
+        },
+        "source_injury_refs": [
+          "INJ-RIGHT-HAND-001"
+        ],
+        "source_event_refs": [
+          "E-INJURY-001"
+        ],
+        "source_demand_ref": "DEMAND-SOURCE-001",
+        "replay_input_ref": "REPLAY-INPUT-001",
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING",
+        "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+        "canonical_contract_version": "1.9.0-candidate",
+        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
+        "binding_version": "1.0.0-candidate"
+      }
+    },
+    "expected_result": {
+      "feasible": true,
+      "effective_capability": 12,
+      "margin": 2
+    }
+  },
+  "zero_applicability_case": {
+    "functional_impairment_evidence": {
+      "state": "PROVIDED_ZERO_APPLICABILITY",
+      "receipt": {
+        "actor_id": "ACTOR-FIGHTER-001",
+        "demand_id": "DEMAND-CUT-001",
+        "ruleset_version": "RULESET-FAMILY-A@1",
+        "required_body_functions": [
+          "RIGHT_GRIP",
+          "VISION"
+        ],
+        "applicable_impairment_refs_by_function": {},
+        "source_injury_refs": [
+          "INJ-LEFT-ANKLE-001"
+        ],
+        "source_event_refs": [
+          "E-INJURY-ANKLE-001"
+        ],
+        "source_demand_ref": "DEMAND-SOURCE-001",
+        "replay_input_ref": "REPLAY-INPUT-001",
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING",
+        "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+        "canonical_contract_version": "1.9.0-candidate",
+        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
+        "binding_version": "1.0.0-candidate"
+      }
+    },
+    "expected_result": {
+      "feasible": true,
+      "effective_capability": 12,
+      "margin": 2
+    }
+  },
+  "absent_impairment_case": {
+    "functional_impairment_evidence": {
+      "state": "ABSENT",
+      "receipt": null
+    },
+    "expected_result": {
+      "feasible": true,
+      "effective_capability": 12,
+      "margin": 2
+    }
+  },
+  "infeasible_case": {
+    "action_demand_override": {
+      "required_attributes": [
+        "agility"
+      ],
+      "required_skills": [
+        "blade"
+      ]
+    },
+    "expected_result": {
+      "feasible": false,
+      "effective_capability": null,
+      "margin": null
+    }
+  },
+  "required_adversarial_cases": [
+    {"case_id": "CDR-01-IDENTICAL-INPUTS-IDENTICAL-IDENTITY", "proof": "IDENTICAL_ADMITTED_INPUTS_AND_AUTHORITY_RESOLVER_TUPLE_YIELD_IDENTICAL_DIGEST"},
+    {"case_id": "CDR-02-FEASIBLE-RESULT-EXACT", "proof": "FEASIBLE_RESULT_BINDS_CURRENT_DETERMINISTIC_OUTPUT"},
+    {"case_id": "CDR-03-INFEASIBLE-NUMERICS-NULL", "proof": "INFEASIBLE_CANNOT_FABRICATE_EFFECTIVE_CAPABILITY_OR_MARGIN"},
+    {"case_id": "CDR-04-ACTOR-PROFILE-CHANGE-INVALIDATES", "proof": "CHANGED_ACTOR_PROFILE_EVIDENCE_CHANGES_IDENTITY"},
+    {"case_id": "CDR-05-SKILL-LEDGER-CHANGE-INVALIDATES", "proof": "CHANGED_SKILL_LEDGER_EVIDENCE_CHANGES_IDENTITY"},
+    {"case_id": "CDR-06-ACTION-DEMAND-CHANGE-INVALIDATES", "proof": "CHANGED_ACTION_DEMAND_EVIDENCE_CHANGES_IDENTITY"},
+    {"case_id": "CDR-07-BODY-FUNCTION-CHANGE-INVALIDATES", "proof": "CHANGED_REQUIRED_BODY_FUNCTIONS_CHANGES_IDENTITY"},
+    {"case_id": "CDR-08-IMPAIRMENT-EVIDENCE-CHANGE-INVALIDATES", "proof": "CHANGED_BOUND_FUNCTIONAL_IMPAIRMENT_EVIDENCE_CHANGES_IDENTITY"},
+    {"case_id": "CDR-09-UNRELATED-IMPAIRMENT-ZERO-NUMERIC-EFFECT", "proof": "SUPPLIED_UNRELATED_IMPAIRMENT_IS_BOUND_BUT_RESULT_UNCHANGED"},
+    {"case_id": "CDR-10-NONSEMANTIC-ORDER-CANONICAL", "proof": "UPSTREAM_NONSEMANTIC_ORDER_ONLY_DIFFERENCE_YIELDS_EQUIVALENT_IDENTITY"},
+    {"case_id": "CDR-11-ORDERED-PROVENANCE-SENSITIVE", "proof": "ORDERED_PROVENANCE_SEQUENCE_REORDER_CHANGES_IDENTITY"},
+    {"case_id": "CDR-12-DRIFT-FAILS-CLOSED", "proof": "DRIFTED_CONTRACT_RULESET_RESOLVER_OR_AUTHORITY_EPOCH_FAILS_CLOSED"},
+    {"case_id": "CDR-13-CALLER-MUTATION-ISOLATED", "proof": "CALLER_MUTATION_AFTER_MATERIALIZATION_CANNOT_ALTER_FROZEN_RECEIPT"},
+    {"case_id": "CDR-14-SUPPLIED-RESULT-CANNOT-OVERRIDE", "proof": "CALLER_RESULT_MUST_MATCH_RECOMPUTATION_OR_FAIL_CLOSED"},
+    {"case_id": "CDR-15-ORPHAN-CHILD-FAILS-CLOSED", "proof": "CHILD_SELF_DECLARATION_WITHOUT_EXACT_PARENT_REGISTRATION_CANNOT_AUTHORIZE"},
+    {"case_id": "CDR-16-PRE-I2A010-PARENT-FAILS-CLOSED", "proof": "SAME_VERSION_PARENT_WITHOUT_RECEIPT_EPOCH_CANNOT_AUTHORIZE_CHILD"},
+    {"case_id": "CDR-17-R003-I1A-UNTOUCHED", "proof": "R003_I1A_PERSISTENCE_REFERENCE_AND_RUNTIME_BLOBS_REMAIN_EXACT"},
+    {"case_id": "CDR-18-NO-RUNTIME-FILES-CHANGED", "proof": "RUNTIME_TREE_SHA_REMAINS_EXACT_CANONICAL_BASE_TREE"},
+    {"case_id": "CDR-19-AUTHORITY-LOCKS-PRESERVED", "proof": "ALL_THREE_I2_AUTHORITY_LOCKS_REMAIN_TRUE"},
+    {"case_id": "CDR-20-ABSENT-VS-ZERO-APPLICABILITY-DISTINCT", "proof": "ABSENT_AND_PROVIDED_ZERO_APPLICABILITY_HAVE_DISTINCT_IDENTITIES_WITH_EQUAL_NUMERIC_RESULT"},
+    {"case_id": "CDR-21-ACTOR-ADMISSION-AUTHORITY-DRIFT-FAILS-CLOSED", "proof": "ACTOR_ADMISSION_CANONICAL_CONTRACT_IDENTITY_DRIFT_FAILS_CLOSED_BEFORE_DIGEST"},
+    {"case_id": "CDR-22-SKILL-ADMISSION-AUTHORITY-DRIFT-FAILS-CLOSED", "proof": "SKILL_ADMISSION_CANONICAL_CONTRACT_IDENTITY_DRIFT_FAILS_CLOSED_BEFORE_DIGEST"},
+    {"case_id": "CDR-23-ACTION-DEMAND-ADMISSION-BINDING-DRIFT-FAILS-CLOSED", "proof": "ACTION_DEMAND_ADMISSION_BINDING_IDENTITY_DRIFT_FAILS_CLOSED_BEFORE_DIGEST" },
+    {"case_id": "CDR-24-FUNCTIONAL-IMPAIRMENT-ADMISSION-AUTHORITY-DRIFT-FAILS-CLOSED", "proof": "FUNCTIONAL_IMPAIRMENT_ADMISSION_AUTHORITY_GRAPH_OR_BINDING_DRIFT_FAILS_CLOSED_BEFORE_DIGEST"}
+  ],
+  "explicit_non_goals": [
+    "RUNTIME_RECEIPT_SERIALIZATION",
+    "RUNTIME_RECEIPT_IMPORT",
+    "PERSISTENCE_INTEGRATION",
+    "SECOND_PERSISTENCE_AUTHORITY",
+    "PROBABILITY",
+    "WEIGHTING",
+    "IMPAIRMENT_NUMERIC_EFFECT",
+    "COMBAT",
+    "HEALING",
+    "PROGRESSION",
+    "BALANCE_TUNING"
+  ]
+}
