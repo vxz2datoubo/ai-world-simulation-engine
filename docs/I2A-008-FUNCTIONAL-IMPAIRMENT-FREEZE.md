@@ -44,7 +44,8 @@ I2A-008 is registered as an `ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION` under can
 
 The Issue #55 remediation preserves the same PR/branch and restores incidental ActionDemand changes to canonical main. Exact-head Python 3.11/3.13 CI and independent review remain mandatory release gates.
 
-
 ## Authority-graph discriminator remediation
 
 The AF001 semantic contract version remains `1.9.0-candidate`, while the post-I2A-008 extension-authority graph carries the separate machine-verifiable discriminator `AF001-AUTHORITY-GRAPH-1.9-I2A008@1`. The existing general ActionDemand extension authority rule is unchanged. Functional-impairment extension authority additionally requires an exact `(contract_id, contract_version, authority_graph_version)` match. A pre-I2A-008 AF001 1.9 document lacks that discriminator and cannot authorize this extension. This removes replay/provenance ambiguity without inventing a top-level AF001 semantic-version migration.
+
+The discriminator is part of the canonical authorization identity for this extension, not a runtime capability grant. Missing or mismatched discriminator evidence fails closed.
