@@ -1,0 +1,249 @@
+{
+  "fixture_suite_id": "AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-FIXTURES",
+  "fixture_suite_version": "1.0.0-candidate",
+  "governance_issue_ref": "#53",
+  "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+  "parent_contract_version": "1.10.0-candidate",
+  "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
+  "binding_version": "1.0.0-candidate",
+  "runtime_implementation_authorized": false,
+  "authority_locks": {
+    "I2_RUNTIME_AUTHORITY_NOT_GRANTED": true,
+    "NO_I2_RUNTIME_IMPLEMENTED": true,
+    "RUNTIME_SEMANTICS_UNCHANGED": true
+  },
+  "cases": [
+    {
+      "case_id": "FIC-01-RIGHT-GRIP-RELEVANT",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-ESCAPE-GRIP",
+      "replay_input_ref": "REPLAY-FIC-01",
+      "demand": {
+        "demand_id": "DEMAND-ESCAPE-GRIP-001",
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "actor_base_profile": {"strength": 8, "reasoning": 4},
+      "skill_ledger": {"restraint_escape": 6, "investigation": 3},
+      "injury_sources": [
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-RIGHT-HAND-001",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-RIGHT-HAND-001",
+          "body_region": "right_hand",
+          "severity": "opaque-not-numerically-consumed",
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-RIGHT-GRIP-001", "function_ref": "body.upper_limb.right.grip@1"}
+          ]
+        }
+      ],
+      "expected": {
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "applicable_impairment_refs_by_function": {
+          "body.upper_limb.right.grip@1": ["IMPAIR-RIGHT-GRIP-001"]
+        },
+        "source_injury_refs": ["INJURY-RIGHT-HAND-001"],
+        "source_event_refs": ["E-INJURY-RIGHT-HAND-001"],
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING"
+      }
+    },
+    {
+      "case_id": "FIC-02-SAME-INJURY-UNRELATED-REASONING-ZERO-EFFECT",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-REASONING",
+      "replay_input_ref": "REPLAY-FIC-02",
+      "demand": {
+        "demand_id": "DEMAND-REASONING-001",
+        "required_body_functions": ["cognition.reasoning@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "injury_sources": [
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-RIGHT-HAND-001",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-RIGHT-HAND-001",
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-RIGHT-GRIP-001", "function_ref": "body.upper_limb.right.grip@1"}
+          ]
+        }
+      ],
+      "expected": {
+        "required_body_functions": ["cognition.reasoning@1"],
+        "applicable_impairment_refs_by_function": {},
+        "source_injury_refs": ["INJURY-RIGHT-HAND-001"],
+        "source_event_refs": ["E-INJURY-RIGHT-HAND-001"],
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING"
+      }
+    },
+    {
+      "case_id": "FIC-03-LOWER-LIMB-CANNOT-SPREAD",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-UPPER-AND-REASONING",
+      "replay_input_ref": "REPLAY-FIC-03",
+      "demand": {
+        "demand_id": "DEMAND-UPPER-AND-REASONING-001",
+        "required_body_functions": ["body.upper_limb.right.grip@1", "cognition.reasoning@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "injury_sources": [
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-LEFT-LEG-001",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-LEFT-LEG-001",
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-LEFT-LEG-BALANCE-001", "function_ref": "body.lower_limb.left.balance@1"}
+          ]
+        }
+      ],
+      "expected": {
+        "required_body_functions": ["body.upper_limb.right.grip@1", "cognition.reasoning@1"],
+        "applicable_impairment_refs_by_function": {},
+        "source_injury_refs": ["INJURY-LEFT-LEG-001"],
+        "source_event_refs": ["E-INJURY-LEFT-LEG-001"],
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING"
+      }
+    },
+    {
+      "case_id": "FIC-04-EMPTY-IMPAIRMENT-EVIDENCE-ZERO-EFFECT",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-EMPTY-IMPAIRMENT",
+      "replay_input_ref": "REPLAY-FIC-04",
+      "demand": {
+        "demand_id": "DEMAND-EMPTY-IMPAIRMENT-001",
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "injury_sources": [
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-NO-FUNCTIONAL-EFFECT-001",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-NO-FUNCTIONAL-EFFECT-001",
+          "functional_impairments": []
+        }
+      ],
+      "expected": {
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "applicable_impairment_refs_by_function": {},
+        "source_injury_refs": ["INJURY-NO-FUNCTIONAL-EFFECT-001"],
+        "source_event_refs": ["E-INJURY-NO-FUNCTIONAL-EFFECT-001"],
+        "numeric_effect_status": "DEFERRED_RULESET_TUNING"
+      }
+    },
+    {
+      "case_id": "FIC-05-DUPLICATE-IMPAIRMENT-REF-FAILS-CLOSED",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-DUPLICATE",
+      "replay_input_ref": "REPLAY-FIC-05",
+      "demand": {
+        "demand_id": "DEMAND-DUPLICATE-001",
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "injury_sources": [
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-DUP-A",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-DUP-A",
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-DUP-001", "function_ref": "body.upper_limb.right.grip@1"}
+          ]
+        },
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-DUP-B",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-DUP-B",
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-DUP-001", "function_ref": "body.upper_limb.right.grip@1"}
+          ]
+        }
+      ],
+      "expected_error": "I2A_DUPLICATE_FUNCTIONAL_IMPAIRMENT_REFERENCE"
+    },
+    {
+      "case_id": "FIC-06-BLANK-FUNCTION-REF-FAILS-CLOSED",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-BLANK",
+      "replay_input_ref": "REPLAY-FIC-06",
+      "demand": {
+        "demand_id": "DEMAND-BLANK-001",
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "injury_sources": [
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-BLANK-001",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-BLANK-001",
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-BLANK-001", "function_ref": "   "}
+          ]
+        }
+      ],
+      "expected_error": "I2A_FUNCTIONAL_IMPAIRMENT_FUNCTION_REF_INVALID"
+    },
+    {
+      "case_id": "FIC-07-DRESSING-CANNOT-AUTHOR-IMPAIRMENT",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-DRESSING",
+      "replay_input_ref": "REPLAY-FIC-07",
+      "demand": {
+        "demand_id": "DEMAND-DRESSING-001",
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "injury_sources": [
+        {
+          "source_type": "DressingState",
+          "source_type_version": "1.0.0-candidate",
+          "dressing_id": "DRESSING-RIGHT-FOREARM-001",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "body_region": "right_forearm",
+          "source_treatment_event_ref": "E-DRESSING-001",
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-FORGED-FROM-DRESSING", "function_ref": "body.upper_limb.right.grip@1"}
+          ]
+        }
+      ],
+      "expected_error": "I2A_PRESENTATION_CANNOT_AUTHOR_FUNCTIONAL_IMPAIRMENT"
+    },
+    {
+      "case_id": "FIC-08-CALLER-NUMERIC-OVERRIDE-NOT-AUTHORIZED",
+      "actor_id": "ACTOR-FIGHTER-001",
+      "source_demand_ref": "DEMAND-REF-NUMERIC-OVERRIDE",
+      "replay_input_ref": "REPLAY-FIC-08",
+      "demand": {
+        "demand_id": "DEMAND-NUMERIC-OVERRIDE-001",
+        "required_body_functions": ["body.upper_limb.right.grip@1"],
+        "ruleset_version": "RULESET-FAMILY-A@1"
+      },
+      "injury_sources": [
+        {
+          "source_type": "InjuryState",
+          "source_type_version": "1.0.0-candidate",
+          "injury_id": "INJURY-NUMERIC-OVERRIDE-001",
+          "actor_id": "ACTOR-FIGHTER-001",
+          "source_event_ref": "E-INJURY-NUMERIC-OVERRIDE-001",
+          "severity": 999999,
+          "functional_impairments": [
+            {"impairment_ref": "IMPAIR-NUMERIC-OVERRIDE-001", "function_ref": "body.upper_limb.right.grip@1", "penalty": -0.9}
+          ]
+        }
+      ],
+      "expected_error": "I2A_FUNCTIONAL_IMPAIRMENT_NUMERIC_OVERRIDE_NOT_AUTHORIZED"
+    }
+  ]
+}
