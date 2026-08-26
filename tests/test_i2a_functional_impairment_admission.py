@@ -250,11 +250,12 @@ def test_empty_required_body_functions_is_valid_zero_applicability_when_admitted
 
 def test_required_function_ref_must_be_nonblank_string():
     case = _cases()["FIC-01-RIGHT-GRIP-RELEVANT"]
+    admitted_receipt = _demand_receipt(case)
     for value in (None, "   ", 123):
         demand = copy.deepcopy(case["demand"])
         demand["required_body_functions"] = [value]
         with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_FUNCTION_REF_INVALID$"):
-            _admit(case, demand=demand)
+            _admit(case, demand_receipt=admitted_receipt, demand=demand)
 
 
 def test_insertion_order_is_deterministic_and_canonically_sorted():
