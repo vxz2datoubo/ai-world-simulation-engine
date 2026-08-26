@@ -239,8 +239,18 @@ def _bind_admitted_inputs(
         required_refs.append(
             _require_nonempty_string(ref, "I2A_FUNCTIONAL_IMPAIRMENT_FUNCTION_REF_INVALID")
         )
+    canonical_required = tuple(sorted(required_refs))
 
-    return actor_id, demand_id, ruleset_version, tuple(sorted(required_refs)), source_ref, replay_ref
+    receipt_required = demand_receipt.required_body_functions
+    if (
+        not isinstance(receipt_required, tuple)
+        or any(not isinstance(ref, str) or not ref.strip() for ref in receipt_required)
+        or tuple(sorted(receipt_required)) != receipt_required
+        or canonical_required != receipt_required
+    ):
+        raise ValueError("I2A_FUNCTIONAL_IMPAIRMENT_DEMAND_BINDING_MISMATCH")
+
+    return actor_id, demand_id, ruleset_version, canonical_required, source_ref, replay_ref
 
 
 def _project_injury_sources(
