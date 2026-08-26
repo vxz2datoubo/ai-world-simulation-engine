@@ -1,0 +1,160 @@
+{
+  "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
+  "binding_version": "1.0.0-candidate",
+  "status": "ARCHITECTURE_CONTRACT_FREEZE_ONLY",
+  "runtime_implementation_authorized": false,
+  "authority_locks": {
+    "I2_RUNTIME_AUTHORITY_NOT_GRANTED": true,
+    "NO_I2_RUNTIME_IMPLEMENTED": true,
+    "RUNTIME_SEMANTICS_UNCHANGED": true
+  },
+  "artifact_role": "BOUNDING_CONTRACT_EXTENSION_NON_COMPETING",
+  "canonical_architecture_master": "ARCHITECTURE.md",
+  "parent_machine_contract": {
+    "path": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
+    "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+    "contract_version": "1.9.0-candidate",
+    "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1"
+  },
+  "governance_issue_ref": "#53",
+  "source_evidence": [
+    "ARCHITECTURE.md#5-AF-C-capability-injury-and-status",
+    "contracts/AF001-LIVING-STORY-CONTRACTS.json#type_registry.ActorBaseProfile",
+    "contracts/AF001-LIVING-STORY-CONTRACTS.json#type_registry.SkillLedger",
+    "contracts/AF001-LIVING-STORY-CONTRACTS.json#type_registry.DerivedCapability",
+    "contracts/AF001-LIVING-STORY-CONTRACTS.json#type_registry.ActionDemandProfile",
+    "contracts/AF001-LIVING-STORY-CONTRACTS.json#type_registry.InjuryState",
+    "contracts/AF001-LIVING-STORY-CONTRACTS.json#type_registry.DressingState"
+  ],
+  "source_type_bindings": {
+    "ActorBaseProfile": {
+      "type_id": "AF001.ActorBaseProfile",
+      "version": "1.1.0-candidate"
+    },
+    "SkillLedger": {
+      "type_id": "AF001.SkillLedger",
+      "version": "1.1.0-candidate"
+    },
+    "DerivedCapability": {
+      "type_id": "AF001.DerivedCapability",
+      "version": "1.0.0-candidate"
+    },
+    "ActionDemandProfile": {
+      "type_id": "AF001.ActionDemandProfile",
+      "version": "1.0.0-candidate"
+    },
+    "InjuryState": {
+      "type_id": "AF001.InjuryState",
+      "version": "1.0.0-candidate"
+    },
+    "DressingState": {
+      "type_id": "AF001.DressingState",
+      "version": "1.0.0-candidate"
+    }
+  },
+  "canonical_decisions": {
+    "base_capability_ne_current_effective_capability": true,
+    "actor_base_profile_mutation_allowed": false,
+    "skill_ledger_mutation_allowed": false,
+    "functional_injury_ne_visible_treatment": true,
+    "functional_impairment_authority": "InjuryState.functional_impairments_WITH_InjuryState.source_event_ref_PROVENANCE_ONLY",
+    "presentation_or_dressing_authority_for_impairment": false,
+    "required_body_functions_role": "EXACT_FUNCTION_NAMESPACE_APPLICABILITY_FILTER_ONLY",
+    "function_identity_rule": "EXACT_NONEMPTY_VERSION_BOUND_STRING_EQUALITY_ONLY_NO_ALIAS_OR_ANATOMY_INFERENCE",
+    "impairment_entry_required_fields": [
+      "impairment_ref",
+      "function_ref"
+    ],
+    "impairment_entry_shape": "MAPPING_WITH_EXACTLY_REQUIRED_IDENTITY_FIELDS_AND_NO_NUMERIC_PENALTY_AUTHORITY",
+    "duplicate_impairment_ref_policy": "REJECT_FAIL_CLOSED_ACROSS_ALL_SOURCE_INJURY_STATES",
+    "duplicate_function_refs_with_distinct_impairment_refs_policy": "PRESERVE_DISTINCT_EVIDENCE_REFS_NO_STACKING_SEMANTICS_GRANTED",
+    "empty_functional_impairments_policy": "VALID_NO_FUNCTIONAL_IMPAIRMENT_EVIDENCE_AND_ZERO_EFFECT",
+    "empty_required_body_functions_policy": "VALID_NO_FUNCTION_LOCAL_IMPAIRMENT_APPLICABILITY_AND_ZERO_EFFECT",
+    "malformed_or_blank_function_ref_policy": "REJECT_FAIL_CLOSED",
+    "unrelated_function_rule": "EXACTLY_UNRELATED_FUNCTION_REFS_HAVE_ZERO_EFFECT_AND_MUST_NOT_REDUCE_UNRELATED_CAPABILITY_DIMENSIONS",
+    "capability_dependency_rule": "AN_IMPAIRMENT_MAY_AFFECT_ONLY_CAPABILITY_REFS_EXPLICITLY_BOUND_TO_THE_SAME_REQUIRED_FUNCTION_REF_BY_A_FUTURE_VERSIONED_RULESET_DEPENDENCY_BINDING",
+    "capability_dependency_binding_status": "NOT_YET_CANONICALLY_DEFINED",
+    "numeric_effect_status": "DEFERRED_RULESET_TUNING",
+    "numeric_application_authorized": false,
+    "severity_consumed_for_numeric_effect": false,
+    "caller_penalty_or_coefficient_consumed": false,
+    "stacking_semantics_status": "DEFERRED_RULESET_TUNING",
+    "recovery_semantics_status": "DEFERRED_RULESET_TUNING",
+    "projection_mutation_policy": "DERIVED_PROJECTION_IS_IMMUTABLE_OR_COPY_ISOLATED_FROM_CALLER_INPUTS",
+    "replay_policy": "IDENTICAL_VERSIONED_DEMAND_AND_IDENTICAL_VERSIONED_INJURY_EVIDENCE_PRODUCE_EQUAL_CANONICALLY_SORTED_LOGICAL_PROJECTION",
+    "runtime_release_gate": "NUMERIC_CURRENT_CAPABILITY_APPLICATION_REMAINS_BLOCKED_UNTIL_EXPLICIT_VERSIONED_CAPABILITY_FUNCTION_DEPENDENCY_AND_NUMERIC_RULESET_BINDINGS_ARE_SEPARATELY_FROZEN_AND_RELEASED"
+  },
+  "projection_schema": {
+    "schema_id": "AF001.FunctionalImpairmentApplicabilityProjection",
+    "schema_version": "1.0.0-candidate",
+    "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+    "inputs": [
+      "ActionDemandProfile.demand_id",
+      "ActionDemandProfile.required_body_functions",
+      "ActionDemandProfile.ruleset_version",
+      "InjuryState.injury_id",
+      "InjuryState.actor_id",
+      "InjuryState.source_event_ref",
+      "InjuryState.functional_impairments"
+    ],
+    "output_fields": [
+      "actor_id",
+      "demand_id",
+      "ruleset_version",
+      "required_body_functions",
+      "applicable_impairment_refs_by_function",
+      "source_injury_refs",
+      "source_event_refs",
+      "numeric_effect_status"
+    ],
+    "required_provenance": [
+      "source_injury_refs",
+      "source_event_refs",
+      "source_demand_ref",
+      "replay_input_ref"
+    ],
+    "canonical_ordering": "required_body_functions_LEXICOGRAPHIC; applicable_impairment_refs_by_function_KEYS_LEXICOGRAPHIC; EACH_IMPAIRMENT_REF_LIST_LEXICOGRAPHIC; source_injury_refs_AND_source_event_refs_LEXICOGRAPHIC",
+    "applicability_rule": "AN_IMPAIRMENT_ENTRY_IS_APPLICABLE_IFF_ITS_function_ref_EXACTLY_EQUALS_ONE_OF_ActionDemandProfile.required_body_functions",
+    "unrelated_zero_effect_rule": "NO_NONMATCHING_FUNCTION_REF_MAY_CREATE_OR_MODIFY_ANY_CURRENT_CAPABILITY_EFFECT",
+    "numeric_projection_rule": "NO_NUMERIC_PENALTY_MULTIPLIER_SEVERITY_MAPPING_STACKING_OR_RECOVERY_VALUE_IS_MATERIALIZED_BY_THIS_CONTRACT",
+    "authority_rule": "DERIVED_STRUCTURAL_APPLICABILITY_PROJECTION_ONLY; ActorBaseProfile SkillLedger InjuryState AND_VERSIONED_RULESET_BINDINGS_REMAIN_UPSTREAM_AUTHORITIES"
+  },
+  "forbidden_authority_sources": [
+    "DressingState",
+    "ActorPresentationState",
+    "ActorPresentationRequirements",
+    "AI_DIRECTOR",
+    "RENDERER_PUBLICATION",
+    "NARRATIVE_DESIGN_NON_CANONICAL",
+    "NARRATIVE_OPPORTUNITY",
+    "PX_RANKING",
+    "CALLER_PROVIDED_PENALTY_OR_COEFFICIENT"
+  ],
+  "fail_closed_codes": {
+    "parent_registration_missing_or_mismatched": "I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID",
+    "source_type_version_mismatch": "I2A_FUNCTIONAL_IMPAIRMENT_SOURCE_TYPE_VERSION_MISMATCH",
+    "actor_binding_mismatch": "I2A_FUNCTIONAL_IMPAIRMENT_ACTOR_BINDING_MISMATCH",
+    "malformed_injury_evidence": "I2A_FUNCTIONAL_IMPAIRMENT_EVIDENCE_MALFORMED",
+    "malformed_function_ref": "I2A_FUNCTIONAL_IMPAIRMENT_FUNCTION_REF_INVALID",
+    "duplicate_impairment_ref": "I2A_DUPLICATE_FUNCTIONAL_IMPAIRMENT_REFERENCE",
+    "presentation_authority_attempt": "I2A_PRESENTATION_CANNOT_AUTHOR_FUNCTIONAL_IMPAIRMENT",
+    "caller_numeric_override": "I2A_FUNCTIONAL_IMPAIRMENT_NUMERIC_OVERRIDE_NOT_AUTHORIZED"
+  },
+  "explicitly_deferred": [
+    "FUNCTION_TO_CAPABILITY_REFERENCE_DEPENDENCY_REGISTRY",
+    "IMPAIRMENT_SEVERITY_TO_PENALTY_FORMULA",
+    "NUMERIC_COEFFICIENTS",
+    "STACKING_ORDER",
+    "RECOVERY_OR_HEALING_FORMULA",
+    "PAIN_BLEEDING_HP_OR_DAMAGE_MODEL",
+    "FATIGUE_OR_STATUS_EFFECT_COMPOSITION",
+    "COMBAT",
+    "PROBABILITY_OR_STOCHASTIC_OUTCOME",
+    "PLAYER_BALANCE",
+    "GENRE_SPECIFIC_IMPAIRMENT_TUNING",
+    "PERSISTENCE_BACKEND",
+    "MIGRATION_RUNTIME",
+    "RENDERER_APPEARANCE_MECHANICS"
+  ],
+  "registration_class": "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION"
+}
