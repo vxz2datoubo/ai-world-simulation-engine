@@ -10,6 +10,12 @@ PARENT_PATH = ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
 EVAL_PATH = ROOT / "evals" / "AF001-ASSET-SPATIAL-CONFORMANCE.json"
 
 CARDINALS = {"N", "S", "E", "W"}
+CARDINAL_RELATION_TO_CODE = {
+    "N": "N", "NORTH": "N",
+    "S": "S", "SOUTH": "S",
+    "E": "E", "EAST": "E",
+    "W": "W", "WEST": "W",
+}
 REQUIRED_PARENT_TYPES = {
     "WorldFrame", "Scene", "Zone", "Portal", "CameraAnchor", "View",
     "MediaAsset", "MediaVersion", "Locator",
@@ -53,6 +59,7 @@ def _validate_fixture(doc):
     if len(world_frames) != 1:
         return "WORLD_FRAME_CARDINAL_AUTHORITY_INVALID"
     world_frame = next(iter(world_frames.values()))
+    world_frame_id = world_frame["world_frame_id"]
     canonical_north = world_frame["canonical_north"]
     if canonical_north not in CARDINALS:
         return "WORLD_FRAME_CARDINAL_AUTHORITY_INVALID"
@@ -65,10 +72,28 @@ def _validate_fixture(doc):
         return "MAP_PROJECTION_GRAPH_BINDING_MISMATCH"
     if (image_map["graph_id"], image_map["graph_version"]) != graph_tuple:
         return "MAP_PROJECTION_GRAPH_BINDING_MISMATCH"
+
+    if graph.get("world_frame_id") != world_frame_id:
+        return "SPATIAL_GRAPH_WORLD_FRAME_BINDING_MISMATCH"
+    if any(scene.get("world_frame_id") != world_frame_id for scene in scenes.values()):
+        return "SCENE_WORLD_FRAME_BINDING_MISMATCH"
+
+    scene_topology_refs = {scene.get("topology_version") for scene in scenes.values()}
+    if len(scene_topology_refs) != 1 or None in scene_topology_refs:
+        return "SCENE_TOPOLOGY_VERSION_BINDING_INVALID"
+    canonical_topology_ref = next(iter(scene_topology_refs))
+    graph_topology_ref = f"{graph['graph_id']}@{graph['graph_version']}"
+    if graph_topology_ref != canonical_topology_ref:
+        return "SPATIAL_GRAPH_CANONICAL_TOPOLOGY_BINDING_MISMATCH"
+
     if text_map["north_arrow"] != canonical_north or image_map["screen_top_cardinal"] != canonical_north:
         return "MAP_PROJECTION_ORIENTATION_MISMATCH"
 
     graph_edge_refs = [edge["portal_id"] for edge in graph["edges"]]
+    if len(graph_edge_refs) != len(set(graph_edge_refs)):
+        return "SPATIAL_GRAPH_PORTAL_ID_DUPLICATE"
+    if set(graph_edge_refs) != set(portals):
+        return "SPATIAL_GRAPH_PORTAL_SET_MISMATCH"
     if sorted(text_map["edge_refs"]) != sorted(graph_edge_refs):
         return "MAP_PROJECTION_TOPOLOGY_MISMATCH"
     if sorted(image_map["edge_refs"]) != sorted(graph_edge_refs):
@@ -81,9 +106,29 @@ def _validate_fixture(doc):
         if portal["to_scene_or_zone_id"] not in known_spatial_ids:
             return "PORTAL_ENDPOINT_UNKNOWN"
 
-    for edge in graph["edges"]:
+    graph_edges = {edge["portal_id"]: edge for edge in graph["edges"]}
+    for edge in graph_edges.values():
         if edge["semantic_class"] == "VERTICAL" and edge.get("cardinal") is not None:
             return "VERTICAL_TOPOLOGY_FALSE_CARDINAL"
+
+    for portal_id, edge in graph_edges.items():
+        portal = portals[portal_id]
+        if edge["from"] != portal["from_scene_or_zone_id"] or edge["to"] != portal["to_scene_or_zone_id"]:
+            return "SPATIAL_GRAPH_PORTAL_ENDPOINT_MISMATCH"
+
+        relation_type = portal["relation_type"]
+        if relation_type.startswith("CARDINAL_"):
+            relation_suffix = relation_type.split("_", 1)[1]
+            expected_cardinal = CARDINAL_RELATION_TO_CODE.get(relation_suffix)
+            if expected_cardinal is None:
+                return "SPATIAL_GRAPH_PORTAL_RELATION_UNSUPPORTED"
+            if edge["semantic_class"] != "CARDINAL" or edge.get("cardinal") != expected_cardinal:
+                return "SPATIAL_GRAPH_PORTAL_RELATION_MISMATCH"
+        elif relation_type.startswith("VERTICAL_"):
+            if edge["semantic_class"] != "VERTICAL" or edge.get("cardinal") is not None:
+                return "SPATIAL_GRAPH_PORTAL_RELATION_MISMATCH"
+        else:
+            return "SPATIAL_GRAPH_PORTAL_RELATION_UNSUPPORTED"
 
     for anchor in anchors.values():
         if anchor["scene_id"] not in scenes:
@@ -334,6 +379,38 @@ def test_shared_asset_pack_reuse_preserves_one_logical_identity_by_reference():
     packs = load_json(EVAL_PATH)["synthetic_fixture"]["eval_only_projections"]["story_asset_packs"]
     assert "AST-DAY-WEST" in packs[0]["asset_refs"] and "AST-DAY-WEST" in packs[1]["asset_refs"]
     assert all("embedded_assets" not in pack for pack in packs)
+
+
+def test_graph_and_both_maps_cannot_drift_together_from_canonical_topology():
+    doc = load_json(EVAL_PATH)
+    projections = doc["synthetic_fixture"]["eval_only_projections"]
+    projections["spatial_graph"]["graph_id"] = "SG-OTHER"
+    projections["spatial_graph"]["graph_version"] = 99
+    projections["text_map_projection"]["graph_id"] = "SG-OTHER"
+    projections["text_map_projection"]["graph_version"] = 99
+    projections["image_map_projection"]["graph_id"] = "SG-OTHER"
+    projections["image_map_projection"]["graph_version"] = 99
+    assert _validate_fixture(doc) == "SPATIAL_GRAPH_CANONICAL_TOPOLOGY_BINDING_MISMATCH"
+
+
+def test_spatial_graph_world_frame_must_bind_canonical_world_frame():
+    doc = load_json(EVAL_PATH)
+    doc["synthetic_fixture"]["eval_only_projections"]["spatial_graph"]["world_frame_id"] = "WF-OTHER"
+    assert _validate_fixture(doc) == "SPATIAL_GRAPH_WORLD_FRAME_BINDING_MISMATCH"
+
+
+def test_same_portal_id_cannot_drift_graph_endpoints():
+    doc = load_json(EVAL_PATH)
+    doc["synthetic_fixture"]["eval_only_projections"]["spatial_graph"]["edges"][0]["to"] = "SCN-TOWER"
+    assert _validate_fixture(doc) == "SPATIAL_GRAPH_PORTAL_ENDPOINT_MISMATCH"
+
+
+def test_same_portal_id_cannot_drift_graph_relation_semantics():
+    doc = load_json(EVAL_PATH)
+    edge = doc["synthetic_fixture"]["eval_only_projections"]["spatial_graph"]["edges"][0]
+    edge["semantic_class"] = "VERTICAL"
+    edge["cardinal"] = None
+    assert _validate_fixture(doc) == "SPATIAL_GRAPH_PORTAL_RELATION_MISMATCH"
 
 
 @pytest.mark.parametrize("case", load_json(EVAL_PATH)["adversarial_cases"], ids=lambda case: case["case_id"])
