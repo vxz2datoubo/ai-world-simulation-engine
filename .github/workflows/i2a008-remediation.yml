@@ -1,0 +1,116 @@
+name: I2A-008 bounded remediation
+
+on:
+  push:
+    branches:
+      - gpt/i2a-008-functional-impairment-freeze
+
+permissions:
+  contents: write
+
+jobs:
+  remediate:
+    if: ${{ !contains(github.event.head_commit.message, '[i2a008-remediated]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gpt/i2a-008-functional-impairment-freeze
+          fetch-depth: 0
+      - name: Build bounded additive remediation from canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:contracts/AF001-LIVING-STORY-CONTRACTS.json > /tmp/main-af001.json
+          git show origin/main:contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json > contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json
+          git show origin/main:tests/test_i2a_action_demand_admission.py > tests/test_i2a_action_demand_admission.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          parent_path = root/'contracts/AF001-LIVING-STORY-CONTRACTS.json'
+          binding_path = root/'contracts/AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING.json'
+          fixture_path = root/'evals/AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-FIXTURES.json'
+          test_path = root/'tests/test_i2a_functional_impairment_contract.py'
+          docs_path = root/'docs/I2A-008-FUNCTIONAL-IMPAIRMENT-FREEZE.md'
+
+          parent = json.loads(Path('/tmp/main-af001.json').read_text())
+          registration = {
+              'path': 'contracts/AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING.json',
+              'binding_version': '1.0.0-candidate',
+              'parent_contract_id': 'AWRSE-AF001-LIVING-STORY-CONTRACTS',
+              'parent_contract_version': '1.9.0-candidate',
+              'authority': 'MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION',
+              'scope': 'AF-C_FUNCTION_LOCAL_INJURY_EVIDENCE_TO_CURRENT_CAPABILITY_APPLICABILITY_PROJECTION',
+              'registration_class': 'ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION',
+              'governance_issue_ref': '#53',
+              'runtime_implementation_authorized': False,
+          }
+          parent['registered_contract_extensions']['AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING'] = registration
+          required_invariants = [
+              'BASE_CAPABILITY_NE_CURRENT_EFFECTIVE_CAPABILITY',
+              'FUNCTIONAL_IMPAIRMENT_IS_FUNCTION_LOCAL',
+              'UNRELATED_FUNCTION_IMPAIRMENT_HAS_ZERO_EFFECT',
+              'FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT',
+              'NARRATIVE_RENDERER_CANNOT_AUTHOR_IMPAIRMENT',
+              'IMPAIRMENT_NUMERIC_EFFECTS_REQUIRE_EXPLICIT_VERSIONED_RULESET_BINDING',
+          ]
+          invariants = parent['freeze_domains']['AF-C']['invariants']
+          for item in required_invariants:
+              if item not in invariants:
+                  invariants.append(item)
+          assert parent['contract_version'] == '1.9.0-candidate'
+          assert parent['registered_contract_extensions']['AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING']['parent_contract_version'] == '1.9.0-candidate'
+          lineage = parent['versioning_and_migration']['contract_version_lineage']
+          assert lineage['previous_contract_version'] == '1.8.0-candidate'
+          parent_path.write_text(json.dumps(parent, indent=2) + '\n')
+
+          binding = json.loads(binding_path.read_text())
+          binding['parent_machine_contract']['contract_version'] = '1.9.0-candidate'
+          binding['registration_class'] = 'ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION'
+          binding['governance_issue_ref'] = '#53'
+          binding['runtime_implementation_authorized'] = False
+          binding_path.write_text(json.dumps(binding, indent=2) + '\n')
+
+          fixture = json.loads(fixture_path.read_text())
+          fixture['parent_contract_version'] = '1.9.0-candidate'
+          fixture['runtime_implementation_authorized'] = False
+          fixture_path.write_text(json.dumps(fixture, indent=2) + '\n')
+
+          text = test_path.read_text()
+          text = text.replace('1.10.0-candidate', '1.9.0-candidate')
+          text = text.replace('lineage.get("previous_contract_version") != "1.9.0-candidate"', 'lineage.get("previous_contract_version") != "1.8.0-candidate"')
+          text = text.replace('        or "FUNCTIONAL_IMPAIRMENT_CAPABILITY_BINDING_CANONICAL_EXTENSION_REGISTRATION" not in delta\n', '')
+          text = text.replace(
+              '        or registration.get("runtime_implementation_authorized") is not False\n',
+              '        or registration.get("registration_class") != "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION"\n'
+              '        or registration.get("governance_issue_ref") != "#53"\n'
+              '        or registration.get("runtime_implementation_authorized") is not False\n'
+          )
+          old = '''    old_parent = copy.deepcopy(parent)\n    old_binding = copy.deepcopy(binding)\n    old_parent["contract_version"] = "1.9.0-candidate"\n    old_parent["registered_contract_extensions"][binding["binding_id"]]["parent_contract_version"] = "1.9.0-candidate"\n    old_binding["parent_machine_contract"]["contract_version"] = "1.9.0-candidate"\n    with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID$"):\n        _validate_authority(old_parent, old_binding)\n'''
+          new = '''    mismatched_parent = copy.deepcopy(parent)\n    mismatched_parent["registered_contract_extensions"][binding["binding_id"]]["parent_contract_version"] = "1.8.0-candidate"\n    with pytest.raises(ValueError, match="^I2A_FUNCTIONAL_IMPAIRMENT_CANONICAL_BINDING_INVALID$"):\n        _validate_authority(mismatched_parent, binding)\n'''
+          if old not in text:
+              raise SystemExit('expected pre-registration regression block not found')
+          text = text.replace(old, new)
+          test_path.write_text(text)
+
+          if docs_path.exists():
+              docs = docs_path.read_text().replace('1.10.0-candidate', '1.9.0-candidate')
+              docs += '\n\n## Additive parent-version remediation\n\nI2A-008 is registered as an `ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION` under canonical AF001 `1.9.0-candidate`; it is not a top-level parent-version migration. Existing ActionDemand authority and version lineage remain unchanged.\n'
+              docs_path.write_text(docs)
+          PY
+          rm -f .github/workflows/i2a008-remediation.yml .i2a008-remediation-trigger
+          python -m pytest -q tests/test_i2a_functional_impairment_contract.py tests/test_i2a_action_demand_admission.py tests/test_i2a_skill_ledger_contract_freeze.py tests/test_af001_architecture_freeze.py
+          python -m pytest -q
+      - name: Commit and push remediation to same PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "I2A-008 bounded additive remediation [i2a008-remediated]"
+          git push origin HEAD:gpt/i2a-008-functional-impairment-freeze
