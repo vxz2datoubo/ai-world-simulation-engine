@@ -300,7 +300,8 @@ def test_i8a_non_primary_speaker_cannot_mint_player_promise():
 
 def test_i8a_source_speech_requires_player_action_provenance():
     baseline, world, _, speech = make_history()
-    object.__setattr__(speech, "caused_by_action_id", None)
+    committed_source = next(event for event in world.event_log if event.event_id == speech.event_id)
+    object.__setattr__(committed_source, "caused_by_action_id", None)
     with pytest.raises(ValueError, match="I8A_SOURCE_SPEECH_REQUIRES_PLAYER_ACTION_PROVENANCE"):
         build_narrative_promise_reference(
             baseline=baseline,
