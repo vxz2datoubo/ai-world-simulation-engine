@@ -2,8 +2,9 @@
 
 Canonical SOLO event history remains source truth. This module derives only the
 already-frozen AF-E projections needed to prove one-NPC cognition continuity.
-It does not create a memory store, new acquisition mode, database, LLM
-memory authority, relationship ruleset, or gameplay runtime semantics.
+A public projection build first proves the supplied world against the existing
+I1 pristine-baseline + replay path, so a caller cannot mint memory authority by
+constructing a plausible-looking WorldState/event_log.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ from awrse import (
     WorldBaseline,
     WorldState,
     export_solo_replay_package,
+    import_solo_replay_package,
     rehydrate_solo_replay_package,
 )
 from awrse.model import Event, freeze_value, thaw_value
@@ -56,8 +58,7 @@ _REQUIRED_AF_E_INVARIANTS = {
     "SUMMARY_REFLECTION_IS_DERIVED_CACHE",
 }
 _IMPLEMENTED_REFERENCE_MODES = {"SAW", "HEARD", "WAS_TOLD"}
-# Deterministic reference constants only. They are not production cognition or
-# relationship tuning, both of which remain explicitly deferred/open decisions.
+# Deterministic reference constants only, not production cognition tuning.
 _MODE_CONFIDENCE = {"SAW": 1.0, "HEARD": 0.55, "WAS_TOLD": 0.45}
 _MODE_SALIENCE = {"SAW": 0.9, "HEARD": 0.55, "WAS_TOLD": 0.5}
 _CLAIM_RE = re.compile(r"(?:^|\s)CLAIM_EVENT_ACTOR:([A-Za-z0-9_.-]+):([A-Za-z0-9_.-]+)(?:\s|$)")
@@ -205,12 +206,7 @@ def _reference_material(reference: NPCMemoryReference) -> dict[str, Any]:
     }))
 
 
-def build_npc_memory_reference(*, world: WorldState, npc_id: str, player_ids: Sequence[str], caller_memory_evidence: Mapping[str, Any] | None = None) -> NPCMemoryReference:
-    """Derive one NPC's AF-E projections from accepted canonical events only."""
-    if caller_memory_evidence is not None:
-        raise ValueError("I4A_CALLER_AUTHORED_MEMORY_EVIDENCE_FORBIDDEN")
-    if not isinstance(world, WorldState):
-        raise TypeError("I4A_WORLD_STATE_REQUIRED")
+def _build_from_replay_validated_world(*, world: WorldState, npc_id: str, player_ids: Sequence[str]) -> NPCMemoryReference:
     contract_id, contract_version, authority_graph = _load_authority()
     npc_id = _require_string(npc_id, "I4A_NPC_ID_REQUIRED")
     if npc_id not in world.npc_minds or npc_id not in world.actors:
@@ -328,16 +324,35 @@ def build_npc_memory_reference(*, world: WorldState, npc_id: str, player_ids: Se
     return NPCMemoryReference(npc_id=npc_id, player_ids=players, contract_id=contract_id, contract_version=contract_version, authority_graph_version=authority_graph, source_world_id=world.world_id, source_baseline_version=world.baseline_version, source_state_version=world.state_version, source_event_sha256=_sha256([_event_record(event) for event in events]), perception_events=tuple(freeze_value(row) for row in perceptions), episodic_memories=tuple(freeze_value(row) for row in memories), belief_states=tuple(freeze_value(row) for row in beliefs), relationship_states=tuple(freeze_value(row) for row in relationships), context_bundle=freeze_value(context))
 
 
+def build_npc_memory_reference(*, baseline: WorldBaseline, world: WorldState, npc_id: str, player_ids: Sequence[str], caller_memory_evidence: Mapping[str, Any] | None = None) -> NPCMemoryReference:
+    """Verify source history through I1 replay, then derive the AF-E projection."""
+    if caller_memory_evidence is not None:
+        raise ValueError("I4A_CALLER_AUTHORED_MEMORY_EVIDENCE_FORBIDDEN")
+    if not isinstance(baseline, WorldBaseline) or not isinstance(world, WorldState):
+        raise TypeError("I4A_BASELINE_AND_WORLD_REQUIRED")
+    if not world.is_live:
+        raise ValueError("I4A_SOURCE_WORLD_MUST_BE_LIVE_READ_ONLY")
+    # Existing I1 export performs baseline integrity, event semantic replay,
+    # event-index equality, and materialized-world equality checks. I4A does not
+    # create a second admission mechanism for world/event truth.
+    export_solo_replay_package(baseline, world)
+    return _build_from_replay_validated_world(world=world, npc_id=npc_id, player_ids=player_ids)
+
+
 def export_npc_memory_replay_package(*, baseline: WorldBaseline, world: WorldState, npc_id: str, player_ids: Sequence[str]) -> bytes:
     """Wrap existing I1 canonical replay evidence plus a derived cache check."""
-    reference = build_npc_memory_reference(world=world, npc_id=npc_id, player_ids=player_ids)
+    if not isinstance(baseline, WorldBaseline) or not isinstance(world, WorldState):
+        raise TypeError("I4A_BASELINE_AND_WORLD_REQUIRED")
+    if not world.is_live:
+        raise ValueError("I4A_SOURCE_WORLD_MUST_BE_LIVE_READ_ONLY")
     solo_package = export_solo_replay_package(baseline, world)
+    reference = _build_from_replay_validated_world(world=world, npc_id=npc_id, player_ids=player_ids)
     payload = {"package_schema": _PACKAGE_SCHEMA, "npc_id": reference.npc_id, "player_ids": list(reference.player_ids), "source_i1_replay_sha256": hashlib.sha256(solo_package).hexdigest(), "source_i1_replay_b64": base64.b64encode(solo_package).decode("ascii"), "expected_reference": _reference_material(reference)}
     return _canonical_json({"payload": payload, "sha256": _sha256(payload)}).encode("utf-8")
 
 
 def replay_npc_memory_package(package: bytes | bytearray | memoryview) -> NPCMemoryReference:
-    """Rehydrate canonical I1 history first, then rebuild AF-E projections."""
+    """Validate I1 evidence, rehydrate world truth, then rebuild AF-E projections."""
     if not isinstance(package, (bytes, bytearray, memoryview)):
         raise TypeError("I4A_REPLAY_PACKAGE_BYTES_REQUIRED")
     try:
@@ -358,8 +373,11 @@ def replay_npc_memory_package(package: bytes | bytearray | memoryview) -> NPCMem
         raise ValueError("I4A_I1_REPLAY_ENCODING_INVALID") from None
     if hashlib.sha256(solo_package).hexdigest() != payload.get("source_i1_replay_sha256"):
         raise ValueError("I4A_I1_REPLAY_DIGEST_MISMATCH")
+    evidence = import_solo_replay_package(solo_package)
     rebuilt_world = rehydrate_solo_replay_package(solo_package)
-    rebuilt = build_npc_memory_reference(world=rebuilt_world, npc_id=payload.get("npc_id"), player_ids=payload.get("player_ids"))
+    rebuilt = _build_from_replay_validated_world(world=rebuilt_world, npc_id=payload.get("npc_id"), player_ids=payload.get("player_ids"))
+    if rebuilt.source_world_id != evidence.world_id or rebuilt.source_baseline_version != evidence.baseline_version:
+        raise ValueError("I4A_REPLAY_I1_SOURCE_BINDING_MISMATCH")
     if _reference_material(rebuilt) != payload.get("expected_reference"):
         raise ValueError("I4A_REPLAY_PROJECTION_MATERIALIZATION_MISMATCH")
     return rebuilt
