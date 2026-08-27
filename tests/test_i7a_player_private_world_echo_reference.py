@@ -500,3 +500,65 @@ def test_i7a_world_echo_conformance_cannot_promote_itself_to_authority(
             source_event_id=source.event_id,
             fixture=make_filter(),
         )
+
+
+def _replace_source_event(world, source, **changes):
+    values = {
+        "event_id": source.event_id,
+        "event_type": source.event_type,
+        "actor_id": source.actor_id,
+        "scene_id": source.scene_id,
+        "baseline_version": source.baseline_version,
+        "payload": source.payload,
+        "caused_by_action_id": source.caused_by_action_id,
+    }
+    values.update(changes)
+    replacement = type(source)(**values)
+    object.__setattr__(
+        world,
+        "event_log",
+        tuple(replacement if event.event_id == source.event_id else event for event in world.event_log),
+    )
+    return replacement
+
+
+def test_i7a_source_event_actor_must_equal_canonical_primary_player_guard():
+    _, world, source = make_world()
+    _replace_source_event(world, source, actor_id=NPC)
+    with pytest.raises(ValueError, match="I7A_SELF_ATTRIBUTION_ACTOR_MISMATCH"):
+        i7a_reference._build_from_replay_validated_world(
+            world=world,
+            player_actor_id=PLAYER,
+            target_object_id=DOOR,
+            source_event_id=source.event_id,
+            fixture=make_filter(),
+        )
+
+
+def test_i7a_committed_damage_source_requires_player_action_provenance_guard():
+    _, world, source = make_world()
+    _replace_source_event(world, source, caused_by_action_id=None)
+    with pytest.raises(
+        ValueError,
+        match="I7A_SOURCE_EVENT_REQUIRES_PLAYER_ACTION_PROVENANCE",
+    ):
+        i7a_reference._build_from_replay_validated_world(
+            world=world,
+            player_actor_id=PLAYER,
+            target_object_id=DOOR,
+            source_event_id=source.event_id,
+            fixture=make_filter(),
+        )
+
+
+def test_i7a_persistent_scene_damage_delta_missing_or_mismatched_guard():
+    _, world, source = make_world()
+    object.__setattr__(world.scenes[TAVERN], "persistent_delta_refs", tuple())
+    with pytest.raises(ValueError, match="I7A_PERSISTENT_DAMAGE_DELTA_MISSING"):
+        i7a_reference._build_from_replay_validated_world(
+            world=world,
+            player_actor_id=PLAYER,
+            target_object_id=DOOR,
+            source_event_id=source.event_id,
+            fixture=make_filter(),
+        )
