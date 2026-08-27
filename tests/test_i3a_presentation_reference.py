@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 
@@ -21,20 +22,39 @@ VIEWS = ["VIEW-WEST", "VIEW-EAST"]
 INVENTORY = ["OBJ-COAT", "OBJ-BOOTS", "MAT-LINEN"]
 ASSETS = {
     "OBJ-COAT": {
-        "media_asset_id": "AST-DAY-WEST",
-        "media_version_id": "VER-DAY-WEST-1",
-        "locator_id": "LOC-DAY-WEST-A",
+        "media_asset_id": "AST-COAT",
+        "media_version_id": "VER-COAT-1",
+        "locator_id": "LOC-COAT-A",
     },
     "OBJ-BOOTS": {
-        "media_asset_id": "AST-DAY-EAST",
-        "media_version_id": "VER-DAY-EAST-1",
-        "locator_id": "LOC-DAY-EAST",
+        "media_asset_id": "AST-BOOTS",
+        "media_version_id": "VER-BOOTS-1",
+        "locator_id": "LOC-BOOTS-A",
     },
     "MAT-LINEN": {
-        "media_asset_id": "AST-NIGHT-WEST",
-        "media_version_id": "VER-NIGHT-WEST-1",
-        "locator_id": "LOC-NIGHT-WEST",
+        "media_asset_id": "AST-LINEN",
+        "media_version_id": "VER-LINEN-1",
+        "locator_id": "LOC-LINEN-A",
     },
+}
+IDENTITY_EVIDENCE = {
+    "status": "UPSTREAM_PREVALIDATED_IDENTITY_EVIDENCE",
+    "authority_identity": {
+        "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+        "canonical_contract_version": "1.9.0-candidate",
+        "admission_authority_ref": "test://upstream-af-d-instance-admission",
+        "view_authority_profile_ref": "SPATIAL_VIEW_DEFINITION_REGISTRY",
+        "asset_authority_profile_ref": "ASSET_LOGICAL_IDENTITY_REGISTRY",
+        "version_authority_profile_ref": "ASSET_IMMUTABLE_VERSION_REGISTRY",
+        "locator_authority_profile_ref": "ASSET_LOCATOR_RESOLUTION",
+    },
+    "admitted_view_ids": VIEWS,
+    "admitted_asset_bindings": [
+        {"media_asset_id": "AST-COAT", "media_version_id": "VER-COAT-1", "locator_id": "LOC-COAT-A"},
+        {"media_asset_id": "AST-COAT", "media_version_id": "VER-COAT-1", "locator_id": "LOC-COAT-B"},
+        {"media_asset_id": "AST-BOOTS", "media_version_id": "VER-BOOTS-1", "locator_id": "LOC-BOOTS-A"},
+        {"media_asset_id": "AST-LINEN", "media_version_id": "VER-LINEN-1", "locator_id": "LOC-LINEN-A"},
+    ],
 }
 EVENTS = [
     {"event_id": "E-I3A-001-WEAR-COAT", "cursor": 101, "actor_id": ACTOR, "kind": "WEAR_SLOT", "slot": "torso_outer", "object_ref": "OBJ-COAT"},
@@ -54,13 +74,14 @@ EVENTS = [
 ]
 
 
-def build(events=None, *, view_id=VIEWS[0], inventory=None, assets=None, valid_view_ids=None):
+def build(events=None, *, view_id=VIEWS[0], inventory=None, assets=None, evidence=None, valid_view_ids=None):
     return build_presentation_reference(
         actor_id=ACTOR,
         events=copy.deepcopy(EVENTS if events is None else events),
         inventory_object_refs=list(INVENTORY if inventory is None else inventory),
         asset_registry=copy.deepcopy(ASSETS if assets is None else assets),
         view_id=view_id,
+        identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE if evidence is None else evidence),
         valid_view_ids=valid_view_ids,
     )
 
@@ -86,6 +107,15 @@ def aligned_claims(reference):
     }
 
 
+def package(reference):
+    return export_replay_package(
+        reference=reference,
+        events=EVENTS,
+        inventory_object_refs=INVENTORY,
+        asset_registry=ASSETS,
+    )
+
+
 def test_scope_locks_remain_narrow():
     assert I3_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED is True
     assert NO_REAL_RENDERER_IMPLEMENTED is True
@@ -105,8 +135,8 @@ def test_golden_06_reference_keeps_no_shoes_right_dressing_and_surface_state():
     assert dressing["source_treatment_event_ref"] == "E-I3A-004-DRESS-RIGHT-FOREARM"
     assert reference.surface_states[0]["surface_type"] == "MUD"
     assert reference.appearance_snapshot["world_event_cursor"] == 105
-    assert reference.authority_evidence_ref == "evals/AF001-ASSET-SPATIAL-CONFORMANCE.json"
-    assert len(reference.authority_evidence_sha256) == 64
+    assert reference.identity_admission_authority_ref == "test://upstream-af-d-instance-admission"
+    assert len(reference.identity_evidence_sha256) == 64
 
 
 def test_mock_render_exact_claims_align():
@@ -115,31 +145,36 @@ def test_mock_render_exact_claims_align():
 
 
 def test_inventory_owned_does_not_silently_become_worn():
-    reference = build(); claims = aligned_claims(reference); claims["outfit_slots"]["feet"] = "OBJ-BOOTS"
+    reference = build()
+    claims = aligned_claims(reference)
+    claims["outfit_slots"]["feet"] = "OBJ-BOOTS"
     result = validate_mock_render_claims(reference, claims)
     assert result.status == "RENDER_MISMATCH"
     assert any(item.startswith("OUTFIT_SLOT:feet:") for item in result.contradictions)
 
 
 def test_wear_transition_requires_real_possession():
-    inventory = [ref for ref in INVENTORY if ref != "OBJ-BOOTS"]
     with pytest.raises(ValueError, match="I3A_WORN_OBJECT_NOT_POSSESSED:OBJ-BOOTS"):
-        build(inventory=inventory)
+        build(inventory=[ref for ref in INVENTORY if ref != "OBJ-BOOTS"])
 
 
 def test_renderer_wrong_dressing_side_fails_closed():
-    reference = build(); claims = aligned_claims(reference); claims["dressings"][0]["side"] = "LEFT"
-    result = validate_mock_render_claims(reference, claims)
-    assert "DRESSING:DRESS-RF-1:side:LEFT!=RIGHT" in result.contradictions
+    reference = build()
+    claims = aligned_claims(reference)
+    claims["dressings"][0]["side"] = "LEFT"
+    assert "DRESSING:DRESS-RF-1:side:LEFT!=RIGHT" in validate_mock_render_claims(reference, claims).contradictions
 
 
 def test_renderer_body_region_drift_fails_closed():
-    reference = build(); claims = aligned_claims(reference); claims["dressings"][0]["body_region"] = "UPPER_ARM"
+    reference = build()
+    claims = aligned_claims(reference)
+    claims["dressings"][0]["body_region"] = "UPPER_ARM"
     assert any("body_region" in item for item in validate_mock_render_claims(reference, claims).contradictions)
 
 
 def test_dressing_treatment_provenance_cannot_self_redirect():
-    events = copy.deepcopy(EVENTS); events[3]["source_treatment_event_ref"] = "E-FAKE-TREATMENT"
+    events = copy.deepcopy(EVENTS)
+    events[3]["source_treatment_event_ref"] = "E-FAKE-TREATMENT"
     with pytest.raises(ValueError, match="I3A_DRESSING_TREATMENT_PROVENANCE_MISMATCH"):
         build(events)
 
@@ -147,43 +182,70 @@ def test_dressing_treatment_provenance_cannot_self_redirect():
 def test_removed_dressing_cannot_be_resurrected_by_old_generated_claim():
     events = copy.deepcopy(EVENTS)
     events.append({"event_id": "E-I3A-006-REMOVE-DRESSING", "cursor": 106, "actor_id": ACTOR, "kind": "REMOVE_DRESSING", "dressing_id": "DRESS-RF-1"})
-    reference = build(events); claims = aligned_claims(reference)
+    reference = build(events)
+    claims = aligned_claims(reference)
     claims["dressings"] = [{"dressing_id": "DRESS-RF-1", "body_region": "FOREARM", "side": "RIGHT", "material_ref": "MAT-LINEN", "appearance_state": {"color": "WHITE", "wrap_style": "SPIRAL", "stain": "LIGHT_BLOOD"}}]
     assert "OBSOLETE_OR_UNKNOWN_DRESSING:DRESS-RF-1" in validate_mock_render_claims(reference, claims).contradictions
 
 
 def test_renderer_or_generated_pixels_cannot_request_upstream_mutation():
-    reference = build(); claims = aligned_claims(reference); claims.update({"mutation_requested": True, "generated_media_as_authority": True})
-    assert set(validate_mock_render_claims(reference, claims).unauthorized_claims) == {"GENERATED_PIXELS_CANNOT_AUTHOR_PRESENTATION_STATE", "RENDERER_CANNOT_MUTATE_PRESENTATION_STATE"}
+    reference = build()
+    claims = aligned_claims(reference)
+    claims.update({"mutation_requested": True, "generated_media_as_authority": True})
+    assert set(validate_mock_render_claims(reference, claims).unauthorized_claims) == {
+        "GENERATED_PIXELS_CANNOT_AUTHOR_PRESENTATION_STATE",
+        "RENDERER_CANNOT_MUTATE_PRESENTATION_STATE",
+    }
 
 
 def test_asset_registry_rejects_live_presentation_contamination():
-    assets = copy.deepcopy(ASSETS); assets["OBJ-COAT"]["slot_bindings"] = {"torso_outer": "OBJ-COAT"}
+    assets = copy.deepcopy(ASSETS)
+    assets["OBJ-COAT"]["slot_bindings"] = {"torso_outer": "OBJ-COAT"}
     with pytest.raises(ValueError, match="I3A_DYNAMIC_PRESENTATION_CONTAMINATES_ASSET_REGISTRY"):
         build(assets=assets)
 
 
 def test_caller_cannot_self_authorize_invented_asset_identity_chain():
     assets = copy.deepcopy(ASSETS)
-    assets["OBJ-COAT"] = {
-        "media_asset_id": "AST-INVENTED",
-        "media_version_id": "VER-INVENTED-1",
-        "locator_id": "LOC-INVENTED-A",
-    }
+    assets["OBJ-COAT"] = {"media_asset_id": "AST-INVENTED", "media_version_id": "VER-INVENTED-1", "locator_id": "LOC-INVENTED-A"}
     with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED:OBJ-COAT"):
         build(assets=assets)
 
 
 def test_mixed_real_ids_cannot_forge_asset_version_locator_relationship():
     assets = copy.deepcopy(ASSETS)
-    assets["OBJ-COAT"]["media_version_id"] = "VER-DAY-EAST-1"
-    assets["OBJ-COAT"]["locator_id"] = "LOC-DAY-EAST"
+    assets["OBJ-COAT"]["media_version_id"] = "VER-BOOTS-1"
+    assets["OBJ-COAT"]["locator_id"] = "LOC-BOOTS-A"
     with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED:OBJ-COAT"):
         build(assets=assets)
 
 
+def test_nonauthority_conformance_fixture_cannot_mint_instance_admission():
+    path = Path(__file__).resolve().parents[1] / "evals" / "AF001-ASSET-SPATIAL-CONFORMANCE.json"
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    with pytest.raises(ValueError, match="I3A_NONAUTHORITY_EVAL_CANNOT_MINT_IDENTITY_ADMISSION"):
+        build(evidence=evidence)
+
+
+def test_prevalidated_identity_evidence_parent_or_authority_drift_fails_closed():
+    evidence = copy.deepcopy(IDENTITY_EVIDENCE)
+    evidence["authority_identity"]["canonical_contract_version"] = "9.9.9-forged"
+    with pytest.raises(ValueError, match="I3A_PREVALIDATED_IDENTITY_PARENT_DRIFT"):
+        build(evidence=evidence)
+
+
+def test_prevalidated_evidence_cannot_point_back_to_nonauthority_eval_fixture():
+    evidence = copy.deepcopy(IDENTITY_EVIDENCE)
+    evidence["authority_identity"]["admission_authority_ref"] = "evals/AF001-ASSET-SPATIAL-CONFORMANCE.json"
+    with pytest.raises(ValueError, match="I3A_NONAUTHORITY_EVAL_CANNOT_MINT_IDENTITY_ADMISSION"):
+        build(evidence=evidence)
+
+
 def test_locator_migration_does_not_change_presentation_identity_or_history():
-    before = build(); migrated = copy.deepcopy(ASSETS); migrated["OBJ-COAT"]["locator_id"] = "LOC-DAY-WEST-B"; after = build(assets=migrated)
+    before = build()
+    migrated = copy.deepcopy(ASSETS)
+    migrated["OBJ-COAT"]["locator_id"] = "LOC-COAT-B"
+    after = build(assets=migrated)
     assert before.outfit_state == after.outfit_state
     assert before.dressing_states == after.dressing_states
     assert before.surface_states == after.surface_states
@@ -192,7 +254,7 @@ def test_locator_migration_does_not_change_presentation_identity_or_history():
 
 
 def test_view_change_does_not_change_actor_presentation_truth():
-    west = build(view_id=VIEWS[0]); east = build(view_id=VIEWS[1])
+    west, east = build(view_id=VIEWS[0]), build(view_id=VIEWS[1])
     assert west.view_id != east.view_id
     assert west.outfit_state == east.outfit_state
     assert west.dressing_states == east.dressing_states
@@ -207,63 +269,87 @@ def test_nonadmitted_view_is_rejected_even_if_caller_allowlist_contains_it():
 
 
 def test_caller_allowlist_cannot_revoke_or_mint_admitted_view_identity():
-    reference = build(view_id="VIEW-WEST", valid_view_ids=["VIEW-INVENTED"])
-    assert reference.view_id == "VIEW-WEST"
+    assert build(view_id="VIEW-WEST", valid_view_ids=["VIEW-INVENTED"]).view_id == "VIEW-WEST"
 
 
 def test_replay_package_is_byte_deterministic_and_rebuilds_exact_reference():
     reference = build()
-    kwargs = dict(reference=reference, events=copy.deepcopy(EVENTS), inventory_object_refs=INVENTORY, asset_registry=copy.deepcopy(ASSETS))
-    package_a = export_replay_package(**kwargs); package_b = export_replay_package(**kwargs)
+    package_a, package_b = package(reference), package(reference)
     assert package_a == package_b
-    assert replay_package(package_a) == reference
+    assert replay_package(package_a, identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE)) == reference
 
 
 def test_replay_payload_tampering_is_rejected_before_rebuild():
-    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS)
-    envelope = json.loads(package); envelope["payload"]["inputs"]["events"][3]["side"] = "LEFT"
+    reference = build()
+    envelope = json.loads(package(reference))
+    envelope["payload"]["inputs"]["events"][3]["side"] = "LEFT"
     with pytest.raises(ValueError, match="I3A_REPLAY_PACKAGE_TAMPERED"):
-        replay_package(json.dumps(envelope))
+        replay_package(json.dumps(envelope), identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE))
 
 
 def test_replay_cannot_accept_forged_expected_snapshot_even_with_recomputed_digest():
-    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS)
-    envelope = json.loads(package); envelope["payload"]["expected_reference"]["appearance_snapshot"]["world_event_cursor"] = 999
+    reference = build()
+    envelope = json.loads(package(reference))
+    envelope["payload"]["expected_reference"]["appearance_snapshot"]["world_event_cursor"] = 999
     canonical_payload = json.dumps(envelope["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     envelope["sha256"] = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
     with pytest.raises(ValueError, match="I3A_REPLAY_MATERIALIZATION_MISMATCH"):
-        replay_package(json.dumps(envelope, ensure_ascii=False))
+        replay_package(json.dumps(envelope, ensure_ascii=False), identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE))
+
+
+def test_replay_package_cannot_reconstitute_identity_authority_from_embedded_data():
+    reference = build()
+    envelope = json.loads(package(reference))
+    assert "identity_evidence" not in envelope["payload"]["inputs"]
+    assert set(envelope["payload"]["identity_evidence_binding"]) == {"admission_authority_ref", "evidence_sha256"}
 
 
 def test_replay_rejects_forged_view_even_with_recomputed_package_digest():
-    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS)
-    envelope = json.loads(package); envelope["payload"]["inputs"]["view_id"] = "VIEW-INVENTED"
+    reference = build()
+    envelope = json.loads(package(reference))
+    envelope["payload"]["inputs"]["view_id"] = "VIEW-INVENTED"
     canonical_payload = json.dumps(envelope["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     envelope["sha256"] = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
     with pytest.raises(ValueError, match="I3A_VIEW_NOT_ADMITTED"):
-        replay_package(json.dumps(envelope, ensure_ascii=False))
+        replay_package(json.dumps(envelope, ensure_ascii=False), identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE))
+
+
+def test_replay_requires_same_external_identity_evidence_digest():
+    reference = build()
+    changed = copy.deepcopy(IDENTITY_EVIDENCE)
+    changed["admitted_view_ids"] = ["VIEW-WEST"]
+    with pytest.raises(ValueError, match="I3A_REPLAY_IDENTITY_EVIDENCE_MISMATCH"):
+        replay_package(package(reference), identity_evidence=changed)
 
 
 def test_event_cursor_must_be_strictly_monotonic():
-    events = copy.deepcopy(EVENTS); events[2]["cursor"] = 102
+    events = copy.deepcopy(EVENTS)
+    events[2]["cursor"] = 102
     with pytest.raises(ValueError, match="I3A_EVENT_CURSOR_INVALID"):
         build(events)
 
 
 def test_dressing_appearance_cannot_mint_functional_injury():
-    reference = build(); claims = aligned_claims(reference); claims["inferred_injury_refs"] = ["INJURY-INFERRED-FROM-BANDAGE"]
+    reference = build()
+    claims = aligned_claims(reference)
+    claims["inferred_injury_refs"] = ["INJURY-INFERRED-FROM-BANDAGE"]
     assert "DRESSING_APPEARANCE_CANNOT_AUTHOR_FUNCTIONAL_INJURY" in validate_mock_render_claims(reference, claims).unauthorized_claims
 
 
 def test_reference_nested_state_is_read_only():
     reference = build()
-    with pytest.raises(TypeError): reference.outfit_state["slot_bindings"]["feet"] = "OBJ-BOOTS"
-    with pytest.raises(TypeError): reference.dressing_states[0]["appearance_state"]["color"] = "BLACK"
+    with pytest.raises(TypeError):
+        reference.outfit_state["slot_bindings"]["feet"] = "OBJ-BOOTS"
+    with pytest.raises(TypeError):
+        reference.dressing_states[0]["appearance_state"]["color"] = "BLACK"
 
 
 def test_hidden_dressing_is_not_forced_visible_but_wrong_claim_still_fails():
-    events = copy.deepcopy(EVENTS); events[3]["covered_by_refs"] = ["OBJ-COAT"]
-    reference = build(events); claims = aligned_claims(reference); claims["dressings"] = []
+    events = copy.deepcopy(EVENTS)
+    events[3]["covered_by_refs"] = ["OBJ-COAT"]
+    reference = build(events)
+    claims = aligned_claims(reference)
+    claims["dressings"] = []
     assert validate_mock_render_claims(reference, claims).status == "RENDER_ALIGNED"
     claims["dressings"] = [{"dressing_id": "DRESS-RF-1", "body_region": "FOREARM", "side": "LEFT", "material_ref": "MAT-LINEN", "appearance_state": {"color": "WHITE", "wrap_style": "SPIRAL", "stain": "LIGHT_BLOOD"}}]
     assert validate_mock_render_claims(reference, claims).status == "RENDER_MISMATCH"
@@ -272,6 +358,7 @@ def test_hidden_dressing_is_not_forced_visible_but_wrong_claim_still_fails():
 def test_cleared_surface_cannot_be_resurrected():
     events = copy.deepcopy(EVENTS)
     events.append({"event_id": "E-I3A-006-CLEAN-COAT", "cursor": 106, "actor_id": ACTOR, "kind": "CLEAR_SURFACE", "surface_state_id": "SURF-COAT-MUD"})
-    reference = build(events); claims = aligned_claims(reference)
+    reference = build(events)
+    claims = aligned_claims(reference)
     claims["surface_states"] = [{"surface_state_id": "SURF-COAT-MUD", "target_ref": "OBJ-COAT", "surface_type": "MUD", "intensity": 0.4}]
     assert "OBSOLETE_OR_UNKNOWN_SURFACE:SURF-COAT-MUD" in validate_mock_render_claims(reference, claims).contradictions
