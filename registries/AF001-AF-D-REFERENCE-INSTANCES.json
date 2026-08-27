@@ -1,0 +1,143 @@
+{
+  "manifest_id": "AWRSE-AF001-AF-D-REFERENCE-INSTANCE-MANIFEST",
+  "manifest_version": "1.0.0-candidate",
+  "status": "CANONICAL_BOUNDED_REFERENCE_INSTANCE_MANIFEST",
+  "governance_issue_ref": "#66",
+  "authority_scope": "BOUNDED_REFERENCE_AF_D_INSTANCES_ONLY_NOT_PRODUCTION_ASSET_SERVICE",
+  "parent_machine_contract": {
+    "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+    "contract_version": "1.9.0-candidate",
+    "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+    "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1"
+  },
+  "canonicalization_provenance": {
+    "canonicalization_source": "PARENT_MACHINE_REGISTRY_EXPLICIT_DELEGATION",
+    "historical_design_evidence_ref": "evals/AF001-ASSET-SPATIAL-CONFORMANCE.json",
+    "historical_design_evidence_authority": "NONAUTHORITY_INPUT_ONLY",
+    "rule": "PRIOR_EVAL_OCCURRENCE_CONFERS_NO_INSTANCE_AUTHORITY; ONLY_THIS_PARENT_REGISTERED_MANIFEST_CANONICALIZES_THE_BOUNDED_REFERENCE_IDENTITIES"
+  },
+  "authority_profile_bindings": {
+    "View": {
+      "type_id": "AF001.View",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "SPATIAL_VIEW_DEFINITION_REGISTRY"
+    },
+    "MediaAsset": {
+      "type_id": "AF001.MediaAsset",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "ASSET_LOGICAL_IDENTITY_REGISTRY"
+    },
+    "MediaVersion": {
+      "type_id": "AF001.MediaVersion",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "ASSET_IMMUTABLE_VERSION_REGISTRY"
+    },
+    "Locator": {
+      "type_id": "AF001.Locator",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "ASSET_LOCATOR_RESOLUTION"
+    }
+  },
+  "views": [
+    {
+      "view_id": "VIEW-WEST",
+      "scene_id": "SCN-PLAZA",
+      "camera_anchor_id": "CAM-EAST",
+      "facing_cardinal_optional": "W",
+      "screen_top_cardinal_optional": null,
+      "projection_class": "perspective",
+      "visible_landmark_refs": ["LM-FOUNTAIN"]
+    },
+    {
+      "view_id": "VIEW-EAST",
+      "scene_id": "SCN-PLAZA",
+      "camera_anchor_id": "CAM-WEST",
+      "facing_cardinal_optional": "E",
+      "screen_top_cardinal_optional": null,
+      "projection_class": "perspective",
+      "visible_landmark_refs": ["LM-GATE"]
+    }
+  ],
+  "media_assets": [
+    {
+      "media_asset_id": "AST-DAY-WEST",
+      "logical_role": "SCENE_COLOR_MASTER",
+      "view_ref_optional": "VIEW-WEST",
+      "rights_policy_ref_optional": null
+    },
+    {
+      "media_asset_id": "AST-NIGHT-WEST",
+      "logical_role": "SCENE_COLOR_MASTER",
+      "view_ref_optional": "VIEW-WEST",
+      "rights_policy_ref_optional": null
+    },
+    {
+      "media_asset_id": "AST-DAY-EAST",
+      "logical_role": "SCENE_COLOR_MASTER",
+      "view_ref_optional": "VIEW-EAST",
+      "rights_policy_ref_optional": null
+    }
+  ],
+  "media_versions": [
+    {
+      "media_version_id": "VER-DAY-WEST-1",
+      "media_asset_id": "AST-DAY-WEST",
+      "content_hash": "sha256:be2b159be297e50734d5dd060630efc03271719218973fc5d6c0335ce86d2dc3",
+      "generation_or_capture_provenance": "REFERENCE_AUTHORITY_PROMOTED_FROM_REVIEWED_SYNTHETIC_EVIDENCE",
+      "verification_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "media_version_id": "VER-NIGHT-WEST-1",
+      "media_asset_id": "AST-NIGHT-WEST",
+      "content_hash": "sha256:e28c49da3571b33d699cf695c5a8a70bbf2aa1f61a7dd3b04b58c1a4b4f74183",
+      "generation_or_capture_provenance": "REFERENCE_AUTHORITY_PROMOTED_FROM_REVIEWED_SYNTHETIC_EVIDENCE",
+      "verification_state": "VERIFIED_REFERENCE"
+    },
+    {
+      "media_version_id": "VER-DAY-EAST-1",
+      "media_asset_id": "AST-DAY-EAST",
+      "content_hash": "sha256:7cc6511292fe2b16d30c2d80ad8d56365ddf70aed5864ea7fecf22b44dc86490",
+      "generation_or_capture_provenance": "REFERENCE_AUTHORITY_PROMOTED_FROM_REVIEWED_SYNTHETIC_EVIDENCE",
+      "verification_state": "VERIFIED_REFERENCE"
+    }
+  ],
+  "locators": [
+    {
+      "locator_id": "LOC-DAY-WEST-A",
+      "media_version_id": "VER-DAY-WEST-1",
+      "location": "reference://day-west-a",
+      "provider_or_store": "AWRSE_REFERENCE_STORE",
+      "status": "ACTIVE_REFERENCE"
+    },
+    {
+      "locator_id": "LOC-DAY-WEST-B",
+      "media_version_id": "VER-DAY-WEST-1",
+      "location": "reference://day-west-b",
+      "provider_or_store": "AWRSE_REFERENCE_STORE_2",
+      "status": "ACTIVE_REFERENCE_MIGRATED"
+    },
+    {
+      "locator_id": "LOC-NIGHT-WEST",
+      "media_version_id": "VER-NIGHT-WEST-1",
+      "location": "reference://night-west",
+      "provider_or_store": "AWRSE_REFERENCE_STORE",
+      "status": "ACTIVE_REFERENCE"
+    },
+    {
+      "locator_id": "LOC-DAY-EAST",
+      "media_version_id": "VER-DAY-EAST-1",
+      "location": "reference://day-east",
+      "provider_or_store": "AWRSE_REFERENCE_STORE",
+      "status": "ACTIVE_REFERENCE"
+    }
+  ],
+  "invariants": [
+    "CALLER_REQUEST_NE_INSTANCE_AUTHORITY",
+    "VIEW_IDENTITY_MUST_EXIST_IN_CANONICAL_MANIFEST",
+    "MEDIA_ASSET_VERSION_LOCATOR_RELATIONSHIP_MUST_BE_DERIVED_FROM_CANONICAL_MANIFEST",
+    "MEDIA_ASSET_IDENTITY_NE_MEDIA_VERSION_NE_LOCATOR",
+    "LOCATOR_MIGRATION_NE_ASSET_OR_VERSION_IDENTITY_CHANGE",
+    "GENERATED_PIXELS_CANNOT_CREATE_CANONICAL_STATE",
+    "DYNAMIC_PRESENTATION_STATE_NE_ASSET_REGISTRY_TRUTH"
+  ]
+}
