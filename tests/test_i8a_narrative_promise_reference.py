@@ -298,6 +298,20 @@ def test_i8a_non_primary_speaker_cannot_mint_player_promise():
         )
 
 
+def test_i8a_source_speech_requires_player_action_provenance():
+    baseline, world, _, speech = make_history()
+    speech.caused_by_action_id = None
+    with pytest.raises(ValueError, match="I8A_SOURCE_SPEECH_REQUIRES_PLAYER_ACTION_PROVENANCE"):
+        build_narrative_promise_reference(
+            baseline=baseline,
+            world=world,
+            player_actor_id=PLAYER,
+            recipient_npc_id=NPC,
+            target_object_id=DOOR,
+            source_speech_event_id=speech.event_id,
+        )
+
+
 def test_i8a_recipient_must_have_canonical_heard_acquisition():
     baseline, world, _, speech = make_history(audible=False)
     with pytest.raises(ValueError, match="I8A_PROMISE_RECIPIENT_HEARD_EVIDENCE_REQUIRED"):
