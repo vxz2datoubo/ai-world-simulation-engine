@@ -17,23 +17,23 @@ from awrse.model import thaw_value
 
 
 ACTOR = "ACTOR-I3A-001"
-VIEWS = ["VIEW-PLAZA-WEST", "VIEW-PLAZA-EAST"]
+VIEWS = ["VIEW-WEST", "VIEW-EAST"]
 INVENTORY = ["OBJ-COAT", "OBJ-BOOTS", "MAT-LINEN"]
 ASSETS = {
     "OBJ-COAT": {
-        "media_asset_id": "AST-COAT",
-        "media_version_id": "VER-COAT-1",
-        "locator_id": "LOC-COAT-A",
+        "media_asset_id": "AST-DAY-WEST",
+        "media_version_id": "VER-DAY-WEST-1",
+        "locator_id": "LOC-DAY-WEST-A",
     },
     "OBJ-BOOTS": {
-        "media_asset_id": "AST-BOOTS",
-        "media_version_id": "VER-BOOTS-1",
-        "locator_id": "LOC-BOOTS-A",
+        "media_asset_id": "AST-DAY-EAST",
+        "media_version_id": "VER-DAY-EAST-1",
+        "locator_id": "LOC-DAY-EAST",
     },
     "MAT-LINEN": {
-        "media_asset_id": "AST-LINEN",
-        "media_version_id": "VER-LINEN-1",
-        "locator_id": "LOC-LINEN-A",
+        "media_asset_id": "AST-NIGHT-WEST",
+        "media_version_id": "VER-NIGHT-WEST-1",
+        "locator_id": "LOC-NIGHT-WEST",
     },
 }
 EVENTS = [
@@ -54,14 +54,14 @@ EVENTS = [
 ]
 
 
-def build(events=None, *, view_id=VIEWS[0], inventory=None, assets=None):
+def build(events=None, *, view_id=VIEWS[0], inventory=None, assets=None, valid_view_ids=None):
     return build_presentation_reference(
         actor_id=ACTOR,
         events=copy.deepcopy(EVENTS if events is None else events),
         inventory_object_refs=list(INVENTORY if inventory is None else inventory),
         asset_registry=copy.deepcopy(ASSETS if assets is None else assets),
         view_id=view_id,
-        valid_view_ids=VIEWS,
+        valid_view_ids=valid_view_ids,
     )
 
 
@@ -105,6 +105,8 @@ def test_golden_06_reference_keeps_no_shoes_right_dressing_and_surface_state():
     assert dressing["source_treatment_event_ref"] == "E-I3A-004-DRESS-RIGHT-FOREARM"
     assert reference.surface_states[0]["surface_type"] == "MUD"
     assert reference.appearance_snapshot["world_event_cursor"] == 105
+    assert reference.authority_evidence_ref == "evals/AF001-ASSET-SPATIAL-CONFORMANCE.json"
+    assert len(reference.authority_evidence_sha256) == 64
 
 
 def test_mock_render_exact_claims_align():
@@ -161,8 +163,27 @@ def test_asset_registry_rejects_live_presentation_contamination():
         build(assets=assets)
 
 
+def test_caller_cannot_self_authorize_invented_asset_identity_chain():
+    assets = copy.deepcopy(ASSETS)
+    assets["OBJ-COAT"] = {
+        "media_asset_id": "AST-INVENTED",
+        "media_version_id": "VER-INVENTED-1",
+        "locator_id": "LOC-INVENTED-A",
+    }
+    with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED:OBJ-COAT"):
+        build(assets=assets)
+
+
+def test_mixed_real_ids_cannot_forge_asset_version_locator_relationship():
+    assets = copy.deepcopy(ASSETS)
+    assets["OBJ-COAT"]["media_version_id"] = "VER-DAY-EAST-1"
+    assets["OBJ-COAT"]["locator_id"] = "LOC-DAY-EAST"
+    with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED:OBJ-COAT"):
+        build(assets=assets)
+
+
 def test_locator_migration_does_not_change_presentation_identity_or_history():
-    before = build(); migrated = copy.deepcopy(ASSETS); migrated["OBJ-COAT"]["locator_id"] = "LOC-COAT-B"; migrated["MAT-LINEN"]["locator_id"] = "LOC-LINEN-B"; after = build(assets=migrated)
+    before = build(); migrated = copy.deepcopy(ASSETS); migrated["OBJ-COAT"]["locator_id"] = "LOC-DAY-WEST-B"; after = build(assets=migrated)
     assert before.outfit_state == after.outfit_state
     assert before.dressing_states == after.dressing_states
     assert before.surface_states == after.surface_states
@@ -180,32 +201,46 @@ def test_view_change_does_not_change_actor_presentation_truth():
     assert west.appearance_snapshot == east.appearance_snapshot
 
 
-def test_noncanonical_view_is_rejected():
-    with pytest.raises(ValueError, match="I3A_VIEW_NOT_CANONICAL"):
-        build(view_id="VIEW-INVENTED")
+def test_nonadmitted_view_is_rejected_even_if_caller_allowlist_contains_it():
+    with pytest.raises(ValueError, match="I3A_VIEW_NOT_ADMITTED"):
+        build(view_id="VIEW-INVENTED", valid_view_ids=["VIEW-INVENTED"])
+
+
+def test_caller_allowlist_cannot_revoke_or_mint_admitted_view_identity():
+    reference = build(view_id="VIEW-WEST", valid_view_ids=["VIEW-INVENTED"])
+    assert reference.view_id == "VIEW-WEST"
 
 
 def test_replay_package_is_byte_deterministic_and_rebuilds_exact_reference():
     reference = build()
-    kwargs = dict(reference=reference, events=copy.deepcopy(EVENTS), inventory_object_refs=INVENTORY, asset_registry=copy.deepcopy(ASSETS), valid_view_ids=VIEWS)
+    kwargs = dict(reference=reference, events=copy.deepcopy(EVENTS), inventory_object_refs=INVENTORY, asset_registry=copy.deepcopy(ASSETS))
     package_a = export_replay_package(**kwargs); package_b = export_replay_package(**kwargs)
     assert package_a == package_b
     assert replay_package(package_a) == reference
 
 
 def test_replay_payload_tampering_is_rejected_before_rebuild():
-    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS, valid_view_ids=VIEWS)
+    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS)
     envelope = json.loads(package); envelope["payload"]["inputs"]["events"][3]["side"] = "LEFT"
     with pytest.raises(ValueError, match="I3A_REPLAY_PACKAGE_TAMPERED"):
         replay_package(json.dumps(envelope))
 
 
 def test_replay_cannot_accept_forged_expected_snapshot_even_with_recomputed_digest():
-    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS, valid_view_ids=VIEWS)
+    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS)
     envelope = json.loads(package); envelope["payload"]["expected_reference"]["appearance_snapshot"]["world_event_cursor"] = 999
     canonical_payload = json.dumps(envelope["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
     envelope["sha256"] = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
     with pytest.raises(ValueError, match="I3A_REPLAY_MATERIALIZATION_MISMATCH"):
+        replay_package(json.dumps(envelope, ensure_ascii=False))
+
+
+def test_replay_rejects_forged_view_even_with_recomputed_package_digest():
+    reference = build(); package = export_replay_package(reference=reference, events=EVENTS, inventory_object_refs=INVENTORY, asset_registry=ASSETS)
+    envelope = json.loads(package); envelope["payload"]["inputs"]["view_id"] = "VIEW-INVENTED"
+    canonical_payload = json.dumps(envelope["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    envelope["sha256"] = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
+    with pytest.raises(ValueError, match="I3A_VIEW_NOT_ADMITTED"):
         replay_package(json.dumps(envelope, ensure_ascii=False))
 
 
