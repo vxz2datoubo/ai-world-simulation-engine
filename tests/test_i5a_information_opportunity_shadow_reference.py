@@ -147,9 +147,9 @@ def test_i5a_valid_wilderness_information_opportunity_is_noncanonical_shadow_can
 
 def test_i5a_importance_alone_does_not_create_player_knowledge_or_world_mutation():
     baseline, world, source_event_id = build_source_world()
-    before_event_ids = [event.event_id for event in world.event_log]
-    before_committed = set(world.committed_event_ids)
-    before_carrier_memories = list(world.npc_minds[CARRIER].memories)
+    before_event_ids = tuple(event.event_id for event in world.event_log)
+    before_committed = frozenset(world.committed_event_ids)
+    before_carrier_memories = tuple(world.npc_minds[CARRIER].memories)
     before_player_scene = world.actors[PLAYER].scene_id
     result = build_information_opportunity_shadow(
         baseline=baseline,
@@ -160,9 +160,9 @@ def test_i5a_importance_alone_does_not_create_player_knowledge_or_world_mutation
         fixture=valid_fixture(),
     )
     assert result.status == "SHADOW_ENCOUNTER_CANDIDATE"
-    assert [event.event_id for event in world.event_log] == before_event_ids
-    assert set(world.committed_event_ids) == before_committed
-    assert world.npc_minds[CARRIER].memories == before_carrier_memories
+    assert tuple(event.event_id for event in world.event_log) == before_event_ids
+    assert frozenset(world.committed_event_ids) == before_committed
+    assert tuple(world.npc_minds[CARRIER].memories) == before_carrier_memories
     assert world.actors[PLAYER].scene_id == before_player_scene
     assert not [event for event in world.event_log if event.event_type == "NPC_KNOWLEDGE_ACQUIRED" and event.payload.get("npc_id") == PLAYER and event.payload.get("source_event_id") == source_event_id]
 
@@ -216,8 +216,23 @@ def test_i5a_plausibility_failures_return_first_class_no_valid_opportunity(fixtu
 
 def test_i5a_no_valid_opportunity_is_legal_deterministic_result_not_exception():
     fixture = valid_fixture(route_available=False, anti_repeat_allowed=False)
-    first = build_shadow(fixture=fixture)[3]
-    second = build_shadow(fixture=fixture)[3]
+    baseline, world, source_event_id = build_source_world()
+    first = build_information_opportunity_shadow(
+        baseline=baseline,
+        world=world,
+        source_event_id=source_event_id,
+        carrier_npc_id=CARRIER,
+        player_actor_id=PLAYER,
+        fixture=fixture,
+    )
+    second = build_information_opportunity_shadow(
+        baseline=baseline,
+        world=world,
+        source_event_id=source_event_id,
+        carrier_npc_id=CARRIER,
+        player_actor_id=PLAYER,
+        fixture=fixture,
+    )
     assert first.status == second.status == "NO_VALID_OPPORTUNITY"
     assert first.rejection_reasons == second.rejection_reasons
     assert thaw_value(first.plausibility_gate) == thaw_value(second.plausibility_gate)
