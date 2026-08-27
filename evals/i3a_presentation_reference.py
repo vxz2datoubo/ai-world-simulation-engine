@@ -1,9 +1,9 @@
 """Bounded I3A actor-presentation replay and mock render-continuity reference.
 
-This module consumes the already-frozen AF-D presentation interfaces from the
-canonical AF001 machine contract. It is deliberately isolated from the main
-runtime loop: it does not call a renderer, generate media, persist to a backend,
-or grant presentation facts to downstream systems.
+This module consumes already-frozen AF-D presentation interfaces plus the
+canonicalized AF001 asset/spatial conformance evidence. It remains isolated
+from the main runtime loop and never grants renderer or caller supplied data
+canonical authority.
 """
 
 from __future__ import annotations
@@ -23,9 +23,9 @@ I3_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED = True
 NO_REAL_RENDERER_IMPLEMENTED = True
 NO_PROVIDER_INTEGRATION = True
 
-_CANONICAL_CONTRACT_PATH = (
-    Path(__file__).resolve().parents[1] / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
-)
+_ROOT = Path(__file__).resolve().parents[1]
+_CANONICAL_CONTRACT_PATH = _ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
+_ASSET_SPATIAL_EVIDENCE_PATH = _ROOT / "evals" / "AF001-ASSET-SPATIAL-CONFORMANCE.json"
 _EXPECTED_TYPES = {
     "ActorPresentationState": ("AF001.ActorPresentationState", "1.0.0-candidate", "PRESENTATION_CANONICAL_STATE"),
     "OutfitState": ("AF001.OutfitState", "1.0.0-candidate", "PRESENTATION_CANONICAL_STATE"),
@@ -105,6 +105,83 @@ def _load_authority() -> tuple[str, str, Mapping[str, Any]]:
     return contract_id, contract_version, registry
 
 
+def _load_admitted_asset_spatial_evidence(
+    contract_id: str,
+    contract_version: str,
+) -> tuple[frozenset[str], frozenset[tuple[str, str, str]], str]:
+    try:
+        raw = _ASSET_SPATIAL_EVIDENCE_PATH.read_bytes()
+        evidence = json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        raise ValueError("I3A_ASSET_SPATIAL_EVIDENCE_UNAVAILABLE") from None
+    if not isinstance(evidence, Mapping):
+        raise ValueError("I3A_ASSET_SPATIAL_EVIDENCE_INVALID")
+    if evidence.get("status") != "EXECUTABLE_CONFORMANCE_EVIDENCE_ONLY_NOT_AUTHORITY_EXTENSION":
+        raise ValueError("I3A_ASSET_SPATIAL_EVIDENCE_STATUS_INVALID")
+    parent = evidence.get("canonical_parent")
+    if not isinstance(parent, Mapping):
+        raise ValueError("I3A_ASSET_SPATIAL_EVIDENCE_PARENT_INVALID")
+    if parent.get("contract_id") != contract_id or parent.get("contract_version") != contract_version:
+        raise ValueError("I3A_ASSET_SPATIAL_EVIDENCE_PARENT_DRIFT")
+
+    bindings = evidence.get("required_parent_type_bindings")
+    if not isinstance(bindings, Mapping):
+        raise ValueError("I3A_ASSET_SPATIAL_EVIDENCE_BINDINGS_INVALID")
+    for name in ("View", "MediaAsset", "MediaVersion", "Locator"):
+        entry = bindings.get(name)
+        expected = _EXPECTED_TYPES[name]
+        if not isinstance(entry, Mapping):
+            raise ValueError(f"I3A_ASSET_SPATIAL_BINDING_MISSING:{name}")
+        actual = (entry.get("type_id"), entry.get("version"), entry.get("authority_profile_ref"))
+        if actual != expected:
+            raise ValueError(f"I3A_ASSET_SPATIAL_BINDING_DRIFT:{name}")
+
+    canonical_objects = evidence.get("synthetic_fixture", {}).get("canonical_objects")
+    if not isinstance(canonical_objects, Mapping):
+        raise ValueError("I3A_ASSET_SPATIAL_OBJECTS_INVALID")
+    view_rows = canonical_objects.get("View")
+    asset_rows = canonical_objects.get("MediaAsset")
+    version_rows = canonical_objects.get("MediaVersion")
+    locator_rows = canonical_objects.get("Locator")
+    if any(not isinstance(rows, list) for rows in (view_rows, asset_rows, version_rows, locator_rows)):
+        raise ValueError("I3A_ASSET_SPATIAL_OBJECTS_INVALID")
+
+    views = frozenset(
+        _require_string(row.get("view_id"), "I3A_ADMITTED_VIEW_ID_INVALID")
+        for row in view_rows
+        if isinstance(row, Mapping)
+    )
+    assets = {
+        _require_string(row.get("media_asset_id"), "I3A_ADMITTED_MEDIA_ASSET_ID_INVALID")
+        for row in asset_rows
+        if isinstance(row, Mapping)
+    }
+    versions: dict[str, str] = {}
+    for row in version_rows:
+        if not isinstance(row, Mapping):
+            raise ValueError("I3A_ADMITTED_MEDIA_VERSION_INVALID")
+        version_id = _require_string(row.get("media_version_id"), "I3A_ADMITTED_MEDIA_VERSION_ID_INVALID")
+        asset_id = _require_string(row.get("media_asset_id"), "I3A_ADMITTED_MEDIA_ASSET_ID_INVALID")
+        if asset_id not in assets:
+            raise ValueError("I3A_ADMITTED_MEDIA_VERSION_ASSET_UNKNOWN")
+        versions[version_id] = asset_id
+
+    admitted: set[tuple[str, str, str]] = set()
+    for row in locator_rows:
+        if not isinstance(row, Mapping):
+            raise ValueError("I3A_ADMITTED_LOCATOR_INVALID")
+        locator_id = _require_string(row.get("locator_id"), "I3A_ADMITTED_LOCATOR_ID_INVALID")
+        version_id = _require_string(row.get("media_version_id"), "I3A_ADMITTED_MEDIA_VERSION_ID_INVALID")
+        asset_id = versions.get(version_id)
+        if asset_id is None:
+            raise ValueError("I3A_ADMITTED_LOCATOR_VERSION_UNKNOWN")
+        admitted.add((asset_id, version_id, locator_id))
+    if not views or not admitted:
+        raise ValueError("I3A_ASSET_SPATIAL_EVIDENCE_EMPTY")
+    digest = hashlib.sha256(raw).hexdigest()
+    return views, frozenset(admitted), digest
+
+
 @dataclass(frozen=True)
 class PresentationReference:
     actor_id: str
@@ -112,6 +189,8 @@ class PresentationReference:
     contract_version: str
     world_event_cursor: int
     view_id: str
+    authority_evidence_ref: str
+    authority_evidence_sha256: str
     outfit_state: Mapping[str, Any]
     dressing_states: tuple[Mapping[str, Any], ...]
     surface_states: tuple[Mapping[str, Any], ...]
@@ -129,15 +208,16 @@ class MockRenderValidation:
 
 def _normalize_inventory(value: Any) -> frozenset[str]:
     refs = _require_sequence(value, "I3A_INVENTORY_REFS_INVALID")
-    normalized: list[str] = []
-    for ref in refs:
-        normalized.append(_require_string(ref, "I3A_INVENTORY_REF_INVALID"))
+    normalized = [_require_string(ref, "I3A_INVENTORY_REF_INVALID") for ref in refs]
     if len(normalized) != len(set(normalized)):
         raise ValueError("I3A_DUPLICATE_INVENTORY_REF")
     return frozenset(normalized)
 
 
-def _validate_asset_registry(asset_registry: Any) -> None:
+def _validate_asset_registry(
+    asset_registry: Any,
+    admitted_bindings: frozenset[tuple[str, str, str]],
+) -> None:
     if not isinstance(asset_registry, Mapping):
         raise ValueError("I3A_ASSET_REGISTRY_REQUIRED")
     for object_ref, record in asset_registry.items():
@@ -146,9 +226,13 @@ def _validate_asset_registry(asset_registry: Any) -> None:
             raise ValueError("I3A_ASSET_RECORD_INVALID")
         if _DYNAMIC_ASSET_FIELDS & set(record):
             raise ValueError("I3A_DYNAMIC_PRESENTATION_CONTAMINATES_ASSET_REGISTRY")
-        _require_string(record.get("media_asset_id"), "I3A_MEDIA_ASSET_ID_REQUIRED")
-        _require_string(record.get("media_version_id"), "I3A_MEDIA_VERSION_ID_REQUIRED")
-        _require_string(record.get("locator_id"), "I3A_LOCATOR_ID_REQUIRED")
+        binding = (
+            _require_string(record.get("media_asset_id"), "I3A_MEDIA_ASSET_ID_REQUIRED"),
+            _require_string(record.get("media_version_id"), "I3A_MEDIA_VERSION_ID_REQUIRED"),
+            _require_string(record.get("locator_id"), "I3A_LOCATOR_ID_REQUIRED"),
+        )
+        if binding not in admitted_bindings:
+            raise ValueError(f"I3A_ASSET_BINDING_NOT_ADMITTED:{object_ref}")
 
 
 def _event_common(event: Any, actor_id: str, previous_cursor: int) -> tuple[str, int, str]:
@@ -173,21 +257,29 @@ def build_presentation_reference(
     inventory_object_refs: Sequence[str],
     asset_registry: Mapping[str, Mapping[str, Any]],
     view_id: str,
-    valid_view_ids: Sequence[str],
+    valid_view_ids: Sequence[str] | None = None,
     schema_version: str = "1.0.0-candidate",
     ruleset_version: str = "AF-D-PRESENTATION-REFERENCE-1",
 ) -> PresentationReference:
-    """Rebuild one actor's presentation state from ordered authorized transitions."""
+    """Rebuild presentation state from ordered transitions and admitted identities.
+
+    ``valid_view_ids`` is accepted only as a legacy/untrusted hint. It never
+    authorizes a View and is intentionally ignored for admission decisions.
+    """
     contract_id, contract_version, _ = _load_authority()
+    admitted_views, admitted_bindings, evidence_digest = _load_admitted_asset_spatial_evidence(
+        contract_id, contract_version
+    )
     actor_id = _require_string(actor_id, "I3A_ACTOR_ID_REQUIRED")
     view_id = _require_string(view_id, "I3A_VIEW_ID_REQUIRED")
-    valid_views = {_require_string(v, "I3A_VIEW_ID_INVALID") for v in valid_view_ids}
-    if view_id not in valid_views:
-        raise ValueError("I3A_VIEW_NOT_CANONICAL")
+    if valid_view_ids is not None:
+        _require_sequence(valid_view_ids, "I3A_VIEW_HINTS_INVALID")
+    if view_id not in admitted_views:
+        raise ValueError("I3A_VIEW_NOT_ADMITTED")
     schema_version = _require_string(schema_version, "I3A_SCHEMA_VERSION_REQUIRED")
     ruleset_version = _require_string(ruleset_version, "I3A_RULESET_VERSION_REQUIRED")
     inventory = _normalize_inventory(inventory_object_refs)
-    _validate_asset_registry(asset_registry)
+    _validate_asset_registry(asset_registry, admitted_bindings)
 
     ordered_events = _require_sequence(events, "I3A_EVENTS_INVALID")
     if not ordered_events:
@@ -238,7 +330,10 @@ def build_presentation_reference(
                 raise ValueError(f"I3A_DRESSING_APPEARANCE_INVALID:{event_id}")
             covered = tuple(
                 _require_string(ref, f"I3A_DRESSING_COVER_REF_INVALID:{event_id}")
-                for ref in _require_sequence(raw_event.get("covered_by_refs", ()), f"I3A_DRESSING_COVER_REFS_INVALID:{event_id}")
+                for ref in _require_sequence(
+                    raw_event.get("covered_by_refs", ()),
+                    f"I3A_DRESSING_COVER_REFS_INVALID:{event_id}",
+                )
             )
             dressings[dressing_id] = {
                 "dressing_id": dressing_id,
@@ -306,6 +401,8 @@ def build_presentation_reference(
         contract_version=contract_version,
         world_event_cursor=cursor,
         view_id=view_id,
+        authority_evidence_ref="evals/AF001-ASSET-SPATIAL-CONFORMANCE.json",
+        authority_evidence_sha256=evidence_digest,
         outfit_state=freeze_value(outfit_state),
         dressing_states=tuple(freeze_value(item) for item in dressing_states_raw),
         surface_states=tuple(freeze_value(item) for item in surface_states_raw),
@@ -316,20 +413,21 @@ def build_presentation_reference(
 
 
 def _reference_material(reference: PresentationReference) -> dict[str, Any]:
-    material = {
+    return _json_normalized({
         "actor_id": reference.actor_id,
         "contract_id": reference.contract_id,
         "contract_version": reference.contract_version,
         "world_event_cursor": reference.world_event_cursor,
         "view_id": reference.view_id,
+        "authority_evidence_ref": reference.authority_evidence_ref,
+        "authority_evidence_sha256": reference.authority_evidence_sha256,
         "outfit_state": thaw_value(reference.outfit_state),
         "dressing_states": [thaw_value(item) for item in reference.dressing_states],
         "surface_states": [thaw_value(item) for item in reference.surface_states],
         "presentation_state": thaw_value(reference.presentation_state),
         "appearance_snapshot": thaw_value(reference.appearance_snapshot),
         "source_event_ids": list(reference.source_event_ids),
-    }
-    return _json_normalized(material)
+    })
 
 
 def export_replay_package(
@@ -338,9 +436,7 @@ def export_replay_package(
     events: Sequence[Mapping[str, Any]],
     inventory_object_refs: Sequence[str],
     asset_registry: Mapping[str, Mapping[str, Any]],
-    valid_view_ids: Sequence[str],
 ) -> str:
-    """Export deterministic replay inputs plus expected materialized reference."""
     payload = {
         "package_schema": "AWRSE-I3A-PRESENTATION-REPLAY-1",
         "inputs": {
@@ -349,7 +445,6 @@ def export_replay_package(
             "inventory_object_refs": list(inventory_object_refs),
             "asset_registry": deepcopy(dict(asset_registry)),
             "view_id": reference.view_id,
-            "valid_view_ids": list(valid_view_ids),
             "schema_version": reference.appearance_snapshot["schema_version"],
             "ruleset_version": reference.appearance_snapshot["ruleset_version"],
         },
@@ -360,7 +455,6 @@ def export_replay_package(
 
 
 def replay_package(package_json: str) -> PresentationReference:
-    """Verify package digest, rebuild from source inputs, and reject materialization drift."""
     try:
         envelope = json.loads(package_json)
     except (TypeError, json.JSONDecodeError):
@@ -382,7 +476,6 @@ def replay_package(package_json: str) -> PresentationReference:
         inventory_object_refs=inputs.get("inventory_object_refs"),
         asset_registry=inputs.get("asset_registry"),
         view_id=inputs.get("view_id"),
-        valid_view_ids=inputs.get("valid_view_ids"),
         schema_version=inputs.get("schema_version"),
         ruleset_version=inputs.get("ruleset_version"),
     )
@@ -395,11 +488,6 @@ def validate_mock_render_claims(
     reference: PresentationReference,
     claims: Mapping[str, Any],
 ) -> MockRenderValidation:
-    """Compare observable mock render claims to current presentation truth.
-
-    The validator never returns a mutated state. Any request or claim that would
-    create upstream truth is reported as unauthorized/mismatched evidence.
-    """
     if not isinstance(claims, Mapping):
         raise ValueError("I3A_RENDER_CLAIMS_REQUIRED")
     contradictions: list[str] = []
@@ -421,8 +509,7 @@ def validate_mock_render_claims(
     if not isinstance(claimed_slots, Mapping):
         contradictions.append("OUTFIT_SLOT_CLAIMS_REQUIRED")
     else:
-        all_slots = set(canonical_slots) | set(claimed_slots)
-        for slot in sorted(all_slots):
+        for slot in sorted(set(canonical_slots) | set(claimed_slots)):
             expected = canonical_slots.get(slot)
             actual = claimed_slots.get(slot)
             if actual != expected:
@@ -448,8 +535,7 @@ def validate_mock_render_claims(
     visible_required: set[str] = set()
     worn_refs = set(canonical_slots.values())
     for dressing_id, canonical in canonical_dressings.items():
-        covered_by = set(canonical.get("covered_by_refs", ()))
-        if not covered_by.intersection(worn_refs):
+        if not set(canonical.get("covered_by_refs", ())).intersection(worn_refs):
             visible_required.add(dressing_id)
     for dressing_id in sorted(visible_required - set(claimed_dressings)):
         contradictions.append(f"MISSING_VISIBLE_DRESSING:{dressing_id}")
