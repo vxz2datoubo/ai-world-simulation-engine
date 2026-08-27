@@ -1,0 +1,141 @@
+{
+  "binding_id": "AWRSE-AF001-AF-D-INSTANCE-ADMISSION-BINDING",
+  "binding_version": "1.0.0-candidate",
+  "status": "BOUNDED_REFERENCE_AUTHORITY_REGISTRATION",
+  "governance_issue_ref": "#66",
+  "implementation_scope": "REFERENCE_INSTANCE_AUTHORITY_AND_TYPED_ADMISSION_ONLY_NOT_BROAD_I3_RUNTIME",
+  "runtime_implementation_authorized": false,
+  "bounded_reference_adapter_implementation_authorized": true,
+  "authority_locks": {
+    "I3_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED": true,
+    "NO_REAL_RENDERER_IMPLEMENTED": true,
+    "NO_PROVIDER_INTEGRATION": true,
+    "NO_AI_FILM_FEDERATION_IMPLEMENTED": true
+  },
+  "artifact_role": "PARENT_DELEGATED_AF_D_REFERENCE_INSTANCE_ADMISSION_EXTENSION_NON_COMPETING",
+  "parent_machine_contract": {
+    "path": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
+    "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+    "contract_version": "1.9.0-candidate",
+    "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+    "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1"
+  },
+  "canonical_instance_manifest": {
+    "path": "registries/AF001-AF-D-REFERENCE-INSTANCES.json",
+    "manifest_id": "AWRSE-AF001-AF-D-REFERENCE-INSTANCE-MANIFEST",
+    "manifest_version": "1.0.0-candidate",
+    "canonical_sha256": "291e7d6f3f4f947e101013403328772a5a83a5a036d00d7d7173c6bc126aaf4e",
+    "status_required": "CANONICAL_BOUNDED_REFERENCE_INSTANCE_MANIFEST"
+  },
+  "authority_profile_bindings": {
+    "View": {
+      "type_id": "AF001.View",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "SPATIAL_VIEW_DEFINITION_REGISTRY"
+    },
+    "MediaAsset": {
+      "type_id": "AF001.MediaAsset",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "ASSET_LOGICAL_IDENTITY_REGISTRY"
+    },
+    "MediaVersion": {
+      "type_id": "AF001.MediaVersion",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "ASSET_IMMUTABLE_VERSION_REGISTRY"
+    },
+    "Locator": {
+      "type_id": "AF001.Locator",
+      "version": "1.0.0-candidate",
+      "authority_profile_ref": "ASSET_LOCATOR_RESOLUTION"
+    }
+  },
+  "issuer_profile": {
+    "issuer_id": "AWRSE-AF-D-REFERENCE-INSTANCE-ADMISSION-ISSUER",
+    "issuer_version": "1.0.0-candidate",
+    "producer_bindings": [
+      "AWRSE_SPATIAL_VIEW_REGISTRY",
+      "AWRSE_ASSET_REGISTRY",
+      "AWRSE_ASSET_VERSION_REGISTRAR",
+      "AWRSE_ASSET_LOCATOR_RESOLVER"
+    ],
+    "authority_rule": "ISSUER_MAY_ONLY_DERIVE_ADMISSION_FROM_THE_PARENT_REGISTERED_CANONICAL_MANIFEST; CALLER_DATA_IS_REQUEST_SCOPE_ONLY_AND_CANNOT_ADD_OR_RECOMBINE_IDENTITIES",
+    "cryptographic_signature_claimed": false,
+    "receipt_is_bearer_capability": false
+  },
+  "request_contract": {
+    "caller_may_supply": [
+      "requested_view_ids",
+      "requested_asset_bindings"
+    ],
+    "caller_may_not_supply": [
+      "admitted_view_ids",
+      "admitted_asset_set",
+      "issuer_id",
+      "manifest",
+      "manifest_digest",
+      "authority_epoch"
+    ],
+    "normalization": "SORT_UNIQUE_NONEMPTY_STABLE_IDS_AND_EXACT_ASSET_VERSION_LOCATOR_TRIPLES",
+    "empty_request_policy": "REJECT_FAIL_CLOSED"
+  },
+  "receipt_profile": {
+    "schema_id": "AF001.AFDInstanceAdmissionReceipt",
+    "schema_version": "1.0.0-candidate",
+    "derived_evidence_only": true,
+    "canonical_world_truth": false,
+    "canonical_asset_truth": false,
+    "fields": [
+      "receipt_schema_id",
+      "receipt_schema_version",
+      "issuer_id",
+      "issuer_version",
+      "parent_contract_id",
+      "parent_contract_version",
+      "parent_authority_graph_version",
+      "af_d_instance_admission_authority_epoch",
+      "binding_id",
+      "binding_version",
+      "manifest_id",
+      "manifest_version",
+      "manifest_sha256",
+      "requested_view_ids",
+      "requested_asset_bindings",
+      "admitted_view_ids",
+      "admitted_asset_bindings",
+      "receipt_sha256"
+    ]
+  },
+  "verification_contract": {
+    "canonicalization": "UTF8_CANONICAL_JSON_SORTED_KEYS_COMPACT_SEPARATORS_NO_NONFINITE_NUMBERS",
+    "receipt_digest": "SHA256_OF_ALL_RECEIPT_FIELDS_EXCEPT_receipt_sha256",
+    "manifest_verification": "RECOMPUTE_CANONICAL_MANIFEST_SHA256_AND_REQUIRE_EXACT_PARENT_REGISTERED_DIGEST",
+    "issuer_verification": "EXACT_PARENT_REGISTERED_BINDING_PLUS_EPOCH_PLUS_MANIFEST_ANCHOR_REQUIRED",
+    "admission_verification": "RE_DERIVE_REQUESTED_IDENTITIES_AND_RELATIONSHIPS_FROM_CANONICAL_MANIFEST; RECEIPT_FIELDS_NEVER_AUTHORIZE_THEM",
+    "exact_copy_rule": "A_CALLER_CAN_COPY_BYTES_OF_A_VALID_DERIVED_RECEIPT_BUT_GAINS_NO_NEW_AUTHORITY; VERIFICATION_ALWAYS_REDERIVES_FROM_CANONICAL_MANIFEST_AND_A_RECEIPT_IS_NOT_A_BEARER_CAPABILITY",
+    "replay_rule": "AUTHORITY_OR_MANIFEST_DRIFT_INVALIDATES_PRIOR_RECEIPT_UNLESS_EXPLICIT_COMPATIBILITY_IS_GOVERNED"
+  },
+  "fail_closed_codes": {
+    "parent_registration_missing_or_mismatched": "AF_D_INSTANCE_ADMISSION_PARENT_REGISTRATION_INVALID",
+    "authority_epoch_missing_or_mismatched": "AF_D_INSTANCE_ADMISSION_AUTHORITY_EPOCH_MISMATCH",
+    "binding_digest_mismatch": "AF_D_INSTANCE_ADMISSION_BINDING_DIGEST_MISMATCH",
+    "manifest_digest_mismatch": "AF_D_INSTANCE_ADMISSION_MANIFEST_DIGEST_MISMATCH",
+    "unknown_view": "AF_D_INSTANCE_ADMISSION_VIEW_UNKNOWN",
+    "unknown_or_recombined_asset_binding": "AF_D_INSTANCE_ADMISSION_ASSET_BINDING_UNKNOWN",
+    "issuer_mismatch": "AF_D_INSTANCE_ADMISSION_ISSUER_MISMATCH",
+    "receipt_digest_mismatch": "AF_D_INSTANCE_ADMISSION_RECEIPT_DIGEST_MISMATCH",
+    "receipt_materialization_mismatch": "AF_D_INSTANCE_ADMISSION_RECEIPT_MATERIALIZATION_MISMATCH",
+    "nonauthority_eval_as_source": "AF_D_INSTANCE_ADMISSION_NONAUTHORITY_EVAL_REJECTED"
+  },
+  "explicitly_prohibited": [
+    "CALLER_SUPPLIED_ALLOWLIST_AS_AUTHORITY",
+    "CALLER_SUPPLIED_ADMITTED_SET_AS_AUTHORITY",
+    "EVAL_FIXTURE_AS_INSTANCE_AUTHORITY",
+    "SECOND_ASSET_REGISTRY",
+    "SECOND_SPATIAL_VIEW_REGISTRY",
+    "PRESENTATION_STATE_TO_ASSET_IDENTITY_FLOWBACK",
+    "GENERATED_PIXELS_TO_CANONICAL_IDENTITY_FLOWBACK",
+    "REAL_RENDERER_OR_PROVIDER_INTEGRATION",
+    "BROAD_I3_RUNTIME_AUTHORIZATION"
+  ],
+  "registration_class": "ADDITIVE_SCOPED_REFERENCE_AUTHORITY_EXTENSION"
+}

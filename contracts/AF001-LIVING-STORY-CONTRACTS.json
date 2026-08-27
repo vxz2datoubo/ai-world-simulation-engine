@@ -3,13 +3,16 @@
   "contract_version": "1.9.0-candidate",
   "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
   "capability_decision_receipt_authority_epoch": "AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1",
+  "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1",
   "status": "ARCHITECTURE_FREEZE_CANDIDATE",
   "implementation_state": "INTERFACE_ONLY_EXCEPT_ACCEPTED_R001_R002_FOUNDATIONS",
   "artifact_roles": {
     "ARCHITECTURE.md": "CANONICAL_ARCHITECTURE_MASTER",
     "contracts/AF001-LIVING-STORY-CONTRACTS.json": "MACHINE_CONTRACT_REGISTRY",
     "evals/AF001-GOLDEN-SCENARIOS.json": "GOLDEN_EXECUTABLE_SPEC_REGISTRY",
-    "docs/AF001-TRACEABILITY.md": "TRACEABILITY_OPEN_DECISION_REGISTRY"
+    "docs/AF001-TRACEABILITY.md": "TRACEABILITY_OPEN_DECISION_REGISTRY",
+    "contracts/AF001-AF-D-INSTANCE-ADMISSION-BINDING.json": "CANONICAL_AF_D_REFERENCE_INSTANCE_ADMISSION_BINDING",
+    "registries/AF001-AF-D-REFERENCE-INSTANCES.json": "CANONICAL_BOUNDED_AF_D_REFERENCE_INSTANCE_MANIFEST"
   },
   "registered_contract_extensions": {
     "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING": {
@@ -45,11 +48,33 @@
       "registration_class": "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION",
       "governance_issue_ref": "#58",
       "runtime_implementation_authorized": false
+    },
+    "AWRSE-AF001-AF-D-INSTANCE-ADMISSION-BINDING": {
+      "path": "contracts/AF001-AF-D-INSTANCE-ADMISSION-BINDING.json",
+      "binding_version": "1.0.0-candidate",
+      "binding_canonical_sha256": "ca3db148b9256a55ac1cb814a71ce6323d73e417ec0cbf524b2d3c67071aae66",
+      "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "parent_contract_version": "1.9.0-candidate",
+      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+      "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1",
+      "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",
+      "scope": "AF-D_BOUNDED_REFERENCE_VIEW_ASSET_INSTANCE_AUTHORITY_AND_TYPED_ADMISSION_RECEIPT",
+      "registration_class": "ADDITIVE_SCOPED_REFERENCE_AUTHORITY_EXTENSION",
+      "governance_issue_ref": "#66",
+      "runtime_implementation_authorized": false,
+      "bounded_reference_adapter_implementation_authorized": true,
+      "canonical_instance_manifest": {
+        "path": "registries/AF001-AF-D-REFERENCE-INSTANCES.json",
+        "manifest_id": "AWRSE-AF001-AF-D-REFERENCE-INSTANCE-MANIFEST",
+        "manifest_version": "1.0.0-candidate",
+        "canonical_sha256": "291e7d6f3f4f947e101013403328772a5a83a5a036d00d7d7173c6bc126aaf4e"
+      }
     }
   },
   "contract_extension_authority_rule": "ONLY_EXTENSIONS_EXPLICITLY_REGISTERED_BY_THIS_MACHINE_CONTRACT_REGISTRY_ARE_CANONICAL; CHILD_TO_PARENT_SELF_DECLARATION_ALONE_CONFERS_NO_AUTHORITY",
   "functional_impairment_extension_authority_rule": "EXACT_PARENT_CONTRACT_ID_PLUS_CONTRACT_VERSION_PLUS_AUTHORITY_GRAPH_VERSION_MATCH_REQUIRED; PRE_I2A008_1_9_WITHOUT_AUTHORITY_GRAPH_DISCRIMINATOR_CANNOT_AUTHORIZE; MISSING_OR_MISMATCHED_AUTHORITY_GRAPH_VERSION_FAILS_CLOSED",
   "capability_decision_receipt_extension_authority_rule": "EXACT_PARENT_CONTRACT_ID_PLUS_CONTRACT_VERSION_PLUS_AUTHORITY_GRAPH_VERSION_PLUS_CAPABILITY_DECISION_RECEIPT_AUTHORITY_EPOCH_MATCH_REQUIRED; PRE_I2A010_PARENT_WITHOUT_RECEIPT_EPOCH_CANNOT_AUTHORIZE; MISSING_OR_MISMATCHED_RECEIPT_EPOCH_FAILS_CLOSED; THIS_RULE_IS_SCOPED_ONLY_TO_THE_CAPABILITY_DECISION_RECEIPT_EXTENSION_AND_DOES_NOT_REINTERPRET_EXISTING_EXTENSION_AUTHORITY",
+  "af_d_instance_admission_extension_authority_rule": "EXACT_PARENT_CONTRACT_ID_PLUS_CONTRACT_VERSION_PLUS_AUTHORITY_GRAPH_VERSION_PLUS_AF_D_INSTANCE_ADMISSION_AUTHORITY_EPOCH_PLUS_PARENT_REGISTERED_BINDING_AND_MANIFEST_DIGEST_MATCH_REQUIRED; PRE_AF_D_INSTANCE_ADMISSION_PARENT_WITHOUT_THE_SCOPED_EPOCH_CANNOT_AUTHORIZE; CALLER_DECLARATION_OR_EVAL_FIXTURE_SELF_DECLARATION_CONFERS_NO_INSTANCE_AUTHORITY; THIS_RULE_IS_SCOPED_ONLY_TO_THE_AF_D_REFERENCE_INSTANCE_ADMISSION_EXTENSION_AND_DOES_NOT_REINTERPRET_EXISTING_I2_AUTHORITY",
   "canonical_architecture_master": "ARCHITECTURE.md",
   "decision_lifecycle_registry": {
     "OD-CAPABILITY-ATTR-001": {"historical_status":"OPEN_DECISION","current_architecture_status":"RESOLVED_ARCHITECTURAL_SUBSTRATE","architecture_blocking_class":"HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER","deferred_policy_tracks":["DEFERRED_RULESET_TUNING","DEFERRED_PLAYER_BALANCE","DEFERRED_GENRE_EXTENSION_POLICY"],"runtime_binding_requirement":"EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME"},
@@ -549,6 +574,7 @@
     "contract_version_required": true,
     "authority_graph_discriminator": {"field":"authority_graph_version","current":"AF001-AUTHORITY-GRAPH-1.9-I2A008@1","pre_i2a008_state":"FIELD_ABSENT","authorization_tuple":["contract_id","contract_version","authority_graph_version"],"functional_impairment_authorization_rule":"EXACT_TRIPLE_MATCH_REQUIRED; PRE_I2A008_1_9_WITHOUT_AUTHORITY_GRAPH_DISCRIMINATOR_CANNOT_AUTHORIZE_FUNCTIONAL_IMPAIRMENT_EXTENSION"},
     "capability_decision_receipt_authority_discriminator": {"field":"capability_decision_receipt_authority_epoch","current":"AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1","pre_i2a010_state":"FIELD_ABSENT","authorization_tuple":["contract_id","contract_version","authority_graph_version","capability_decision_receipt_authority_epoch"],"authorization_rule":"EXACT_QUADRUPLE_MATCH_REQUIRED; PRE_I2A010_PARENT_WITHOUT_RECEIPT_EPOCH_CANNOT_AUTHORIZE_CAPABILITY_DECISION_RECEIPT_EXTENSION; SCOPED_ONLY_TO_THIS_EXTENSION"},
+    "af_d_instance_admission_authority_discriminator": {"field":"af_d_instance_admission_authority_epoch","current":"AF001-AF-D-INSTANCE-ADMISSION-001@1","pre_af_d_instance_admission_state":"FIELD_ABSENT","authorization_tuple":["contract_id","contract_version","authority_graph_version","af_d_instance_admission_authority_epoch"],"manifest_anchor_required":true,"authorization_rule":"EXACT_SCOPED_TUPLE_PLUS_PARENT_REGISTERED_BINDING_AND_CANONICAL_MANIFEST_DIGEST_REQUIRED; PRE_AF_D_INSTANCE_ADMISSION_PARENT_WITHOUT_THIS_EPOCH_CANNOT_AUTHORIZE_THE_EXTENSION; EXISTING_I2_AUTHORITY_TUPLES_RETAIN_THEIR_PRIOR_MEANING"},
     "breaking_change_classes": ["AUTHORITY_ORDER","IDENTITY_SEMANTICS","CANONICAL_EVENT_MEANING","CANONICAL_OWNERSHIP","REQUIRED_PROVENANCE","FAIL_CLOSED_BOUNDARY"],
     "breaking_change_requirements": ["EXPLICIT_MIGRATION_SPEC","REPLAY_OR_REBUILD_IMPACT_ANALYSIS","UPDATED_GOLDEN_SCENARIO_RECEIPTS","INDEPENDENT_REVIEW"],
     "contract_version_lineage": {"previous_contract_version":"1.8.0-candidate","semantic_delta":["ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION","ACTION_DEMAND_PROJECTION_EXTENSION_AUTHORITY_IS_PARENT_REGISTERED_AND_VERSION_BOUND","PRE_REGISTRATION_1_8_PARENT_VERSION_CANNOT_AUTHORIZE_NEW_EXTENSION"],"consumer_rule":"CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_ACTION_DEMAND_EXTENSION_AUTHORITY_FROM_PRE_REGISTRATION_1_8_STATE"},
