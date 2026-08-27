@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-import runtime.awrse.af_d_instance_admission as admission
-from runtime.awrse.af_d_instance_admission import (
+import registries.af_d_instance_admission as admission
+from registries.af_d_instance_admission import (
     I3_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED,
     NO_AI_FILM_FEDERATION_IMPLEMENTED,
     NO_PROVIDER_INTEGRATION,
