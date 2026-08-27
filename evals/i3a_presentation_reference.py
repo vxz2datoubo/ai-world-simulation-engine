@@ -1,9 +1,9 @@
 """Bounded I3A actor-presentation replay and mock render-continuity reference.
 
-This module consumes already-frozen AF-D presentation interfaces plus explicit
-upstream-prevalidated identity evidence. It does not mint View/asset identity,
-does not treat eval fixtures as instance authority, and remains isolated from
-the canonical runtime loop.
+This module consumes the canonical AF-D bounded instance admission authority
+registered by Issue #66 / PR #67. Callers may request already-canonical View and
+asset identities, but cannot supply an admitted set, issuer, manifest, authority
+epoch, or receipt material. The reference remains isolated from gameplay runtime.
 """
 from __future__ import annotations
 
@@ -16,6 +16,10 @@ from pathlib import Path
 from typing import Any
 
 from awrse.model import freeze_value, thaw_value
+from registries.af_d_instance_admission import (
+    issue_admission_receipt,
+    verify_admission_receipt,
+)
 
 I3_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED = True
 NO_REAL_RENDERER_IMPLEMENTED = True
@@ -23,8 +27,9 @@ NO_PROVIDER_INTEGRATION = True
 
 _ROOT = Path(__file__).resolve().parents[1]
 _CANONICAL_CONTRACT_PATH = _ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
-_NONAUTHORITY_EVAL_STATUS = "EXECUTABLE_CONFORMANCE_EVIDENCE_ONLY_NOT_AUTHORITY_EXTENSION"
-_PREVALIDATED_STATUS = "UPSTREAM_PREVALIDATED_IDENTITY_EVIDENCE"
+_EXPECTED_ADMISSION_EPOCH = "AF001-AF-D-INSTANCE-ADMISSION-001@1"
+_EXPECTED_ADMISSION_ISSUER_ID = "AWRSE-AF-D-REFERENCE-INSTANCE-ADMISSION-ISSUER"
+_EXPECTED_ADMISSION_ISSUER_VERSION = "1.0.0-candidate"
 _EXPECTED_TYPES = {
     "ActorPresentationState": ("AF001.ActorPresentationState", "1.0.0-candidate", "PRESENTATION_CANONICAL_STATE"),
     "OutfitState": ("AF001.OutfitState", "1.0.0-candidate", "PRESENTATION_CANONICAL_STATE"),
@@ -86,6 +91,8 @@ def _load_authority() -> tuple[str, str, Mapping[str, Any]]:
         raise ValueError("I3A_CANONICAL_CONTRACT_INVALID")
     contract_id = _require_string(contract.get("contract_id"), "I3A_CANONICAL_CONTRACT_INVALID")
     contract_version = _require_string(contract.get("contract_version"), "I3A_CANONICAL_CONTRACT_INVALID")
+    if contract.get("af_d_instance_admission_authority_epoch") != _EXPECTED_ADMISSION_EPOCH:
+        raise ValueError("I3A_AF_D_INSTANCE_ADMISSION_AUTHORITY_EPOCH_DRIFT")
     registry = contract.get("type_registry")
     if not isinstance(registry, Mapping):
         raise ValueError("I3A_CANONICAL_CONTRACT_INVALID")
@@ -104,80 +111,62 @@ def _load_authority() -> tuple[str, str, Mapping[str, Any]]:
     return contract_id, contract_version, registry
 
 
-def _consume_prevalidated_identity_evidence(
-    evidence: Any,
-    contract_id: str,
-    contract_version: str,
-) -> tuple[frozenset[str], frozenset[tuple[str, str, str]], str, str]:
-    """Consume an upstream trust-boundary result without minting/admitting it locally.
-
-    This function validates the *shape and authority identity* of evidence that
-    upstream has already admitted. It does not authenticate the upstream issuer
-    and therefore must never be described as an AF-D admission authority.
-    """
-    if not isinstance(evidence, Mapping):
-        raise ValueError("I3A_PREVALIDATED_IDENTITY_EVIDENCE_REQUIRED")
-    status = evidence.get("status")
-    if status in {_NONAUTHORITY_EVAL_STATUS, "NONCANONICAL_EVAL_ONLY"}:
-        raise ValueError("I3A_NONAUTHORITY_EVAL_CANNOT_MINT_IDENTITY_ADMISSION")
-    if status != _PREVALIDATED_STATUS:
-        raise ValueError("I3A_PREVALIDATED_IDENTITY_EVIDENCE_STATUS_INVALID")
-    identity = evidence.get("authority_identity")
-    if not isinstance(identity, Mapping):
-        raise ValueError("I3A_PREVALIDATED_IDENTITY_AUTHORITY_REQUIRED")
-    if (
-        identity.get("canonical_contract_id") != contract_id
-        or identity.get("canonical_contract_version") != contract_version
-    ):
-        raise ValueError("I3A_PREVALIDATED_IDENTITY_PARENT_DRIFT")
-    expected_profiles = {
-        "view_authority_profile_ref": _EXPECTED_TYPES["View"][2],
-        "asset_authority_profile_ref": _EXPECTED_TYPES["MediaAsset"][2],
-        "version_authority_profile_ref": _EXPECTED_TYPES["MediaVersion"][2],
-        "locator_authority_profile_ref": _EXPECTED_TYPES["Locator"][2],
-    }
-    for field, expected in expected_profiles.items():
-        if identity.get(field) != expected:
-            raise ValueError(f"I3A_PREVALIDATED_IDENTITY_AUTHORITY_DRIFT:{field}")
-    authority_ref = _require_string(
-        identity.get("admission_authority_ref"),
-        "I3A_PREVALIDATED_IDENTITY_AUTHORITY_REF_REQUIRED",
-    )
-    if authority_ref == "evals/AF001-ASSET-SPATIAL-CONFORMANCE.json":
-        raise ValueError("I3A_NONAUTHORITY_EVAL_CANNOT_MINT_IDENTITY_ADMISSION")
-
-    views = frozenset(
-        _require_string(v, "I3A_PREVALIDATED_VIEW_ID_INVALID")
-        for v in _require_sequence(
-            evidence.get("admitted_view_ids"),
-            "I3A_PREVALIDATED_VIEW_IDS_REQUIRED",
-        )
-    )
-    if not views:
-        raise ValueError("I3A_PREVALIDATED_VIEW_IDS_EMPTY")
-
+def _asset_request_bindings(asset_registry: Any) -> tuple[tuple[str, str, str], ...]:
+    if not isinstance(asset_registry, Mapping):
+        raise ValueError("I3A_ASSET_REGISTRY_REQUIRED")
     bindings: set[tuple[str, str, str]] = set()
-    for row in _require_sequence(
-        evidence.get("admitted_asset_bindings"),
-        "I3A_PREVALIDATED_ASSET_BINDINGS_REQUIRED",
-    ):
-        if not isinstance(row, Mapping):
-            raise ValueError("I3A_PREVALIDATED_ASSET_BINDING_INVALID")
-        binding = (
-            _require_string(row.get("media_asset_id"), "I3A_PREVALIDATED_MEDIA_ASSET_ID_INVALID"),
-            _require_string(row.get("media_version_id"), "I3A_PREVALIDATED_MEDIA_VERSION_ID_INVALID"),
-            _require_string(row.get("locator_id"), "I3A_PREVALIDATED_LOCATOR_ID_INVALID"),
-        )
-        if binding in bindings:
-            raise ValueError("I3A_DUPLICATE_PREVALIDATED_ASSET_BINDING")
-        bindings.add(binding)
-    if not bindings:
-        raise ValueError("I3A_PREVALIDATED_ASSET_BINDINGS_EMPTY")
+    for object_ref, record in asset_registry.items():
+        _require_string(object_ref, "I3A_ASSET_OBJECT_REF_INVALID")
+        if not isinstance(record, Mapping):
+            raise ValueError("I3A_ASSET_RECORD_INVALID")
+        if _DYNAMIC_ASSET_FIELDS & set(record):
+            raise ValueError("I3A_DYNAMIC_PRESENTATION_CONTAMINATES_ASSET_REGISTRY")
+        bindings.add((
+            _require_string(record.get("media_asset_id"), "I3A_MEDIA_ASSET_ID_REQUIRED"),
+            _require_string(record.get("media_version_id"), "I3A_MEDIA_VERSION_ID_REQUIRED"),
+            _require_string(record.get("locator_id"), "I3A_LOCATOR_ID_REQUIRED"),
+        ))
+    return tuple(sorted(bindings))
 
-    digest = hashlib.sha256(
-        _canonical_json(_json_normalized(evidence)).encode("utf-8")
-    ).hexdigest()
-    return views, frozenset(bindings), authority_ref, digest
+
+def _request_verified_identity_admission(
+    view_id: str,
+    asset_registry: Mapping[str, Mapping[str, Any]],
+) -> tuple[frozenset[str], frozenset[tuple[str, str, str]], Mapping[str, str]]:
+    requested_bindings = _asset_request_bindings(asset_registry)
+    try:
+        receipt = issue_admission_receipt(
+            requested_view_ids=[view_id],
+            requested_asset_bindings=requested_bindings,
+        )
+    except ValueError as exc:
+        code = str(exc)
+        if code.startswith("AF_D_INSTANCE_ADMISSION_VIEW_UNKNOWN"):
+            raise ValueError("I3A_VIEW_NOT_ADMITTED") from None
+        if code.startswith("AF_D_INSTANCE_ADMISSION_ASSET_BINDING_UNKNOWN"):
+            raise ValueError("I3A_ASSET_BINDING_NOT_ADMITTED") from None
+        raise
+
+    verified = verify_admission_receipt(receipt)
+    if receipt.issuer_id != _EXPECTED_ADMISSION_ISSUER_ID or receipt.issuer_version != _EXPECTED_ADMISSION_ISSUER_VERSION:
+        raise ValueError("I3A_CANONICAL_ADMISSION_ISSUER_DRIFT")
+    if verified.authority_epoch != _EXPECTED_ADMISSION_EPOCH:
+        raise ValueError("I3A_CANONICAL_ADMISSION_EPOCH_DRIFT")
+    if frozenset(verified.view_ids) != frozenset({view_id}):
+        raise ValueError("I3A_CANONICAL_ADMISSION_VIEW_REDERIVATION_MISMATCH")
+    if frozenset(verified.asset_bindings) != frozenset(requested_bindings):
+        raise ValueError("I3A_CANONICAL_ADMISSION_ASSET_REDERIVATION_MISMATCH")
+
+    binding = {
+        "issuer_id": receipt.issuer_id,
+        "issuer_version": receipt.issuer_version,
+        "authority_epoch": verified.authority_epoch,
+        "manifest_id": verified.manifest_id,
+        "manifest_version": verified.manifest_version,
+        "manifest_sha256": verified.manifest_sha256,
+        "receipt_sha256": receipt.receipt_sha256,
+    }
+    return frozenset(verified.view_ids), frozenset(verified.asset_bindings), binding
 
 
 @dataclass(frozen=True)
@@ -187,8 +176,13 @@ class PresentationReference:
     contract_version: str
     world_event_cursor: int
     view_id: str
-    identity_admission_authority_ref: str
-    identity_evidence_sha256: str
+    identity_admission_issuer_id: str
+    identity_admission_issuer_version: str
+    identity_admission_authority_epoch: str
+    identity_manifest_id: str
+    identity_manifest_version: str
+    identity_manifest_sha256: str
+    identity_receipt_sha256: str
     outfit_state: Mapping[str, Any]
     dressing_states: tuple[Mapping[str, Any], ...]
     surface_states: tuple[Mapping[str, Any], ...]
@@ -210,27 +204,6 @@ def _normalize_inventory(value: Any) -> frozenset[str]:
     if len(normalized) != len(set(normalized)):
         raise ValueError("I3A_DUPLICATE_INVENTORY_REF")
     return frozenset(normalized)
-
-
-def _validate_asset_registry(
-    asset_registry: Any,
-    admitted_bindings: frozenset[tuple[str, str, str]],
-) -> None:
-    if not isinstance(asset_registry, Mapping):
-        raise ValueError("I3A_ASSET_REGISTRY_REQUIRED")
-    for object_ref, record in asset_registry.items():
-        _require_string(object_ref, "I3A_ASSET_OBJECT_REF_INVALID")
-        if not isinstance(record, Mapping):
-            raise ValueError("I3A_ASSET_RECORD_INVALID")
-        if _DYNAMIC_ASSET_FIELDS & set(record):
-            raise ValueError("I3A_DYNAMIC_PRESENTATION_CONTAMINATES_ASSET_REGISTRY")
-        binding = (
-            _require_string(record.get("media_asset_id"), "I3A_MEDIA_ASSET_ID_REQUIRED"),
-            _require_string(record.get("media_version_id"), "I3A_MEDIA_VERSION_ID_REQUIRED"),
-            _require_string(record.get("locator_id"), "I3A_LOCATOR_ID_REQUIRED"),
-        )
-        if binding not in admitted_bindings:
-            raise ValueError(f"I3A_ASSET_BINDING_NOT_ADMITTED:{object_ref}")
 
 
 def _event_common(event: Any, actor_id: str, previous_cursor: int) -> tuple[str, int, str]:
@@ -255,36 +228,35 @@ def build_presentation_reference(
     inventory_object_refs: Sequence[str],
     asset_registry: Mapping[str, Mapping[str, Any]],
     view_id: str,
-    identity_evidence: Mapping[str, Any],
     valid_view_ids: Sequence[str] | None = None,
+    identity_evidence: Any = None,
     schema_version: str = "1.0.0-candidate",
     ruleset_version: str = "AF-D-PRESENTATION-REFERENCE-1",
 ) -> PresentationReference:
-    """Rebuild presentation state from transitions plus upstream-admitted identities.
+    """Rebuild presentation state from transitions plus canonical AF-D admission.
 
-    ``identity_evidence`` is a declared external trust boundary. I3A validates
-    its shape/authority identity and consumes the already-admitted identities;
-    I3A does not authenticate, register, or mint that admission.
+    ``identity_evidence`` is retained only as an explicit fail-closed legacy
+    boundary. Any caller-supplied evidence mapping is rejected. The selected
+    View and every asset/version/locator triple are requests to the canonical
+    admission issuer and are accepted only after canonical verifier re-derivation.
     ``valid_view_ids`` is a legacy caller hint and has no admission power.
     """
+    if identity_evidence is not None:
+        raise ValueError("I3A_CALLER_AUTHORED_IDENTITY_EVIDENCE_FORBIDDEN")
     contract_id, contract_version, _ = _load_authority()
-    admitted_views, admitted_bindings, authority_ref, evidence_digest = (
-        _consume_prevalidated_identity_evidence(
-            identity_evidence,
-            contract_id,
-            contract_version,
-        )
-    )
     actor_id = _require_string(actor_id, "I3A_ACTOR_ID_REQUIRED")
     view_id = _require_string(view_id, "I3A_VIEW_ID_REQUIRED")
     if valid_view_ids is not None:
         _require_sequence(valid_view_ids, "I3A_VIEW_HINTS_INVALID")
+    admitted_views, admitted_bindings, admission = _request_verified_identity_admission(view_id, asset_registry)
     if view_id not in admitted_views:
         raise ValueError("I3A_VIEW_NOT_ADMITTED")
+    for binding in _asset_request_bindings(asset_registry):
+        if binding not in admitted_bindings:
+            raise ValueError("I3A_ASSET_BINDING_NOT_ADMITTED")
     schema_version = _require_string(schema_version, "I3A_SCHEMA_VERSION_REQUIRED")
     ruleset_version = _require_string(ruleset_version, "I3A_RULESET_VERSION_REQUIRED")
     inventory = _normalize_inventory(inventory_object_refs)
-    _validate_asset_registry(asset_registry, admitted_bindings)
     ordered_events = _require_sequence(events, "I3A_EVENTS_INVALID")
     if not ordered_events:
         raise ValueError("I3A_EVENTS_REQUIRED")
@@ -404,8 +376,13 @@ def build_presentation_reference(
         contract_version=contract_version,
         world_event_cursor=cursor,
         view_id=view_id,
-        identity_admission_authority_ref=authority_ref,
-        identity_evidence_sha256=evidence_digest,
+        identity_admission_issuer_id=admission["issuer_id"],
+        identity_admission_issuer_version=admission["issuer_version"],
+        identity_admission_authority_epoch=admission["authority_epoch"],
+        identity_manifest_id=admission["manifest_id"],
+        identity_manifest_version=admission["manifest_version"],
+        identity_manifest_sha256=admission["manifest_sha256"],
+        identity_receipt_sha256=admission["receipt_sha256"],
         outfit_state=freeze_value(outfit_state),
         dressing_states=tuple(freeze_value(item) for item in dressing_states_raw),
         surface_states=tuple(freeze_value(item) for item in surface_states_raw),
@@ -415,6 +392,18 @@ def build_presentation_reference(
     )
 
 
+def _identity_admission_binding(reference: PresentationReference) -> dict[str, str]:
+    return {
+        "issuer_id": reference.identity_admission_issuer_id,
+        "issuer_version": reference.identity_admission_issuer_version,
+        "authority_epoch": reference.identity_admission_authority_epoch,
+        "manifest_id": reference.identity_manifest_id,
+        "manifest_version": reference.identity_manifest_version,
+        "manifest_sha256": reference.identity_manifest_sha256,
+        "receipt_sha256": reference.identity_receipt_sha256,
+    }
+
+
 def _reference_material(reference: PresentationReference) -> dict[str, Any]:
     return _json_normalized({
         "actor_id": reference.actor_id,
@@ -422,8 +411,7 @@ def _reference_material(reference: PresentationReference) -> dict[str, Any]:
         "contract_version": reference.contract_version,
         "world_event_cursor": reference.world_event_cursor,
         "view_id": reference.view_id,
-        "identity_admission_authority_ref": reference.identity_admission_authority_ref,
-        "identity_evidence_sha256": reference.identity_evidence_sha256,
+        "identity_admission_binding": _identity_admission_binding(reference),
         "outfit_state": thaw_value(reference.outfit_state),
         "dressing_states": [thaw_value(item) for item in reference.dressing_states],
         "surface_states": [thaw_value(item) for item in reference.surface_states],
@@ -442,10 +430,7 @@ def export_replay_package(
 ) -> str:
     payload = {
         "package_schema": "AWRSE-I3A-PRESENTATION-REPLAY-1",
-        "identity_evidence_binding": {
-            "admission_authority_ref": reference.identity_admission_authority_ref,
-            "evidence_sha256": reference.identity_evidence_sha256,
-        },
+        "identity_admission_binding": _identity_admission_binding(reference),
         "inputs": {
             "actor_id": reference.actor_id,
             "events": deepcopy(list(events)),
@@ -464,14 +449,15 @@ def export_replay_package(
 def replay_package(
     package_json: str,
     *,
-    identity_evidence: Mapping[str, Any],
+    identity_evidence: Any = None,
 ) -> PresentationReference:
-    """Replay with separately supplied upstream identity evidence.
+    """Replay by re-requesting and re-verifying canonical AF-D admission.
 
-    The replay package deliberately cannot carry/reconstitute its own admission
-    authority. It only carries a ref+digest binding to evidence supplied again
-    across the external trust boundary at replay time.
+    The package carries only canonical admission binding metadata and never
+    embeds a caller-authored evidence envelope or a transferable authority.
     """
+    if identity_evidence is not None:
+        raise ValueError("I3A_CALLER_AUTHORED_IDENTITY_EVIDENCE_FORBIDDEN")
     try:
         envelope = json.loads(package_json)
     except (TypeError, json.JSONDecodeError):
@@ -485,7 +471,7 @@ def replay_package(
     if envelope.get("sha256") != digest:
         raise ValueError("I3A_REPLAY_PACKAGE_TAMPERED")
     inputs = payload.get("inputs")
-    binding = payload.get("identity_evidence_binding")
+    binding = payload.get("identity_admission_binding")
     if not isinstance(inputs, Mapping) or not isinstance(binding, Mapping):
         raise ValueError("I3A_REPLAY_INPUTS_INVALID")
     rebuilt = build_presentation_reference(
@@ -494,15 +480,11 @@ def replay_package(
         inventory_object_refs=inputs.get("inventory_object_refs"),
         asset_registry=inputs.get("asset_registry"),
         view_id=inputs.get("view_id"),
-        identity_evidence=identity_evidence,
         schema_version=inputs.get("schema_version"),
         ruleset_version=inputs.get("ruleset_version"),
     )
-    if (
-        rebuilt.identity_admission_authority_ref != binding.get("admission_authority_ref")
-        or rebuilt.identity_evidence_sha256 != binding.get("evidence_sha256")
-    ):
-        raise ValueError("I3A_REPLAY_IDENTITY_EVIDENCE_MISMATCH")
+    if _identity_admission_binding(rebuilt) != dict(binding):
+        raise ValueError("I3A_REPLAY_IDENTITY_ADMISSION_MISMATCH")
     if _reference_material(rebuilt) != payload.get("expected_reference"):
         raise ValueError("I3A_REPLAY_MATERIALIZATION_MISMATCH")
     return rebuilt
