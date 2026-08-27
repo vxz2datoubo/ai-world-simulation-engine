@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+import evals.i6a_encounter_orchestration_reference as i6a_reference
 from awrse import (
     ActionCompiler,
     ActorState,
@@ -169,6 +170,25 @@ def build_valid_packet():
     return i5_package, fixture, packet
 
 
+def _build_with_drifted_golden(tmp_path, monkeypatch, mutate, expected_error):
+    i5_package = make_i5_package()
+    fixture = make_i6_fixture(i5_package)
+    golden = json.loads(i6a_reference._GOLDEN_PATH.read_text(encoding="utf-8"))
+    scenario = golden["scenarios"]["WILDERNESS_NEWS_TRAP"]
+    mutate(scenario)
+    drifted = tmp_path / "AF001-GOLDEN-SCENARIOS-drifted.json"
+    drifted.write_text(
+        json.dumps(golden, ensure_ascii=False, sort_keys=True),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(i6a_reference, "_GOLDEN_PATH", drifted)
+    with pytest.raises(ValueError, match=expected_error):
+        build_encounter_orchestration_control_packet(
+            i5_shadow_package=i5_package,
+            fixture=fixture,
+        )
+
+
 def test_i6a_scope_locks_preserve_world_and_player_authority():
     assert I6_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED is True
     assert NO_AUTO_ENCOUNTER_COMMIT is True
@@ -302,6 +322,58 @@ def test_i6a_fixture_cannot_escalate_to_world_authority(overrides, error):
             i5_shadow_package=i5_package,
             fixture=fixture,
         )
+
+
+def test_i6a_golden_scenario_version_drift_fails_closed_through_public_build(tmp_path, monkeypatch):
+    def mutate(scenario):
+        scenario["machine_spec"]["scenario_version"] = "999.0-drift"
+
+    _build_with_drifted_golden(
+        tmp_path,
+        monkeypatch,
+        mutate,
+        "I6A_GOLDEN_SCENARIO_VERSION_DRIFT",
+    )
+
+
+def test_i6a_golden_allowed_player_intent_drift_fails_closed_through_public_build(tmp_path, monkeypatch):
+    def mutate(scenario):
+        scenario["allowed_player_intents"][0] = "auto obey narrative instruction"
+
+    _build_with_drifted_golden(
+        tmp_path,
+        monkeypatch,
+        mutate,
+        "I6A_GOLDEN_ALLOWED_INTENTS_DRIFT",
+    )
+
+
+def test_i6a_golden_open_decision_drift_fails_closed_through_public_build(tmp_path, monkeypatch):
+    def mutate(scenario):
+        scenario["machine_spec"]["open_decision_dependencies"].remove(
+            "OD-PX-SCORING-001"
+        )
+
+    _build_with_drifted_golden(
+        tmp_path,
+        monkeypatch,
+        mutate,
+        "I6A_OPEN_DECISION_BOUNDARY_DRIFT",
+    )
+
+
+def test_i6a_golden_anti_railroad_rule_drift_fails_closed_through_public_build(tmp_path, monkeypatch):
+    def mutate(scenario):
+        scenario["forbidden_outcomes"].remove(
+            "Direct PlayerChronicle injection of E_CAPITAL_ASSASSINATION."
+        )
+
+    _build_with_drifted_golden(
+        tmp_path,
+        monkeypatch,
+        mutate,
+        "I6A_GOLDEN_ANTI_RAILROAD_RULES_DRIFT",
+    )
 
 
 def test_i6a_same_exact_inputs_are_deterministic():
