@@ -22,38 +22,35 @@ VIEWS = ["VIEW-WEST", "VIEW-EAST"]
 INVENTORY = ["OBJ-COAT", "OBJ-BOOTS", "MAT-LINEN"]
 ASSETS = {
     "OBJ-COAT": {
-        "media_asset_id": "AST-COAT",
-        "media_version_id": "VER-COAT-1",
-        "locator_id": "LOC-COAT-A",
+        "media_asset_id": "AST-DAY-WEST",
+        "media_version_id": "VER-DAY-WEST-1",
+        "locator_id": "LOC-DAY-WEST-A",
     },
     "OBJ-BOOTS": {
-        "media_asset_id": "AST-BOOTS",
-        "media_version_id": "VER-BOOTS-1",
-        "locator_id": "LOC-BOOTS-A",
+        "media_asset_id": "AST-NIGHT-WEST",
+        "media_version_id": "VER-NIGHT-WEST-1",
+        "locator_id": "LOC-NIGHT-WEST",
     },
     "MAT-LINEN": {
-        "media_asset_id": "AST-LINEN",
-        "media_version_id": "VER-LINEN-1",
-        "locator_id": "LOC-LINEN-A",
+        "media_asset_id": "AST-DAY-EAST",
+        "media_version_id": "VER-DAY-EAST-1",
+        "locator_id": "LOC-DAY-EAST",
     },
 }
-IDENTITY_EVIDENCE = {
+FORGED_IDENTITY_EVIDENCE = {
     "status": "UPSTREAM_PREVALIDATED_IDENTITY_EVIDENCE",
     "authority_identity": {
         "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
         "canonical_contract_version": "1.9.0-candidate",
-        "admission_authority_ref": "test://upstream-af-d-instance-admission",
+        "admission_authority_ref": "caller://forged-af-d-authority",
         "view_authority_profile_ref": "SPATIAL_VIEW_DEFINITION_REGISTRY",
         "asset_authority_profile_ref": "ASSET_LOGICAL_IDENTITY_REGISTRY",
         "version_authority_profile_ref": "ASSET_IMMUTABLE_VERSION_REGISTRY",
         "locator_authority_profile_ref": "ASSET_LOCATOR_RESOLUTION",
     },
-    "admitted_view_ids": VIEWS,
+    "admitted_view_ids": ["VIEW-INVENTED"],
     "admitted_asset_bindings": [
-        {"media_asset_id": "AST-COAT", "media_version_id": "VER-COAT-1", "locator_id": "LOC-COAT-A"},
-        {"media_asset_id": "AST-COAT", "media_version_id": "VER-COAT-1", "locator_id": "LOC-COAT-B"},
-        {"media_asset_id": "AST-BOOTS", "media_version_id": "VER-BOOTS-1", "locator_id": "LOC-BOOTS-A"},
-        {"media_asset_id": "AST-LINEN", "media_version_id": "VER-LINEN-1", "locator_id": "LOC-LINEN-A"},
+        {"media_asset_id": "AST-INVENTED", "media_version_id": "VER-INVENTED-1", "locator_id": "LOC-INVENTED"},
     ],
 }
 EVENTS = [
@@ -81,8 +78,8 @@ def build(events=None, *, view_id=VIEWS[0], inventory=None, assets=None, evidenc
         inventory_object_refs=list(INVENTORY if inventory is None else inventory),
         asset_registry=copy.deepcopy(ASSETS if assets is None else assets),
         view_id=view_id,
-        identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE if evidence is None else evidence),
         valid_view_ids=valid_view_ids,
+        identity_evidence=copy.deepcopy(evidence),
     )
 
 
@@ -116,6 +113,13 @@ def package(reference):
     )
 
 
+def _recompute_package_digest(envelope):
+    canonical_payload = json.dumps(
+        envelope["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+    )
+    envelope["sha256"] = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
+
+
 def test_scope_locks_remain_narrow():
     assert I3_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED is True
     assert NO_REAL_RENDERER_IMPLEMENTED is True
@@ -135,8 +139,12 @@ def test_golden_06_reference_keeps_no_shoes_right_dressing_and_surface_state():
     assert dressing["source_treatment_event_ref"] == "E-I3A-004-DRESS-RIGHT-FOREARM"
     assert reference.surface_states[0]["surface_type"] == "MUD"
     assert reference.appearance_snapshot["world_event_cursor"] == 105
-    assert reference.identity_admission_authority_ref == "test://upstream-af-d-instance-admission"
-    assert len(reference.identity_evidence_sha256) == 64
+    assert reference.identity_admission_issuer_id == "AWRSE-AF-D-REFERENCE-INSTANCE-ADMISSION-ISSUER"
+    assert reference.identity_admission_issuer_version == "1.0.0-candidate"
+    assert reference.identity_admission_authority_epoch == "AF001-AF-D-INSTANCE-ADMISSION-001@1"
+    assert reference.identity_manifest_id == "AWRSE-AF001-AF-D-REFERENCE-INSTANCE-MANIFEST"
+    assert len(reference.identity_manifest_sha256) == 64
+    assert len(reference.identity_receipt_sha256) == 64
 
 
 def test_mock_render_exact_claims_align():
@@ -208,49 +216,50 @@ def test_asset_registry_rejects_live_presentation_contamination():
 def test_caller_cannot_self_authorize_invented_asset_identity_chain():
     assets = copy.deepcopy(ASSETS)
     assets["OBJ-COAT"] = {"media_asset_id": "AST-INVENTED", "media_version_id": "VER-INVENTED-1", "locator_id": "LOC-INVENTED-A"}
-    with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED:OBJ-COAT"):
+    with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED"):
         build(assets=assets)
 
 
 def test_mixed_real_ids_cannot_forge_asset_version_locator_relationship():
     assets = copy.deepcopy(ASSETS)
-    assets["OBJ-COAT"]["media_version_id"] = "VER-BOOTS-1"
-    assets["OBJ-COAT"]["locator_id"] = "LOC-BOOTS-A"
-    with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED:OBJ-COAT"):
+    assets["OBJ-COAT"]["media_version_id"] = "VER-NIGHT-WEST-1"
+    assets["OBJ-COAT"]["locator_id"] = "LOC-NIGHT-WEST"
+    with pytest.raises(ValueError, match="I3A_ASSET_BINDING_NOT_ADMITTED"):
         build(assets=assets)
 
 
 def test_nonauthority_conformance_fixture_cannot_mint_instance_admission():
     path = Path(__file__).resolve().parents[1] / "evals" / "AF001-ASSET-SPATIAL-CONFORMANCE.json"
     evidence = json.loads(path.read_text(encoding="utf-8"))
-    with pytest.raises(ValueError, match="I3A_NONAUTHORITY_EVAL_CANNOT_MINT_IDENTITY_ADMISSION"):
+    with pytest.raises(ValueError, match="I3A_CALLER_AUTHORED_IDENTITY_EVIDENCE_FORBIDDEN"):
         build(evidence=evidence)
 
 
-def test_prevalidated_identity_evidence_parent_or_authority_drift_fails_closed():
-    evidence = copy.deepcopy(IDENTITY_EVIDENCE)
-    evidence["authority_identity"]["canonical_contract_version"] = "9.9.9-forged"
-    with pytest.raises(ValueError, match="I3A_PREVALIDATED_IDENTITY_PARENT_DRIFT"):
-        build(evidence=evidence)
+def test_structurally_complete_forged_prevalidated_envelope_is_rejected():
+    with pytest.raises(ValueError, match="I3A_CALLER_AUTHORED_IDENTITY_EVIDENCE_FORBIDDEN"):
+        build(evidence=FORGED_IDENTITY_EVIDENCE)
 
 
-def test_prevalidated_evidence_cannot_point_back_to_nonauthority_eval_fixture():
-    evidence = copy.deepcopy(IDENTITY_EVIDENCE)
-    evidence["authority_identity"]["admission_authority_ref"] = "evals/AF001-ASSET-SPATIAL-CONFORMANCE.json"
-    with pytest.raises(ValueError, match="I3A_NONAUTHORITY_EVAL_CANNOT_MINT_IDENTITY_ADMISSION"):
+def test_old_identity_evidence_path_is_rejected_even_with_canonical_ids():
+    evidence = copy.deepcopy(FORGED_IDENTITY_EVIDENCE)
+    evidence["authority_identity"]["admission_authority_ref"] = "registries/AF001-AF-D-REFERENCE-INSTANCES.json"
+    evidence["admitted_view_ids"] = ["VIEW-WEST"]
+    evidence["admitted_asset_bindings"] = [copy.deepcopy(ASSETS["OBJ-COAT"])]
+    with pytest.raises(ValueError, match="I3A_CALLER_AUTHORED_IDENTITY_EVIDENCE_FORBIDDEN"):
         build(evidence=evidence)
 
 
 def test_locator_migration_does_not_change_presentation_identity_or_history():
     before = build()
     migrated = copy.deepcopy(ASSETS)
-    migrated["OBJ-COAT"]["locator_id"] = "LOC-COAT-B"
+    migrated["OBJ-COAT"]["locator_id"] = "LOC-DAY-WEST-B"
     after = build(assets=migrated)
     assert before.outfit_state == after.outfit_state
     assert before.dressing_states == after.dressing_states
     assert before.surface_states == after.surface_states
     assert before.presentation_state == after.presentation_state
     assert before.appearance_snapshot == after.appearance_snapshot
+    assert before.identity_receipt_sha256 != after.identity_receipt_sha256
 
 
 def test_view_change_does_not_change_actor_presentation_truth():
@@ -261,6 +270,7 @@ def test_view_change_does_not_change_actor_presentation_truth():
     assert west.surface_states == east.surface_states
     assert west.presentation_state == east.presentation_state
     assert west.appearance_snapshot == east.appearance_snapshot
+    assert west.identity_receipt_sha256 != east.identity_receipt_sha256
 
 
 def test_nonadmitted_view_is_rejected_even_if_caller_allowlist_contains_it():
@@ -276,7 +286,7 @@ def test_replay_package_is_byte_deterministic_and_rebuilds_exact_reference():
     reference = build()
     package_a, package_b = package(reference), package(reference)
     assert package_a == package_b
-    assert replay_package(package_a, identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE)) == reference
+    assert replay_package(package_a) == reference
 
 
 def test_replay_payload_tampering_is_rejected_before_rebuild():
@@ -284,42 +294,55 @@ def test_replay_payload_tampering_is_rejected_before_rebuild():
     envelope = json.loads(package(reference))
     envelope["payload"]["inputs"]["events"][3]["side"] = "LEFT"
     with pytest.raises(ValueError, match="I3A_REPLAY_PACKAGE_TAMPERED"):
-        replay_package(json.dumps(envelope), identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE))
+        replay_package(json.dumps(envelope))
 
 
 def test_replay_cannot_accept_forged_expected_snapshot_even_with_recomputed_digest():
     reference = build()
     envelope = json.loads(package(reference))
     envelope["payload"]["expected_reference"]["appearance_snapshot"]["world_event_cursor"] = 999
-    canonical_payload = json.dumps(envelope["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
-    envelope["sha256"] = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
+    _recompute_package_digest(envelope)
     with pytest.raises(ValueError, match="I3A_REPLAY_MATERIALIZATION_MISMATCH"):
-        replay_package(json.dumps(envelope, ensure_ascii=False), identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE))
+        replay_package(json.dumps(envelope, ensure_ascii=False))
 
 
 def test_replay_package_cannot_reconstitute_identity_authority_from_embedded_data():
     reference = build()
     envelope = json.loads(package(reference))
     assert "identity_evidence" not in envelope["payload"]["inputs"]
-    assert set(envelope["payload"]["identity_evidence_binding"]) == {"admission_authority_ref", "evidence_sha256"}
+    assert set(envelope["payload"]["identity_admission_binding"]) == {
+        "issuer_id",
+        "issuer_version",
+        "authority_epoch",
+        "manifest_id",
+        "manifest_version",
+        "manifest_sha256",
+        "receipt_sha256",
+    }
 
 
 def test_replay_rejects_forged_view_even_with_recomputed_package_digest():
     reference = build()
     envelope = json.loads(package(reference))
     envelope["payload"]["inputs"]["view_id"] = "VIEW-INVENTED"
-    canonical_payload = json.dumps(envelope["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
-    envelope["sha256"] = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
+    _recompute_package_digest(envelope)
     with pytest.raises(ValueError, match="I3A_VIEW_NOT_ADMITTED"):
-        replay_package(json.dumps(envelope, ensure_ascii=False), identity_evidence=copy.deepcopy(IDENTITY_EVIDENCE))
+        replay_package(json.dumps(envelope, ensure_ascii=False))
 
 
-def test_replay_requires_same_external_identity_evidence_digest():
+def test_replay_rejects_admission_binding_tamper_even_with_recomputed_package_digest():
     reference = build()
-    changed = copy.deepcopy(IDENTITY_EVIDENCE)
-    changed["admitted_view_ids"] = ["VIEW-WEST"]
-    with pytest.raises(ValueError, match="I3A_REPLAY_IDENTITY_EVIDENCE_MISMATCH"):
-        replay_package(package(reference), identity_evidence=changed)
+    envelope = json.loads(package(reference))
+    envelope["payload"]["identity_admission_binding"]["manifest_sha256"] = "0" * 64
+    _recompute_package_digest(envelope)
+    with pytest.raises(ValueError, match="I3A_REPLAY_IDENTITY_ADMISSION_MISMATCH"):
+        replay_package(json.dumps(envelope, ensure_ascii=False))
+
+
+def test_replay_rejects_legacy_caller_identity_evidence_path():
+    reference = build()
+    with pytest.raises(ValueError, match="I3A_CALLER_AUTHORED_IDENTITY_EVIDENCE_FORBIDDEN"):
+        replay_package(package(reference), identity_evidence=FORGED_IDENTITY_EVIDENCE)
 
 
 def test_event_cursor_must_be_strictly_monotonic():
