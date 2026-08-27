@@ -292,9 +292,22 @@ def test_i7a_reference_filter_cannot_escalate_to_player_policy_authority():
 
 
 def test_i7a_seen_novelty_suppresses_without_changing_canonical_facts():
-    _, _, _, _, first = build_valid_reference()
-    _, _, _, _, suppressed = build_valid_reference(
-        already_seen_novelty_keys=(first.novelty_key,)
+    baseline, world, source = make_world()
+    first = build_player_private_world_echo_reference(
+        baseline=baseline,
+        world=world,
+        player_actor_id=PLAYER,
+        target_object_id=DOOR,
+        source_event_id=source.event_id,
+        fixture=make_filter(),
+    )
+    suppressed = build_player_private_world_echo_reference(
+        baseline=baseline,
+        world=world,
+        player_actor_id=PLAYER,
+        target_object_id=DOOR,
+        source_event_id=source.event_id,
+        fixture=make_filter(already_seen_novelty_keys=(first.novelty_key,)),
     )
     realization = thaw_value(suppressed.realization)
 
