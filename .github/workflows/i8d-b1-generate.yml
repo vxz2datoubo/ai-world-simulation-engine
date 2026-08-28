@@ -42,11 +42,26 @@ jobs:
               "    for rel in graph_files:\n        replace_text(rel, OLD_GRAPH, NEW_GRAPH)\n",
               "    for rel in graph_files:\n        replace_text(rel, OLD_GRAPH, NEW_GRAPH)\n        replace_text(rel, OLD_PARENT, NEW_PARENT)\n",
           )
+          old_main='''    migrate_parent()\n    migrate_json_current_context()\n    migrate_branch_binding()\n    migrate_golden()\n    migrate_current_code_refs()\n    make_provenance_fixtures()\n'''
+          new_main='''    make_provenance_fixtures()\n    migrate_parent()\n    migrate_json_current_context()\n    migrate_branch_binding()\n    migrate_golden()\n    migrate_current_code_refs()\n'''
+          t=t.replace(old_main,new_main)
           p.write_text(t, encoding='utf-8')
           PY
           python -m py_compile tools/i8d_b1_migrate.py
       - name: Generate B1 canonical migration
         run: python tools/i8d_b1_migrate.py
+      - name: Migrate historical Stage A promotion guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('evals/i8d_branch_quality_evidence_experiment.py')
+          t=p.read_text(encoding='utf-8')
+          old='''    registry = contract.get("type_registry")\n    if not isinstance(registry, Mapping):\n        raise ValueError("I8D_TYPE_REGISTRY_MISSING")\n    forbidden_promotions = {"BranchQuality", "BranchQualityEvidence", "BranchQualityScore"}\n    if forbidden_promotions & set(registry):\n        raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")\n'''
+          new='''    registry = contract.get("type_registry")\n    if not isinstance(registry, Mapping):\n        raise ValueError("I8D_TYPE_REGISTRY_MISSING")\n    if {"BranchQuality", "BranchQualityScore"} & set(registry):\n        raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")\n    if "BranchQualityEvidence" in registry:\n        promoted = registry.get("BranchQualityEvidence")\n        registration = contract.get("registered_contract_extensions", {}).get(\n            "AWRSE-AF001-BRANCH-QUALITY-EVIDENCE-BINDING"\n        )\n        profile = profiles.get("BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW")\n        if (\n            contract.get("contract_version") != "1.10.0-candidate"\n            or contract.get("authority_graph_version") != "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"\n            or not isinstance(promoted, Mapping)\n            or promoted.get("type_id") != "AF001.BranchQualityEvidence"\n            or promoted.get("authority_profile_ref") != "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW"\n            or not isinstance(registration, Mapping)\n            or registration.get("parent_contract_version") != "1.10.0-candidate"\n            or registration.get("parent_authority_graph_version") != "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"\n            or not isinstance(profile, Mapping)\n            or profile.get("canonical_data_authority") != ["NONE"]\n            or registration.get("runtime_implementation_authorized") is not False\n        ):\n            raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")\n'''
+          if old not in t:
+              raise SystemExit('historical Stage A guard anchor not found')
+          p.write_text(t.replace(old,new), encoding='utf-8')
+          PY
       - name: Verify generated repository
         run: |
           git diff --check
