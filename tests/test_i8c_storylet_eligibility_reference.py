@@ -40,11 +40,19 @@ BASELINE_VERSION = "I8C-BASELINE-v1"
 
 
 def canonical_json_bytes(value) -> bytes:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
 
 
 def refresh_outer_digest(envelope: dict) -> bytes:
-    envelope["sha256"] = hashlib.sha256(canonical_json_bytes(envelope["payload"])).hexdigest()
+    envelope["sha256"] = hashlib.sha256(
+        canonical_json_bytes(envelope["payload"])
+    ).hexdigest()
     return canonical_json_bytes(envelope)
 
 
@@ -55,19 +63,40 @@ def make_world():
         baseline_version=BASELINE_VERSION,
         primary_player_actor_id=PLAYER,
         actors={
-            PLAYER: ActorState(PLAYER, "旅人", SCENE, strength=1.0, capabilities={"HIT", "SPEAK"}),
-            NPC: ActorState(NPC, "酒馆老板", SCENE, strength=1.0, capabilities={"SPEAK"}),
-            NPC_SAME_NAME: ActorState(NPC_SAME_NAME, "酒馆老板", SCENE, strength=1.0, capabilities={"SPEAK"}),
+            PLAYER: ActorState(
+                PLAYER, "旅人", SCENE, strength=1.0, capabilities={"HIT", "SPEAK"}
+            ),
+            NPC: ActorState(
+                NPC, "酒馆老板", SCENE, strength=1.0, capabilities={"SPEAK"}
+            ),
+            NPC_SAME_NAME: ActorState(
+                NPC_SAME_NAME,
+                "酒馆老板",
+                SCENE,
+                strength=1.0,
+                capabilities={"SPEAK"},
+            ),
         },
         objects={
-            DOOR: ObjectState(DOOR, "木门", SCENE, mass=25.0, graspable=False, fragility=0.5),
-            CRATE: ObjectState(CRATE, "木箱", SCENE, mass=10.0, graspable=True, fragility=0.8),
+            DOOR: ObjectState(
+                DOOR, "木门", SCENE, mass=25.0, graspable=False, fragility=0.5
+            ),
+            CRATE: ObjectState(
+                CRATE, "木箱", SCENE, mass=10.0, graspable=True, fragility=0.8
+            ),
         },
         npc_minds={
             NPC: NPCMindState(NPC, "INNKEEPER"),
             NPC_SAME_NAME: NPCMindState(NPC_SAME_NAME, "INNKEEPER"),
         },
-        scenes={SCENE: SceneState(SCENE, ["asset://i8c/tavern"], [DOOR, CRATE], [PLAYER, NPC, NPC_SAME_NAME])},
+        scenes={
+            SCENE: SceneState(
+                SCENE,
+                ["asset://i8c/tavern"],
+                [DOOR, CRATE],
+                [PLAYER, NPC, NPC_SAME_NAME],
+            )
+        },
         principal_actor_bindings={PLAYER_PRINCIPAL: {PLAYER}},
         reachable_pairs={(PLAYER, DOOR), (PLAYER, CRATE)},
         audible_pairs={(PLAYER, NPC)},
@@ -79,13 +108,20 @@ def make_history(*, add_later=True):
     world, baseline = make_world()
     damage_action = ActionCompiler().compile("砸木门", PLAYER, world, PLAYER_PRINCIPAL)
     damage_resolution = SimulationEngine().resolve_and_commit(damage_action, world)
-    damage = next(event for event in damage_resolution.events if event.event_type == "OBJECT_DAMAGED")
+    damage = next(
+        event for event in damage_resolution.events if event.event_type == "OBJECT_DAMAGED"
+    )
 
     speech_action = ActionCompiler().compile(
-        f"告诉酒馆老板 PROMISE_REPAIR_OBJECT:{DOOR}", PLAYER, world, PLAYER_PRINCIPAL
+        f"告诉酒馆老板 PROMISE_REPAIR_OBJECT:{DOOR}",
+        PLAYER,
+        world,
+        PLAYER_PRINCIPAL,
     )
     speech_resolution = SimulationEngine().resolve_and_commit(speech_action, world)
-    speech = next(event for event in speech_resolution.events if event.event_type == "SPEECH_UTTERED")
+    speech = next(
+        event for event in speech_resolution.events if event.event_type == "SPEECH_UTTERED"
+    )
     acquisition = next(
         event
         for event in speech_resolution.events
@@ -147,6 +183,26 @@ def build(*, candidate=NPC, add_later=True, mutate_storylet=None):
     return baseline, world, damage, speech, acquisition, definition, reference
 
 
+def build_with_contract_mutation(tmp_path, monkeypatch, mutate, expected_error):
+    baseline, world, damage, speech, acquisition = make_history()
+    contract = json.loads(i8c_reference._CONTRACT_PATH.read_text(encoding="utf-8"))
+    mutate(contract)
+    path = tmp_path / "contract-drift.json"
+    path.write_text(json.dumps(contract, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(i8c_reference, "_CONTRACT_PATH", path)
+    with pytest.raises(ValueError, match=expected_error):
+        build_storylet_eligibility_reference(
+            baseline=baseline,
+            world=world,
+            storylet_definition=storylet(damage, speech, acquisition),
+            player_actor_id=PLAYER,
+            promise_recipient_npc_id=NPC,
+            candidate_npc_id=NPC,
+            target_object_id=DOOR,
+            source_speech_event_id=speech.event_id,
+        )
+
+
 def test_i8c_scope_locks_keep_storylet_eligibility_non_executing():
     assert I8C_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED is True
     assert NO_STORYLET_REALIZATION is True
@@ -162,11 +218,17 @@ def test_i8c_scope_locks_keep_storylet_eligibility_non_executing():
 def test_i8c_valid_callback_and_revalidated_storylet_becomes_eligible_only():
     _, _, _, _, _, definition, reference = build()
     assert reference.outcome == "STORYLET_ELIGIBLE"
-    assert reference.reason == "ALL_AUTHORED_PRECONDITIONS_REVALIDATED_FROM_CANONICAL_EVIDENCE"
+    assert (
+        reference.reason
+        == "ALL_AUTHORED_PRECONDITIONS_REVALIDATED_FROM_CANONICAL_EVIDENCE"
+    )
     assert reference.storylet_id == definition["storylet_id"]
     assert reference.source_callback_concept_id.startswith("RESPONSE:PROMISE_CALLBACK:")
     assert reference.authority_class == "NON_CANONICAL_STORYLET_ELIGIBILITY_ONLY"
-    assert any(item.startswith("KNOWLEDGE_RECIPIENT:") for item in reference.eligibility_evidence)
+    assert any(
+        item.startswith("KNOWLEDGE_RECIPIENT:")
+        for item in reference.eligibility_evidence
+    )
 
 
 def test_i8c_eligibility_projection_is_read_only_and_commits_nothing():
@@ -257,7 +319,9 @@ def test_i8c_unsafe_consequence_template_cannot_force_scene_or_branch():
     def mutate(definition):
         definition["consequence_templates"] = ["FORCE_PLAYER_ACCEPT_AND_COMMIT_SCENE"]
 
-    with pytest.raises(ValueError, match="I8C_UNSAFE_OR_UNSUPPORTED_CONSEQUENCE_TEMPLATE"):
+    with pytest.raises(
+        ValueError, match="I8C_UNSAFE_OR_UNSUPPORTED_CONSEQUENCE_TEMPLATE"
+    ):
         build(mutate_storylet=mutate)
 
 
@@ -265,7 +329,9 @@ def test_i8c_storylet_must_preserve_anti_retcon_and_anti_welding_guards():
     def mutate(definition):
         definition["forbidden_contradictions"].remove("NO_BRANCH_WELDING")
 
-    with pytest.raises(ValueError, match="I8C_REQUIRED_ANTI_WELDING_CONTRADICTIONS_MISSING"):
+    with pytest.raises(
+        ValueError, match="I8C_REQUIRED_ANTI_WELDING_CONTRADICTIONS_MISSING"
+    ):
         build(mutate_storylet=mutate)
 
 
@@ -279,7 +345,9 @@ def test_i8c_repeat_policy_cannot_auto_realize_eligible_storylet():
 
 def test_i8c_caller_authored_eligibility_evidence_is_rejected():
     baseline, world, damage, speech, acquisition = make_history()
-    with pytest.raises(ValueError, match="I8C_CALLER_AUTHORED_ELIGIBILITY_EVIDENCE_FORBIDDEN"):
+    with pytest.raises(
+        ValueError, match="I8C_CALLER_AUTHORED_ELIGIBILITY_EVIDENCE_FORBIDDEN"
+    ):
         build_storylet_eligibility_reference(
             baseline=baseline,
             world=world,
@@ -337,41 +405,86 @@ def test_i8c_recomputed_outer_digest_cannot_launder_forged_expected_eligibility(
     envelope = json.loads(package.decode("utf-8"))
     envelope["payload"]["expected_reference"]["outcome"] = "FORCED_REALIZED_STORYLET"
     forged = refresh_outer_digest(envelope)
-    with pytest.raises(ValueError, match="I8C_REPLAY_REFERENCE_MATERIALIZATION_MISMATCH"):
+    with pytest.raises(
+        ValueError, match="I8C_REPLAY_REFERENCE_MATERIALIZATION_MISMATCH"
+    ):
         replay_storylet_eligibility_package(forged)
 
 
 def test_i8c_contract_storylet_field_drift_fails_closed(tmp_path, monkeypatch):
-    baseline, world, damage, speech, acquisition = make_history()
-    contract = json.loads(i8c_reference._CONTRACT_PATH.read_text(encoding="utf-8"))
-    contract["type_registry"]["Storylet"]["fields"].append("invented_status")
-    path = tmp_path / "contract-drift.json"
-    path.write_text(json.dumps(contract, ensure_ascii=False), encoding="utf-8")
-    monkeypatch.setattr(i8c_reference, "_CONTRACT_PATH", path)
-    with pytest.raises(ValueError, match="I8C_STORYLET_FIELDS_DRIFT"):
-        build_storylet_eligibility_reference(
-            baseline=baseline,
-            world=world,
-            storylet_definition=storylet(damage, speech, acquisition),
-            player_actor_id=PLAYER,
-            promise_recipient_npc_id=NPC,
-            candidate_npc_id=NPC,
-            target_object_id=DOOR,
-            source_speech_event_id=speech.event_id,
-        )
+    build_with_contract_mutation(
+        tmp_path,
+        monkeypatch,
+        lambda contract: contract["type_registry"]["Storylet"]["fields"].append(
+            "invented_status"
+        ),
+        "I8C_STORYLET_FIELDS_DRIFT",
+    )
 
 
-def test_i8c_golden_noncanonical_storylet_guard_drift_fails_closed(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    ("field", "mutated_value"),
+    [
+        ("canonical_data_authority", ["WORLD_RULES_AUTHORITY"]),
+        ("staging_authority", ["AI_DIRECTOR"]),
+        ("contract_schema_steward", "AWRSE_AF_G_CONTRACT_STEWARD"),
+        ("producer_or_assembler", ["AWRSE_PX_RANKER"]),
+        ("downstream_consumer", ["WORLD_ACTION_AUTHORITY"]),
+        (
+            "mutation_constraint",
+            "AUTHORED_NARRATIVE_MAY_RETCON_WORLD_TRUTH_FOR_DRAMATIC_QUALITY",
+        ),
+    ],
+)
+def test_i8c_narrative_design_profile_body_drift_fails_closed(
+    tmp_path, monkeypatch, field, mutated_value
+):
+    def mutate(contract):
+        contract["authority_semantics"]["profiles"]["NARRATIVE_DESIGN_NON_CANONICAL"][
+            field
+        ] = mutated_value
+
+    build_with_contract_mutation(
+        tmp_path,
+        monkeypatch,
+        mutate,
+        "I8C_NARRATIVE_DESIGN_PROFILE_DRIFT",
+    )
+
+
+def test_i8c_narrative_design_profile_extra_authority_field_fails_closed(
+    tmp_path, monkeypatch
+):
+    def mutate(contract):
+        contract["authority_semantics"]["profiles"]["NARRATIVE_DESIGN_NON_CANONICAL"][
+            "hidden_override"
+        ] = "WORLD_AUTHORITY"
+
+    build_with_contract_mutation(
+        tmp_path,
+        monkeypatch,
+        mutate,
+        "I8C_NARRATIVE_DESIGN_PROFILE_DRIFT",
+    )
+
+
+def test_i8c_golden_noncanonical_storylet_guard_drift_fails_closed(
+    tmp_path, monkeypatch
+):
     baseline, world, damage, speech, acquisition = make_history()
     golden = json.loads(i8c_reference._GOLDEN_PATH.read_text(encoding="utf-8"))
-    rows = golden["scenarios"]["HOSTILE_PLAYER_BREAKS_PLOT"]["machine_spec"]["initial_state_predicates"]
+    rows = golden["scenarios"]["HOSTILE_PLAYER_BREAKS_PLOT"]["machine_spec"][
+        "initial_state_predicates"
+    ]
     for row in rows:
         if row.get("type_ref") == "Storylet":
             row["assertion"] = "storylet_may_force_world_fact"
     path = tmp_path / "golden-drift.json"
     path.write_text(json.dumps(golden, ensure_ascii=False), encoding="utf-8")
     monkeypatch.setattr(i8c_reference, "_GOLDEN_PATH", path)
-    with pytest.raises(ValueError, match="I8C_STORYLET_NONCANONICAL_GOLDEN_GUARD_DRIFT"):
+    with pytest.raises(
+        ValueError, match="I8C_STORYLET_NONCANONICAL_GOLDEN_GUARD_DRIFT"
+    ):
         build_storylet_eligibility_reference(
             baseline=baseline,
             world=world,
