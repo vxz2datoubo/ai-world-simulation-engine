@@ -98,6 +98,8 @@ No scalar score, weight, rank, selection, legality result, mutation command, rea
 
 The initial source-kind envelope is intentionally limited to the mechanisms actually tested by Stage A2: I5A information opportunity, I7A World Echo, and I8C Storylet. Adding a new source kind is a new evidence claim and requires later governed evaluation.
 
+All carried `source_refs` are semantically **upstream-owned**: a future assembler may carry only refs already admitted by the replay-validated source package semantic domain. Arbitrary caller strings cannot mint BranchQualityEvidence. B0 freezes this admission rule but does not implement a runtime assembler.
+
 The B0 fixture suite is explicitly `SYNTHETIC_INTERFACE_SHAPE_FIXTURE_ONLY_NOT_SOURCE_PROOF`. Its SHA-256-shaped values validate the interface form and fail-closed rules; they are **not** claims that those exact hashes are canonical source packages or I1 replay digests. B1 must bind real replay-valid provenance before canonical promotion.
 
 ## 5. Fail-closed fixture semantics
@@ -130,15 +132,17 @@ After independent B0 ACCEPT, B1 must at minimum:
 
 1. fresh-reconcile current canonical main;
 2. advance `AWRSE-AF001-LIVING-STORY-CONTRACTS` from the historical B0 parent version;
-3. advance `AWRSE-AF001-GOLDEN-SCENARIOS` and its required parent-contract version;
-4. add inverse parent registration for the binding;
-5. add inverse Golden fixture registration;
-6. prove the old parent contract / Golden suite tuple cannot authorize the new extension;
-7. preserve `canonical_data_authority = NONE`;
-8. preserve assessment-level portability rather than evidence-material identity;
-9. fresh-reconcile `OD-CLUE-QUALITY-001` and `OD-PX-SCORING-001` from canonical traceability and keep unresolved metric/PX policy outside this interface;
-10. replace B0 synthetic shape-only hash fixtures with real replay-valid source-package and I1 provenance evidence before any canonical promotion;
-11. keep runtime and PX scoring separately unauthorized.
+3. advance the parent `authority_graph_version`, because B1 would add a new registered derived-view authority profile even though its canonical data authority remains `NONE`;
+4. advance `AWRSE-AF001-GOLDEN-SCENARIOS` and its required parent-contract version;
+5. add inverse parent registration for the binding;
+6. add inverse Golden registration using a new replay-valid provenance fixture artifact, **not** the B0 synthetic shape-only suite;
+7. prove the old parent contract / authority-graph / Golden-suite tuple cannot authorize the new extension;
+8. preserve `canonical_data_authority = NONE`;
+9. preserve assessment-level portability rather than evidence-material identity;
+10. preserve the rule that `source_refs` must come from the bound source-package semantic domain and cannot be caller-minted;
+11. fresh-reconcile `OD-CLUE-QUALITY-001` and `OD-PX-SCORING-001` from canonical traceability and keep unresolved metric/PX policy outside this interface;
+12. replace B0 synthetic shape-only hash fixtures with real replay-valid source-package and I1 provenance evidence before any canonical promotion;
+13. keep runtime and PX scoring separately unauthorized.
 
 ## 7. Explicit non-goals
 
