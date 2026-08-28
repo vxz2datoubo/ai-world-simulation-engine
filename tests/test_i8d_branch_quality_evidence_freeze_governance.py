@@ -41,7 +41,19 @@ def test_b1_cannot_promote_synthetic_hash_shape_as_real_provenance():
     locks = binding["hard_locks"]
     assert gate["b1_real_replay_valid_source_provenance_required"] is True
     assert gate["b1_must_not_promote_synthetic_fixture_hashes_as_source_proof"] is True
+    assert gate["b1_golden_registration_must_use_replay_valid_fixture_artifact_not_b0_synthetic_suite"] is True
     assert locks["NO_SYNTHETIC_FIXTURE_PROMOTION_AS_SOURCE_PROOF"] is True
+
+
+def test_b1_must_advance_authority_graph_and_preserve_source_ref_admission():
+    binding = load_json(BINDING_PATH)
+    gate = binding["promotion_gate"]
+    assert gate["parent_authority_graph_version_must_advance"] is True
+    assert gate["b1_must_preserve_source_ref_admission_semantics"] is True
+    assert binding["proposed_type"]["source_ref_admission_semantics"] == (
+        "ONLY_REFS_ALREADY_VALIDATED_BY_BOUND_SOURCE_PACKAGE_SEMANTIC_DOMAIN_MAY_BE_CARRIED; "
+        "CALLER_STRINGS_CANNOT_MINT_BRANCH_EVIDENCE"
+    )
 
 
 def test_canonical_open_decisions_are_read_directly_from_traceability_registry():
