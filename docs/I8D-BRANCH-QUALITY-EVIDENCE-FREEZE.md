@@ -76,12 +76,14 @@ The candidate payload contains only:
 
 ### Identity and exact provenance
 - `evidence_id`
-- `source_candidate_ref`
+- `evaluated_subject_ref`
 - `source_kind`
 - `source_package_sha256`
 - `source_i1_sha256`
 - `evidence_version`
 - `authority_class`
+
+`evaluated_subject_ref` is deliberately neutral. It may identify a real candidate when one exists, or the evaluated no-opportunity/no-storylet result when no candidate exists. B0 must never invent a candidate identity merely to satisfy its evidence envelope.
 
 ### Portable integrity
 - `causal_world_integrity`

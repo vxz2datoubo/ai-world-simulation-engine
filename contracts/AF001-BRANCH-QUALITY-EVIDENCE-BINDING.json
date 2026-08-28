@@ -16,11 +16,7 @@
     "stage_a2_exact_head": "8cfae8cc882ffc5cd66426443073137990f07a81",
     "stage_a2_package_schema": "AWRSE-I8D-STAGE-A2-AXIS-STABILITY-2",
     "stage_a2_review_evidence_ref": "pullrequestreview-5051434710",
-    "validated_source_kinds": [
-      "I5A_INFORMATION_OPPORTUNITY",
-      "I7A_WORLD_ECHO",
-      "I8C_STORYLET"
-    ]
+    "validated_source_kinds": ["I5A_INFORMATION_OPPORTUNITY", "I7A_WORLD_ECHO", "I8C_STORYLET"]
   },
   "parent_review_context": {
     "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
@@ -32,21 +28,11 @@
   },
   "proposed_authority_profile": {
     "profile_id": "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW",
-    "canonical_data_authority": [
-      "NONE"
-    ],
+    "canonical_data_authority": ["NONE"],
     "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-    "producer_or_assembler": [
-      "AWRSE_NARRATIVE_COMPOSITE_VIEW_ASSEMBLER"
-    ],
-    "downstream_consumer": [
-      "NARRATIVE_OPPORTUNITY",
-      "PX_RANKING",
-      "AI_DIRECTOR"
-    ],
-    "staging_authority": [
-      "NONE"
-    ],
+    "producer_or_assembler": ["AWRSE_NARRATIVE_COMPOSITE_VIEW_ASSEMBLER"],
+    "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
+    "staging_authority": ["NONE"],
     "mutation_constraint": "DERIVED_BRANCH_EVIDENCE_MAY_DESCRIBE_ALREADY_VALIDATED_EVIDENCE_ONLY_AND_CANNOT_LEGALIZE_INVALID_CANDIDATES_CREATE_OR_REWRITE_WORLD_FACTS_OR_KNOWLEDGE_LOWER_CAPABILITY_DIFFICULTY_CREATE_PLAYER_INTENT_FORCE_STORYLET_OR_ENCOUNTER_REALIZATION_RETCON_RESURRECT_OR_FORCE_RECONVERGENCE"
   },
   "proposed_type": {
@@ -60,7 +46,7 @@
     "field_groups": {
       "identity_and_provenance": [
         "evidence_id",
-        "source_candidate_ref",
+        "evaluated_subject_ref",
         "source_kind",
         "source_package_sha256",
         "source_i1_sha256",
@@ -72,9 +58,7 @@
         "agency_legibility",
         "knowledge_provenance_integrity"
       ],
-      "dynamic_opportunity_state": [
-        "opportunity_scarcity_evidence"
-      ],
+      "dynamic_opportunity_state": ["opportunity_scarcity_evidence"],
       "mechanism_local_optional": [
         "character_relationship_continuity",
         "meaningful_state_information_relationship_delta",
@@ -84,7 +68,7 @@
     },
     "fields": [
       "evidence_id",
-      "source_candidate_ref",
+      "evaluated_subject_ref",
       "source_kind",
       "source_package_sha256",
       "source_i1_sha256",
@@ -96,31 +80,16 @@
       "opportunity_scarcity_evidence",
       "mechanism_evidence"
     ],
-    "integrity_assessment_vocabulary": [
-      "SUPPORTED",
-      "INTEGRITY_FAILURE"
-    ],
-    "scarcity_assessment_vocabulary": [
-      "ABSENT",
-      "RISK"
-    ],
-    "mechanism_assessment_vocabulary": [
-      "SUPPORTED",
-      "THIN",
-      "ABSENT",
-      "RISK",
-      "NOT_APPLICABLE"
-    ],
+    "integrity_assessment_vocabulary": ["SUPPORTED", "INTEGRITY_FAILURE"],
+    "scarcity_assessment_vocabulary": ["ABSENT", "RISK"],
+    "mechanism_assessment_vocabulary": ["SUPPORTED", "THIN", "ABSENT", "RISK", "NOT_APPLICABLE"],
     "mechanism_axis_registry": [
       "character_relationship_continuity",
       "meaningful_state_information_relationship_delta",
       "setup_promise_anchor_continuity",
       "contrivance_repetition_risk"
     ],
-    "authored_design_metadata_excluded": [
-      "genre_theme_design_fit",
-      "recoverable_thread_availability"
-    ],
+    "authored_design_metadata_excluded": ["genre_theme_design_fit", "recoverable_thread_availability"],
     "authority_class_constant": "DERIVED_EVIDENCE_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY",
     "source_provenance_required": true,
     "no_numeric_scalar_fields": true,
@@ -128,23 +97,9 @@
   },
   "forbidden_capabilities": {
     "field_name_fragments": [
-      "score",
-      "weight",
-      "rank",
-      "selected",
-      "legality",
-      "legalize",
-      "world_mutation",
-      "event_commit",
-      "realize_storylet",
-      "realize_encounter",
-      "engagement",
-      "retention",
-      "hidden_truth",
-      "player_intent",
-      "reconverge",
-      "resurrect",
-      "retcon"
+      "score", "weight", "rank", "selected", "legality", "legalize", "world_mutation", "event_commit",
+      "realize_storylet", "realize_encounter", "engagement", "retention", "hidden_truth", "player_intent",
+      "reconverge", "resurrect", "retcon"
     ],
     "semantic_rules": [
       "NO_UNIVERSAL_QUALITY_SCORE",

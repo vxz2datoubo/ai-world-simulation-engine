@@ -69,7 +69,7 @@ SCARCITY_ASSESSMENTS = {"ABSENT", "RISK"}
 MECHANISM_ASSESSMENTS = {"SUPPORTED", "THIN", "ABSENT", "RISK", "NOT_APPLICABLE"}
 TOP_LEVEL_FIELDS = {
     "evidence_id",
-    "source_candidate_ref",
+    "evaluated_subject_ref",
     "source_kind",
     "source_package_sha256",
     "source_i1_sha256",
@@ -118,13 +118,7 @@ def _load_json(path: Path) -> Mapping[str, Any]:
 
 
 def _canonical_json(value: Any) -> str:
-    return json.dumps(
-        value,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        allow_nan=False,
-    )
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
 def _sha256(value: Any) -> str:
@@ -182,7 +176,7 @@ def validate_evidence_instance(instance: Mapping[str, Any]) -> None:
         raise ValueError("B0_EVIDENCE_REQUIRED_FIELDS_MISSING")
 
     _require_string(instance.get("evidence_id"), "B0_EVIDENCE_ID_REQUIRED")
-    _require_string(instance.get("source_candidate_ref"), "B0_SOURCE_CANDIDATE_REF_REQUIRED")
+    _require_string(instance.get("evaluated_subject_ref"), "B0_EVALUATED_SUBJECT_REF_REQUIRED")
     source_kind = _require_string(instance.get("source_kind"), "B0_SOURCE_KIND_REQUIRED")
     if source_kind not in VALIDATED_SOURCE_KINDS:
         raise ValueError("B0_SOURCE_KIND_NOT_EVIDENCE_VALIDATED")
@@ -197,15 +191,9 @@ def validate_evidence_instance(instance: Mapping[str, Any]) -> None:
         _validate_axis(instance.get(name), INTEGRITY_ASSESSMENTS, f"B0_{name.upper()}")
 
     scarcity = instance.get("opportunity_scarcity_evidence")
-    if not isinstance(scarcity, Mapping) or set(scarcity) != {
-        "assessment",
-        "source_refs",
-        "upstream_status_ref",
-    }:
+    if not isinstance(scarcity, Mapping) or set(scarcity) != {"assessment", "source_refs", "upstream_status_ref"}:
         raise ValueError("B0_SCARCITY_SCHEMA_INVALID")
-    assessment = _require_string(
-        scarcity.get("assessment"), "B0_SCARCITY_ASSESSMENT_REQUIRED"
-    )
+    assessment = _require_string(scarcity.get("assessment"), "B0_SCARCITY_ASSESSMENT_REQUIRED")
     if assessment not in SCARCITY_ASSESSMENTS:
         raise ValueError("B0_SCARCITY_ASSESSMENT_INVALID")
     refs = scarcity.get("source_refs")
@@ -223,15 +211,11 @@ def validate_evidence_instance(instance: Mapping[str, Any]) -> None:
             raise ValueError("B0_MECHANISM_AXIS_UNKNOWN")
         if not isinstance(value, Mapping) or set(value) != {"assessment", "source_refs"}:
             raise ValueError("B0_MECHANISM_SCHEMA_INVALID")
-        mechanism_assessment = _require_string(
-            value.get("assessment"), "B0_MECHANISM_ASSESSMENT_REQUIRED"
-        )
+        mechanism_assessment = _require_string(value.get("assessment"), "B0_MECHANISM_ASSESSMENT_REQUIRED")
         if mechanism_assessment not in MECHANISM_ASSESSMENTS:
             raise ValueError("B0_MECHANISM_ASSESSMENT_INVALID")
         mechanism_refs = value.get("source_refs")
-        if not isinstance(mechanism_refs, list) or any(
-            not isinstance(item, str) or not item for item in mechanism_refs
-        ):
+        if not isinstance(mechanism_refs, list) or any(not isinstance(item, str) or not item for item in mechanism_refs):
             raise ValueError("B0_MECHANISM_SOURCE_REFS_INVALID")
         if mechanism_assessment == "NOT_APPLICABLE" and mechanism_refs:
             raise ValueError("B0_MECHANISM_NOT_APPLICABLE_REFS_FORBIDDEN")
@@ -240,20 +224,12 @@ def validate_evidence_instance(instance: Mapping[str, Any]) -> None:
 
 
 def materialize_negative_fixture(
-    case: Mapping[str, Any],
-    *,
-    positive_by_id: Mapping[str, Mapping[str, Any]] | None = None,
+    case: Mapping[str, Any], *, positive_by_id: Mapping[str, Mapping[str, Any]] | None = None
 ) -> dict[str, Any]:
-    """Materialize one adversarial fixture from a declared positive baseline.
-
-    Keeping negative cases as path mutations makes each authority attack auditable
-    and prevents copy-pasted full instances from drifting away from their baseline.
-    """
+    """Materialize one adversarial fixture from a declared positive baseline."""
     if not isinstance(case, Mapping):
         raise TypeError("B0_NEGATIVE_FIXTURE_MAPPING_REQUIRED")
-    base_ref = _require_string(
-        case.get("base_fixture_ref"), "B0_NEGATIVE_BASE_FIXTURE_REF_REQUIRED"
-    )
+    base_ref = _require_string(case.get("base_fixture_ref"), "B0_NEGATIVE_BASE_FIXTURE_REF_REQUIRED")
     if positive_by_id is None:
         fixtures = _load_json(FIXTURES_PATH)
         positives = fixtures.get("positive_cases")
@@ -278,9 +254,7 @@ def materialize_negative_fixture(
         path = mutation.get("path")
         if op not in {"set", "delete"}:
             raise ValueError("B0_NEGATIVE_MUTATION_OP_INVALID")
-        if not isinstance(path, list) or not path or any(
-            not isinstance(segment, str) or not segment for segment in path
-        ):
+        if not isinstance(path, list) or not path or any(not isinstance(segment, str) or not segment for segment in path):
             raise ValueError("B0_NEGATIVE_MUTATION_PATH_INVALID")
         cursor: dict[str, Any] = instance
         for segment in path[:-1]:
@@ -353,9 +327,7 @@ def validate_freeze_candidate() -> B0FreezeReceipt:
         raise ValueError("B0_PROPOSED_TYPE_INVALID")
     if proposed.get("domain") != "AF-F":
         raise ValueError("B0_DOMAIN_INVALID")
-    if proposed.get("portable_integrity_invariant") != (
-        "ASSESSMENT_LEVEL_PORTABILITY_ONLY_NOT_BYTE_IDENTICAL_EVIDENCE_MATERIAL"
-    ):
+    if proposed.get("portable_integrity_invariant") != "ASSESSMENT_LEVEL_PORTABILITY_ONLY_NOT_BYTE_IDENTICAL_EVIDENCE_MATERIAL":
         raise ValueError("B0_PORTABILITY_INVARIANT_DRIFT")
     groups = proposed.get("field_groups")
     if not isinstance(groups, Mapping):
@@ -394,17 +366,12 @@ def validate_freeze_candidate() -> B0FreezeReceipt:
         raise ValueError("B0_PROMOTION_GATE_INCOMPLETE")
 
     open_decisions = binding.get("open_decisions")
-    if not isinstance(open_decisions, Mapping) or set(open_decisions) != {
-        "OD-CLUE-QUALITY-001",
-        "OD-PX-SCORING-001",
-    }:
+    if not isinstance(open_decisions, Mapping) or set(open_decisions) != {"OD-CLUE-QUALITY-001", "OD-PX-SCORING-001"}:
         raise ValueError("B0_OPEN_DECISION_BOUNDARY_DRIFT")
 
     positive = fixtures.get("positive_cases")
     negative = fixtures.get("negative_cases")
-    if fixtures.get("mutation_fixture_schema") != (
-        "BASE_POSITIVE_INSTANCE_PLUS_DECLARED_PATH_MUTATIONS"
-    ):
+    if fixtures.get("mutation_fixture_schema") != "BASE_POSITIVE_INSTANCE_PLUS_DECLARED_PATH_MUTATIONS":
         raise ValueError("B0_MUTATION_FIXTURE_SCHEMA_INVALID")
     if not isinstance(positive, list) or not positive:
         raise ValueError("B0_POSITIVE_FIXTURES_REQUIRED")
@@ -415,9 +382,7 @@ def validate_freeze_candidate() -> B0FreezeReceipt:
     for case in positive:
         if not isinstance(case, Mapping):
             raise ValueError("B0_POSITIVE_FIXTURE_MAPPING_REQUIRED")
-        fixture_id = _require_string(
-            case.get("fixture_id"), "B0_POSITIVE_FIXTURE_ID_REQUIRED"
-        )
+        fixture_id = _require_string(case.get("fixture_id"), "B0_POSITIVE_FIXTURE_ID_REQUIRED")
         if fixture_id in positive_by_id:
             raise ValueError("B0_POSITIVE_FIXTURE_ID_DUPLICATE")
         instance = case.get("instance")
@@ -428,17 +393,13 @@ def validate_freeze_candidate() -> B0FreezeReceipt:
     for case in negative:
         if not isinstance(case, Mapping):
             raise ValueError("B0_NEGATIVE_FIXTURE_MAPPING_REQUIRED")
-        expected = _require_string(
-            case.get("expected_error"), "B0_NEGATIVE_EXPECTED_ERROR_REQUIRED"
-        )
+        expected = _require_string(case.get("expected_error"), "B0_NEGATIVE_EXPECTED_ERROR_REQUIRED")
         instance = materialize_negative_fixture(case, positive_by_id=positive_by_id)
         try:
             validate_evidence_instance(instance)
         except (ValueError, TypeError) as exc:
             if str(exc) != expected:
-                raise ValueError(
-                    f"B0_NEGATIVE_FIXTURE_ERROR_MISMATCH:{case.get('fixture_id')}:{exc}"
-                ) from exc
+                raise ValueError(f"B0_NEGATIVE_FIXTURE_ERROR_MISMATCH:{case.get('fixture_id')}:{exc}") from exc
         else:
             raise ValueError(f"B0_NEGATIVE_FIXTURE_DID_NOT_FAIL:{case.get('fixture_id')}")
 
