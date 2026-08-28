@@ -55,19 +55,34 @@ jobs:
           p.write_text(t, encoding='utf-8')
           PY
           python -m py_compile tools/i8d_b1_migrate.py
+      - name: Refine historical runtime invariance gate for B1 registry rebind
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('tests/test_i2a_capability_decision_receipt_contract.py')
+          t = p.read_text(encoding='utf-8')
+          old = '''def test_runtime_and_r003_persistence_authority_are_exactly_unchanged():\n    fixture = _load(FIXTURES_PATH)["unchanged_evidence"]\n    assert _git_object("runtime") == fixture["runtime_tree_sha"]\n    assert _git_object("runtime/awrse/persistence.py") == fixture["persistence_runtime_blob_sha"]\n    assert _git_object("evals/R003-I1A-RESTART-REFERENCE.json") == fixture[\n        "r003_i1a_reference_blob_sha"\n    ]\n'''
+          new = '''def test_runtime_and_r003_persistence_authority_are_preserved_with_exact_b1_registry_rebind():\n    fixture = _load(FIXTURES_PATH)["unchanged_evidence"]\n\n    def tree_map(treeish):\n        output = subprocess.check_output(\n            ["git", "ls-tree", "-r", treeish], cwd=ROOT, text=True\n        )\n        entries = {}\n        for line in output.splitlines():\n            metadata, path = line.split("\\t", 1)\n            entries[path] = metadata.split()[2]\n        return entries\n\n    baseline = tree_map(fixture["runtime_tree_sha"])\n    current = tree_map("HEAD:runtime")\n    allowed = "awrse/functional_impairment_admission.py"\n    assert {k: v for k, v in current.items() if k != allowed} == {\n        k: v for k, v in baseline.items() if k != allowed\n    }\n    assert set(current) == set(baseline)\n\n    old_source = subprocess.check_output(\n        ["git", "cat-file", "blob", baseline[allowed]], cwd=ROOT\n    )\n    current_source = subprocess.check_output(\n        ["git", "cat-file", "blob", current[allowed]], cwd=ROOT\n    )\n    expected_source = old_source.replace(\n        b"AF001-AUTHORITY-GRAPH-1.9-I2A008@1", AUTHORITY_GRAPH.encode("utf-8"), 1\n    )\n    assert current_source == expected_source\n    assert current_source.count(AUTHORITY_GRAPH.encode("utf-8")) == 1\n\n    assert _git_object("runtime/awrse/persistence.py") == fixture["persistence_runtime_blob_sha"]\n    assert _git_object("evals/R003-I1A-RESTART-REFERENCE.json") == fixture[\n        "r003_i1a_reference_blob_sha"\n    ]\n'''
+          if old in t:
+              t = t.replace(old, new, 1)
+          elif new not in t:
+              raise SystemExit('runtime invariance gate anchor not found')
+          p.write_text(t, encoding='utf-8')
+          PY
       - name: Verify materialized B1 migration
         run: |
           python tools/i8d_b1_migrate.py
           git diff --check
           python -m pytest -q
-      - name: Commit generator hardening only after full verification
+      - name: Commit hardening only after full verification
         run: |
           if git diff --quiet && git diff --cached --quiet; then
-            echo 'B1 migration already materialized and generator already idempotent.'
+            echo 'B1 migration hardening already materialized.'
             exit 0
           fi
           git config user.name 'AWRSE B1 Migration Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add tools/i8d_b1_migrate.py
-          git commit -m 'Harden I8D B1 migration idempotency [b1-generated]'
+          git add tools/i8d_b1_migrate.py tests/test_i2a_capability_decision_receipt_contract.py
+          git commit -m 'Harden I8D B1 replay and runtime invariants [b1-generated]'
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
