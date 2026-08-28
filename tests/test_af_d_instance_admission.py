@@ -65,7 +65,7 @@ def test_parent_explicitly_registers_binding_manifest_and_scoped_epoch():
     binding = _load(BINDING)
     manifest = _load(MANIFEST)
 
-    assert parent["contract_version"] == "1.9.0-candidate"
+    assert parent["contract_version"] == "1.10.0-candidate"
     assert parent["af_d_instance_admission_authority_epoch"] == "AF001-AF-D-INSTANCE-ADMISSION-001@1"
     registration = parent["registered_contract_extensions"][binding["binding_id"]]
     assert registration["path"] == "contracts/AF001-AF-D-INSTANCE-ADMISSION-BINDING.json"

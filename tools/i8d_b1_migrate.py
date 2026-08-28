@@ -261,7 +261,7 @@ def migrate_branch_binding() -> None:
         "golden_required_contract_version": NEW_PARENT,
         "decision_lifecycle_binding_version": NEW_DECISION,
     }
-    b["historical_b0_review_context"] = b.pop("parent_review_context")
+    b["historical_b0_review_context"] = copy.deepcopy(b["parent_review_context"])
     b["historical_b0_review_context"]["status"] = "REVIEWED_B0_PRE_PROMOTION_CONTEXT_ONLY"
     b["proposed_authority_profile"]["profile_id"] = BQ_PROFILE
     b["proposed_type"]["version"] = "1.0.0-candidate"
@@ -281,11 +281,53 @@ def migrate_branch_binding() -> None:
         "runtime_remains_separately_unauthorized": True,
         "assessment_level_not_material_identity_invariant_preserved": True,
     }
+    b["promotion_gate"].update({
+        "stage_b1_required": True,
+        "independent_accept_of_b0_required": True,
+        "parent_contract_version_must_advance": True,
+        "golden_suite_version_must_advance": True,
+        "b1_must_preserve_assessment_level_not_material_identity_invariant": True,
+        "b1_real_replay_valid_source_provenance_required": True,
+        "b1_must_not_promote_synthetic_fixture_hashes_as_source_proof": True,
+        "canonical_open_decisions_must_be_fresh_reconciled_before_b1": True,
+        "parent_authority_graph_version_must_advance": True,
+        "b1_golden_registration_must_use_replay_valid_fixture_artifact_not_b0_synthetic_suite": True,
+        "b1_must_preserve_source_ref_admission_semantics": True,
+    })
     b["hard_locks"]["STAGE_B1_CANONICAL_REGISTRATION_NOT_AUTHORIZED"] = False
     b["hard_locks"]["B1_CANONICAL_REGISTRATION_COMPLETED_INTERFACE_ONLY"] = True
     b["hard_locks"]["NO_SYNTHETIC_FIXTURE_PROMOTION_AS_SOURCE_PROOF"] = True
     b["canonical_provenance_fixture_ref"] = BQ_PROVENANCE_PATH
     dump("contracts/AF001-BRANCH-QUALITY-EVIDENCE-BINDING.json", b)
+
+
+def refresh_rebound_integrity_digests() -> None:
+    manifest_path = "registries/AF001-AF-D-REFERENCE-INSTANCES.json"
+    binding_path = "contracts/AF001-AF-D-INSTANCE-ADMISSION-BINDING.json"
+    parent_path = "contracts/AF001-LIVING-STORY-CONTRACTS.json"
+    binding_id = "AWRSE-AF001-AF-D-INSTANCE-ADMISSION-BINDING"
+
+    manifest = load(manifest_path)
+    manifest_digest = sha256_bytes(canonical_json_bytes(manifest))
+
+    binding = load(binding_path)
+    manifest_registration = binding.get("canonical_instance_manifest")
+    if not isinstance(manifest_registration, dict):
+        raise RuntimeError("B1_AF_D_MANIFEST_REGISTRATION_MISSING")
+    manifest_registration["canonical_sha256"] = manifest_digest
+    dump(binding_path, binding)
+    binding_digest = sha256_bytes(canonical_json_bytes(binding))
+
+    parent = load(parent_path)
+    registration = parent.get("registered_contract_extensions", {}).get(binding_id)
+    if not isinstance(registration, dict):
+        raise RuntimeError("B1_AF_D_PARENT_REGISTRATION_MISSING")
+    registration["binding_canonical_sha256"] = binding_digest
+    parent_manifest = registration.get("canonical_instance_manifest")
+    if not isinstance(parent_manifest, dict):
+        raise RuntimeError("B1_AF_D_PARENT_MANIFEST_REGISTRATION_MISSING")
+    parent_manifest["canonical_sha256"] = manifest_digest
+    dump(parent_path, parent)
 
 
 def load_a2_test_helpers():
@@ -431,11 +473,56 @@ def migrate_current_code_refs() -> None:
     ]
     for rel in graph_files:
         replace_text(rel, OLD_GRAPH, NEW_GRAPH)
+        replace_text(rel, OLD_PARENT, NEW_PARENT)
     for rel in parent_files:
         replace_text(rel, OLD_PARENT, NEW_PARENT)
     replace_text("tests/test_i2a_action_demand_canonical_registration.py", OLD_GOLDEN, NEW_GOLDEN)
-    replace_text("tests/test_i2a_functional_impairment_contract.py", 'previous_contract_version") != "1.8.0-candidate"', 'previous_contract_version") != "1.9.0-candidate"')
+    replace_text("tests/test_i2a_functional_impairment_contract.py", 'lineage.get("previous_contract_version") != "1.8.0-candidate"', 'lineage.get("previous_contract_version") != "1.9.0-candidate"')
     replace_text("tests/test_i2a_action_demand_canonical_registration.py", 'previous_contract_version"] == "1.8.0-candidate"', 'previous_contract_version"] == "1.9.0-candidate"')
+    replace_text("tests/test_i2a_action_demand_admission.py", 'contract["contract_version"] = "1.8.0-candidate"', 'contract["contract_version"] = "1.9.0-candidate"')
+    replace_text("tests/test_i2a_action_demand_admission.py", 'registration["parent_contract_version"] = "1.8.0-candidate"', 'registration["parent_contract_version"] = "1.9.0-candidate"')
+    replace_text("tests/test_i2a_action_demand_admission.py", 'binding["parent_machine_contract"]["contract_version"] = "1.8.0-candidate"', 'binding["parent_machine_contract"]["contract_version"] = "1.9.0-candidate"')
+    replace_text("tests/test_i2a_skill_ledger_contract_freeze.py", 'assert contract["contract_version"] == "1.9.0-candidate"', 'assert contract["contract_version"] == "1.10.0-candidate"')
+    replace_text("tests/test_i2a_skill_ledger_contract_freeze.py", 'assert suite["suite_version"] == "1.7.0-candidate"', 'assert suite["suite_version"] == "1.8.0-candidate"')
+
+    architecture_path = ROOT / "tests/test_af001_architecture_freeze.py"
+    architecture_text = architecture_path.read_text(encoding="utf-8")
+    old_architecture = """    assert contract["contract_version"] == "1.9.0-candidate"
+    assert contract["versioning_and_migration"]["contract_version_lineage"] == {
+        "previous_contract_version": "1.8.0-candidate",
+        "semantic_delta": [
+            "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",
+            "ACTION_DEMAND_PROJECTION_EXTENSION_AUTHORITY_IS_PARENT_REGISTERED_AND_VERSION_BOUND",
+            "PRE_REGISTRATION_1_8_PARENT_VERSION_CANNOT_AUTHORIZE_NEW_EXTENSION",
+        ],
+        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_ACTION_DEMAND_EXTENSION_AUTHORITY_FROM_PRE_REGISTRATION_1_8_STATE",
+    }
+    assert suite["suite_version"] == "1.7.0-candidate"
+    assert suite["required_contract_version"] == contract["contract_version"]
+    assert bindings["version"] == "1.2.0-candidate"
+    assert bindings["required_contract_version"] == contract["contract_version"]
+"""
+    new_architecture = """    assert contract["contract_version"] == "1.10.0-candidate"
+    lineage = contract["versioning_and_migration"]["contract_version_lineage"]
+    assert lineage["previous_contract_version"] == "1.9.0-candidate"
+    assert set(lineage["semantic_delta"]) >= {
+        "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",
+        "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW_CANONICAL_EXTENSION_REGISTRATION",
+        "BRANCH_QUALITY_EVIDENCE_AUTHORITY_PROFILE_ADDED_WITH_CANONICAL_DATA_AUTHORITY_NONE",
+        "EXISTING_REGISTERED_EXTENSIONS_REBOUND_TO_NEW_PARENT_REGISTRY_EPOCH_WITHOUT_GAMEPLAY_SEMANTIC_CHANGE",
+        "PRE_I8DB1_1_9_PARENT_AUTHORITY_GRAPH_AND_GOLDEN_TUPLE_CANNOT_AUTHORIZE_BRANCH_QUALITY_EXTENSION",
+    }
+    assert "BRANCH_QUALITY_EVIDENCE_REQUIRES_PARENT_AND_GOLDEN_INVERSE_REGISTRATION_AND_REPLAY_VALID_PROVENANCE" in lineage["consumer_rule"]
+    assert suite["suite_version"] == "1.8.0-candidate"
+    assert suite["required_contract_version"] == contract["contract_version"]
+    assert bindings["version"] == "1.3.0-candidate"
+    assert bindings["required_contract_version"] == contract["contract_version"]
+"""
+    if old_architecture in architecture_text:
+        architecture_text = architecture_text.replace(old_architecture, new_architecture, 1)
+    elif new_architecture not in architecture_text:
+        raise RuntimeError("B1_ARCHITECTURE_CURRENT_ASSERTION_ANCHOR_MISSING")
+    architecture_path.write_text(architecture_text, encoding="utf-8")
 
 
 def write_b1_validator_and_tests() -> None:
@@ -619,6 +706,7 @@ def main() -> None:
     migrate_parent()
     migrate_json_current_context()
     migrate_branch_binding()
+    refresh_rebound_integrity_digests()
     migrate_golden()
     migrate_current_code_refs()
     make_provenance_fixtures()

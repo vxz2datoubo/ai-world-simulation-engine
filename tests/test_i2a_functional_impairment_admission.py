@@ -37,7 +37,7 @@ def _actor_receipt(actor_id="ACTOR-FIGHTER-001"):
         admitted_base_attribute_map=MappingProxyType({"strength": 8, "reasoning": 4}),
         source_event_refs=("E-ACTOR-001",),
         canonical_contract_id="AWRSE-AF001-LIVING-STORY-CONTRACTS",
-        canonical_contract_version="1.9.0-candidate",
+        canonical_contract_version="1.10.0-candidate",
     )
 
 
@@ -66,7 +66,7 @@ def _demand_receipt(case):
             }
         ),
         canonical_contract_id="AWRSE-AF001-LIVING-STORY-CONTRACTS",
-        canonical_contract_version="1.9.0-candidate",
+        canonical_contract_version="1.10.0-candidate",
         binding_id="AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
         binding_version="1.0.0-candidate",
         resolver_projection=MappingProxyType(
@@ -109,7 +109,7 @@ def test_fic01_exact_right_grip_is_structurally_applicable_without_numeric_effec
     receipt = _admit(case)
     assert isinstance(receipt, FunctionalImpairmentAdmissionReceipt)
     assert _logical_projection(receipt) == case["expected"]
-    assert receipt.authority_graph_version == "AF001-AUTHORITY-GRAPH-1.9-I2A008@1"
+    assert receipt.authority_graph_version == "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"
     assert receipt.numeric_effect_status == "DEFERRED_RULESET_TUNING"
     assert "severity" not in receipt.projection
     assert "penalty" not in receipt.projection

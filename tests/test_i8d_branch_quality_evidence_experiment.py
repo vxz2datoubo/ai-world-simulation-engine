@@ -420,8 +420,8 @@ def test_i8d_scope_locks_keep_stage_a_non_authoritative():
 def test_i8d_governance_gate_confirms_open_decisions_and_no_production_type():
     assert i8d_reference._load_governance() == (
         "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-        "1.9.0-candidate",
-        "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "1.10.0-candidate",
+        "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
     )
 
 

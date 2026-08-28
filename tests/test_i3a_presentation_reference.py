@@ -41,7 +41,7 @@ FORGED_IDENTITY_EVIDENCE = {
     "status": "UPSTREAM_PREVALIDATED_IDENTITY_EVIDENCE",
     "authority_identity": {
         "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-        "canonical_contract_version": "1.9.0-candidate",
+        "canonical_contract_version": "1.10.0-candidate",
         "admission_authority_ref": "caller://forged-af-d-authority",
         "view_authority_profile_ref": "SPATIAL_VIEW_DEFINITION_REGISTRY",
         "asset_authority_profile_ref": "ASSET_LOGICAL_IDENTITY_REGISTRY",

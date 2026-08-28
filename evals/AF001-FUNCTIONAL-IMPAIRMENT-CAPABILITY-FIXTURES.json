@@ -3,7 +3,7 @@
   "fixture_suite_version": "1.0.0-candidate",
   "governance_issue_ref": "#53",
   "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-  "parent_contract_version": "1.9.0-candidate",
+  "parent_contract_version": "1.10.0-candidate",
   "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
   "binding_version": "1.0.0-candidate",
   "runtime_implementation_authorized": false,
@@ -321,5 +321,5 @@
       "expected_error": "I2A_FUNCTIONAL_IMPAIRMENT_NUMERIC_OVERRIDE_NOT_AUTHORIZED"
     }
   ],
-  "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1"
+  "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"
 }

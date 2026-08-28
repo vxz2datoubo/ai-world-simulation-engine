@@ -73,7 +73,7 @@ def test_adp_01_valid_projection_admits_with_exact_canonical_authority():
         "difficulty_or_resistance": 7,
     }
     assert receipt.canonical_contract_id == "AWRSE-AF001-LIVING-STORY-CONTRACTS"
-    assert receipt.canonical_contract_version == "1.9.0-candidate"
+    assert receipt.canonical_contract_version == "1.10.0-candidate"
     assert receipt.binding_id == "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING"
     assert receipt.binding_version == "1.0.0-candidate"
 
@@ -308,10 +308,10 @@ def test_orphan_self_declared_binding_is_not_canonical(monkeypatch, tmp_path):
 def test_pre_registration_parent_version_cannot_authorize_new_binding(monkeypatch, tmp_path):
     contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
     binding = json.loads(BINDING.read_text(encoding="utf-8"))
-    contract["contract_version"] = "1.8.0-candidate"
+    contract["contract_version"] = "1.9.0-candidate"
     registration = contract["registered_contract_extensions"][binding["binding_id"]]
-    registration["parent_contract_version"] = "1.8.0-candidate"
-    binding["parent_machine_contract"]["contract_version"] = "1.8.0-candidate"
+    registration["parent_contract_version"] = "1.9.0-candidate"
+    binding["parent_machine_contract"]["contract_version"] = "1.9.0-candidate"
 
     contract_path = tmp_path / "contract.json"
     binding_path = tmp_path / "binding.json"

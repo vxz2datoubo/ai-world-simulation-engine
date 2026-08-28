@@ -6,8 +6,8 @@
   "authority_scope": "BOUNDED_REFERENCE_AF_D_INSTANCES_ONLY_NOT_PRODUCTION_ASSET_SERVICE",
   "parent_machine_contract": {
     "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-    "contract_version": "1.9.0-candidate",
-    "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+    "contract_version": "1.10.0-candidate",
+    "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
     "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1"
   },
   "canonicalization_provenance": {

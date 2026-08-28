@@ -1,22 +1,40 @@
 {
   "registry_id": "AWRSE-AF001-DECISION-LIFECYCLE-BINDINGS",
-  "version": "1.2.0-candidate",
+  "version": "1.3.0-candidate",
   "status": "ARCHITECTURE_FREEZE_CANDIDATE",
   "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
-  "required_contract_version": "1.9.0-candidate",
+  "required_contract_version": "1.10.0-candidate",
   "purpose": "Classify durable historical decision references without treating resolved architectural substrate as an unresolved architecture blocker.",
   "legacy_golden_field": "open_decision_dependencies",
   "legacy_field_rule": "A listed reference remains open only when it is absent from the scenario historical_decision_dependencies binding. Bound historical references retain traceability but are not current architecture blockers.",
   "scenario_bindings": {
     "WILDERNESS_NEWS_TRAP": {
-      "historical_decision_dependencies": ["OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001"],
-      "current_open_architecture_dependencies": ["OD-ENCOUNTER-DENSITY-001", "OD-PX-SCORING-001", "OD-PUBLICATION-POLICY-001"],
-      "required_runtime_bindings": ["EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME", "EXPLICIT_VERSIONED_RULESET_REQUIRED_BEFORE_RUNTIME"]
+      "historical_decision_dependencies": [
+        "OD-CAPABILITY-ATTR-001",
+        "OD-CAPABILITY-MATH-001"
+      ],
+      "current_open_architecture_dependencies": [
+        "OD-ENCOUNTER-DENSITY-001",
+        "OD-PX-SCORING-001",
+        "OD-PUBLICATION-POLICY-001"
+      ],
+      "required_runtime_bindings": [
+        "EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME",
+        "EXPLICIT_VERSIONED_RULESET_REQUIRED_BEFORE_RUNTIME"
+      ]
     },
     "FIGHTER_VS_SCHOLAR": {
-      "historical_decision_dependencies": ["OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001"],
+      "historical_decision_dependencies": [
+        "OD-CAPABILITY-ATTR-001",
+        "OD-CAPABILITY-MATH-001"
+      ],
       "current_open_architecture_dependencies": [],
-      "required_runtime_bindings": ["EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME", "EXPLICIT_VERSIONED_RULESET_REQUIRED_BEFORE_RUNTIME"]
+      "required_runtime_bindings": [
+        "EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME",
+        "EXPLICIT_VERSIONED_RULESET_REQUIRED_BEFORE_RUNTIME"
+      ]
     }
-  }
+  },
+  "migration_from_version": "1.2.0-candidate",
+  "migration_reason": "PARENT_CONTRACT_REGISTRY_EPOCH_ADVANCED_FOR_I8D_B1_WITH_DECISION_SEMANTICS_UNCHANGED"
 }

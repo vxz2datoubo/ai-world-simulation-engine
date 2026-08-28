@@ -19,7 +19,7 @@ EXPECTED_LOCKS = {
     "RUNTIME_SEMANTICS_UNCHANGED": True,
 }
 
-AUTHORITY_GRAPH_VERSION = "AF001-AUTHORITY-GRAPH-1.9-I2A008@1"
+AUTHORITY_GRAPH_VERSION = "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"
 
 
 def _load(path):
@@ -71,8 +71,8 @@ def _validate_authority(parent, binding):
         raise ValueError(error)
     delta = lineage.get("semantic_delta")
     if (
-        lineage.get("previous_contract_version") != "1.8.0-candidate"
-        or parent.get("contract_version") != "1.9.0-candidate"
+        lineage.get("previous_contract_version") != "1.9.0-candidate"
+        or parent.get("contract_version") != "1.10.0-candidate"
         or not isinstance(delta, list)
         or "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION" not in delta
     ):
@@ -217,9 +217,9 @@ def test_parent_registers_functional_impairment_binding_and_preserves_action_dem
 
     action_registration = parent["registered_contract_extensions"][action_binding["binding_id"]]
     fixture = _load(FIXTURES_PATH)
-    assert action_registration["parent_contract_version"] == "1.9.0-candidate"
-    assert action_binding["parent_machine_contract"]["contract_version"] == "1.9.0-candidate"
-    assert parent["contract_version"] == "1.9.0-candidate"
+    assert action_registration["parent_contract_version"] == "1.10.0-candidate"
+    assert action_binding["parent_machine_contract"]["contract_version"] == "1.10.0-candidate"
+    assert parent["contract_version"] == "1.10.0-candidate"
     assert parent["authority_graph_version"] == AUTHORITY_GRAPH_VERSION
     assert binding["parent_machine_contract"]["authority_graph_version"] == AUTHORITY_GRAPH_VERSION
     assert fixture["parent_authority_graph_version"] == AUTHORITY_GRAPH_VERSION

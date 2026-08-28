@@ -3,7 +3,7 @@
   "fixture_version": "1.0.0-candidate",
   "fixture_role": "GOLDEN_EXECUTABLE_SPEC_EXTENSION_NON_COMPETING",
   "parent_golden_registry": "evals/AF001-GOLDEN-SCENARIOS.json",
-  "parent_golden_registry_version": "1.7.0-candidate",
+  "parent_golden_registry_version": "1.8.0-candidate",
   "required_binding": {
     "path": "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json",
     "binding_version": "1.0.0-candidate"
@@ -16,10 +16,20 @@
         "demand_id": "climb-wall-standard",
         "action_family": "CLIMB",
         "method_id": "HAND_AND_FOOT_CLIMB",
-        "hard_prerequisites": ["HAS_REACHABLE_SURFACE"],
-        "attribute_weights": {"strength": 999, "agility": -999},
-        "skill_weights": {"climb": 123456},
-        "required_body_functions": ["UPPER_LIMB", "LOWER_LIMB"],
+        "hard_prerequisites": [
+          "HAS_REACHABLE_SURFACE"
+        ],
+        "attribute_weights": {
+          "strength": 999,
+          "agility": -999
+        },
+        "skill_weights": {
+          "climb": 123456
+        },
+        "required_body_functions": [
+          "UPPER_LIMB",
+          "LOWER_LIMB"
+        ],
         "hazard_profile": "hazard:falling-v1",
         "ruleset_version": "ruleset:small-core-v1"
       },
@@ -37,8 +47,13 @@
         }
       },
       "expected": {
-        "required_attributes": ["agility", "strength"],
-        "required_skills": ["climb"],
+        "required_attributes": [
+          "agility",
+          "strength"
+        ],
+        "required_skills": [
+          "climb"
+        ],
         "difficulty_or_resistance": 7,
         "weight_values_consumed": false
       }
@@ -50,8 +65,12 @@
         "action_family": "CLIMB",
         "method_id": "HAND_AND_FOOT_CLIMB",
         "hard_prerequisites": [],
-        "attribute_weights": {"": 1},
-        "skill_weights": {"climb": 1},
+        "attribute_weights": {
+          "": 1
+        },
+        "skill_weights": {
+          "climb": 1
+        },
         "required_body_functions": [],
         "hazard_profile": null,
         "ruleset_version": "ruleset:small-core-v1"
@@ -65,8 +84,12 @@
         "action_family": "CLIMB",
         "method_id": "HAND_AND_FOOT_CLIMB",
         "hard_prerequisites": [],
-        "attribute_weights": {"strength": 1},
-        "skill_weights": {"": 1},
+        "attribute_weights": {
+          "strength": 1
+        },
+        "skill_weights": {
+          "": 1
+        },
         "required_body_functions": [],
         "hazard_profile": null,
         "ruleset_version": "ruleset:small-core-v1"
@@ -94,9 +117,15 @@
         "demand_id": "locked-climb",
         "action_family": "CLIMB",
         "method_id": "HAND_AND_FOOT_CLIMB",
-        "hard_prerequisites": ["HAS_REACHABLE_SURFACE"],
-        "attribute_weights": {"strength": 1},
-        "skill_weights": {"climb": 1},
+        "hard_prerequisites": [
+          "HAS_REACHABLE_SURFACE"
+        ],
+        "attribute_weights": {
+          "strength": 1
+        },
+        "skill_weights": {
+          "climb": 1
+        },
         "required_body_functions": [],
         "hazard_profile": null,
         "ruleset_version": "ruleset:small-core-v1"
@@ -113,8 +142,12 @@
         "action_family": "CLIMB",
         "method_id": "HAND_AND_FOOT_CLIMB",
         "hard_prerequisites": [],
-        "attribute_weights": {"strength": 1},
-        "skill_weights": {"climb": 1},
+        "attribute_weights": {
+          "strength": 1
+        },
+        "skill_weights": {
+          "climb": 1
+        },
         "required_body_functions": [],
         "hazard_profile": null,
         "ruleset_version": "ruleset:small-core-v1"
@@ -139,7 +172,9 @@
         "action_family": "LIFT",
         "method_id": "DIRECT_LIFT",
         "hard_prerequisites": [],
-        "attribute_weights": {"strength": 0},
+        "attribute_weights": {
+          "strength": 0
+        },
         "skill_weights": {},
         "required_body_functions": [],
         "hazard_profile": null,
@@ -159,7 +194,9 @@
         }
       },
       "expected": {
-        "required_attributes": ["strength"],
+        "required_attributes": [
+          "strength"
+        ],
         "required_skills": [],
         "difficulty_or_resistance": 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       }

@@ -56,8 +56,8 @@ def test_r1_scope_locks_and_supersession_are_explicit():
 def test_r1_repair_guard_keeps_same_nonauthority_governance():
     assert r1._load_repair_guard() == (
         "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-        "1.9.0-candidate",
-        "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "1.10.0-candidate",
+        "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
     )
 
 

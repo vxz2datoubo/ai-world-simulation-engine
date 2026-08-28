@@ -24,7 +24,7 @@ def valid_instance():
 
 def test_b0_hard_locks_are_explicit():
     assert b0.B0_INTERFACE_FREEZE_ONLY is True
-    assert b0.B0_CANDIDATE_NOT_CANONICAL is True
+    assert b0.B0_CANDIDATE_NOT_CANONICAL is True  # historical B0 declaration
     assert b0.STAGE_B1_CANONICAL_REGISTRATION_NOT_AUTHORIZED is True
     assert b0.NO_RUNTIME_IMPLEMENTATION is True
     assert b0.NO_BRANCH_QUALITY_SCORE is True
@@ -37,19 +37,17 @@ def test_b0_hard_locks_are_explicit():
     assert b0.NO_PARTY_PUBLIC_IMPLEMENTED is True
 
 
-def test_freeze_candidate_validates_and_is_not_registered():
-    receipt = b0.validate_freeze_candidate()
-    assert receipt.parent_contract_version == "1.9.0-candidate"
-    assert receipt.golden_suite_version == "1.7.0-candidate"
-    assert receipt.canonical_registration_present is False
-    assert receipt.b1_required is True
-    assert len(receipt.binding_sha256) == 64
-    assert len(receipt.fixture_sha256) == 64
-
-
-def test_parent_registry_does_not_yet_grant_candidate_authority():
+def test_freeze_candidate_historical_validator_is_superseded_by_b1_registration():
+    binding = load("contracts/AF001-BRANCH-QUALITY-EVIDENCE-BINDING.json")
     parent = load("contracts/AF001-LIVING-STORY-CONTRACTS.json")
-    assert b0.BINDING_ID not in parent["registered_contract_extensions"]
+    assert binding["status"] == "CANONICAL_REGISTERED_INTERFACE_ONLY_NO_RUNTIME"
+    assert b0.BINDING_ID in parent["registered_contract_extensions"]
+    assert binding["historical_b0_review_context"]["parent_contract_version"] == "1.9.0-candidate"
+
+
+def test_parent_registry_now_grants_only_derived_view_schema_authority():
+    parent = load("contracts/AF001-LIVING-STORY-CONTRACTS.json")
+    assert b0.BINDING_ID in parent["registered_contract_extensions"]
     assert parent["contract_extension_authority_rule"].startswith(
         "ONLY_EXTENSIONS_EXPLICITLY_REGISTERED"
     )
@@ -58,10 +56,10 @@ def test_parent_registry_does_not_yet_grant_candidate_authority():
 def test_current_parent_and_golden_versions_are_frozen_review_context():
     parent = load("contracts/AF001-LIVING-STORY-CONTRACTS.json")
     golden = load("evals/AF001-GOLDEN-SCENARIOS.json")
-    assert parent["contract_version"] == b0.PARENT_VERSION
-    assert parent["authority_graph_version"] == b0.PARENT_AUTHORITY_GRAPH
-    assert golden["suite_version"] == b0.GOLDEN_VERSION
-    assert golden["required_contract_version"] == b0.PARENT_VERSION
+    assert parent["contract_version"] == "1.10.0-candidate"
+    assert parent["authority_graph_version"] == "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"
+    assert golden["suite_version"] == "1.8.0-candidate"
+    assert golden["required_contract_version"] == "1.10.0-candidate"
 
 
 def test_authority_profile_has_no_canonical_data_authority():

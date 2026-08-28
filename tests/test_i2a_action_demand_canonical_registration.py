@@ -104,12 +104,12 @@ def test_pre_registration_parent_version_tuple_cannot_authorize_new_extensions()
     golden = _load(GOLDEN_REGISTRY)
     fixture = _load(FIXTURES)
 
-    assert parent["contract_version"] == "1.9.0-candidate"
-    assert parent["versioning_and_migration"]["contract_version_lineage"]["previous_contract_version"] == "1.8.0-candidate"
-    assert binding["parent_machine_contract"]["contract_version"] == "1.9.0-candidate"
-    assert golden["suite_version"] == "1.7.0-candidate"
-    assert golden["required_contract_version"] == "1.9.0-candidate"
-    assert fixture["parent_golden_registry_version"] == "1.7.0-candidate"
+    assert parent["contract_version"] == "1.10.0-candidate"
+    assert parent["versioning_and_migration"]["contract_version_lineage"]["previous_contract_version"] == "1.9.0-candidate"
+    assert binding["parent_machine_contract"]["contract_version"] == "1.10.0-candidate"
+    assert golden["suite_version"] == "1.8.0-candidate"
+    assert golden["required_contract_version"] == "1.10.0-candidate"
+    assert fixture["parent_golden_registry_version"] == "1.8.0-candidate"
 
     pre_registration_parent = copy.deepcopy(parent)
     pre_registration_parent["contract_version"] = "1.8.0-candidate"

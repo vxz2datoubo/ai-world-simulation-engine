@@ -94,9 +94,9 @@ def test_contract_and_golden_versions_are_bound_for_skill_ledger_freeze():
     contract = _load(CONTRACT_PATH)
     suite = _load(GOLDEN_PATH)
 
-    assert contract["contract_version"] == "1.9.0-candidate"
+    assert contract["contract_version"] == "1.10.0-candidate"
     assert suite["required_contract_version"] == contract["contract_version"]
-    assert suite["suite_version"] == "1.7.0-candidate"
+    assert suite["suite_version"] == "1.8.0-candidate"
 
 
 def test_skill_ledger_contract_freezes_minimum_admission_without_tuning():

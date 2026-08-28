@@ -16,15 +16,15 @@
   "parent_machine_contract": {
     "path": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
     "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-    "contract_version": "1.9.0-candidate",
-    "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+    "contract_version": "1.10.0-candidate",
+    "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
     "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1"
   },
   "canonical_instance_manifest": {
     "path": "registries/AF001-AF-D-REFERENCE-INSTANCES.json",
     "manifest_id": "AWRSE-AF001-AF-D-REFERENCE-INSTANCE-MANIFEST",
     "manifest_version": "1.0.0-candidate",
-    "canonical_sha256": "291e7d6f3f4f947e101013403328772a5a83a5a036d00d7d7173c6bc126aaf4e",
+    "canonical_sha256": "aad58315f12054115ea3277b8418465cb743958e12352f82c28fcefe12a76965",
     "status_required": "CANONICAL_BOUNDED_REFERENCE_INSTANCE_MANIFEST"
   },
   "authority_profile_bindings": {
