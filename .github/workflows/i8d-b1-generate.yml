@@ -30,7 +30,7 @@ jobs:
           python-version: '3.13'
       - name: Install test tooling
         run: python -m pip install --upgrade pip pytest
-      - name: Repair generator source preflight
+      - name: Make materialized migration idempotent
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -38,89 +38,36 @@ jobs:
           p = Path('tools/i8d_b1_migrate.py')
           t = p.read_text(encoding='utf-8')
 
-          def migrate_source(old: str, new: str, label: str) -> None:
-              global t
-              if old in t:
-                  t = t.replace(old, new, 1)
-              elif new not in t:
-                  raise SystemExit(f'generator repair anchor missing: {label}')
+          gate = '''\n\ndef migration_already_materialized() -> bool:\n    try:\n        parent = load("contracts/AF001-LIVING-STORY-CONTRACTS.json")\n        golden = load("evals/AF001-GOLDEN-SCENARIOS.json")\n        decisions = load("evals/AF001-DECISION-LIFECYCLE-BINDINGS.json")\n        binding = load("contracts/AF001-BRANCH-QUALITY-EVIDENCE-BINDING.json")\n    except (OSError, json.JSONDecodeError):\n        return False\n    registration = parent.get("registered_contract_extensions", {}).get(BQ_BINDING_ID)\n    fixture_registration = golden.get("registered_fixture_extensions", {}).get(BQ_PROVENANCE_FIXTURE_ID)\n    return bool(\n        parent.get("contract_version") == NEW_PARENT\n        and parent.get("authority_graph_version") == NEW_GRAPH\n        and isinstance(registration, dict)\n        and registration.get("parent_contract_version") == NEW_PARENT\n        and registration.get("parent_authority_graph_version") == NEW_GRAPH\n        and golden.get("suite_version") == NEW_GOLDEN\n        and golden.get("required_contract_version") == NEW_PARENT\n        and isinstance(fixture_registration, dict)\n        and decisions.get("version") == NEW_DECISION\n        and decisions.get("required_contract_version") == NEW_PARENT\n        and binding.get("status") == "CANONICAL_REGISTERED_INTERFACE_ONLY_NO_RUNTIME"\n        and binding.get("runtime_implementation_authorized") is False\n        and (ROOT / BQ_PROVENANCE_PATH).is_file()\n    )\n'''
+          if 'def migration_already_materialized()' not in t:
+              anchor = '\n\ndef main() -> None:'
+              if anchor not in t:
+                  raise SystemExit('idempotency function anchor not found')
+              t = t.replace(anchor, gate + anchor, 1)
 
-          migrate_source(
-              "replace_text(\"tests/test_i2a_functional_impairment_contract.py\", 'previous_contract_version\") != \"1.8.0-candidate\"', 'previous_contract_version\") != \"1.9.0-candidate\"')",
-              "replace_text(\"tests/test_i2a_functional_impairment_contract.py\", 'lineage.get(\"previous_contract_version\") != \"1.8.0-candidate\"', 'lineage.get(\"previous_contract_version\") != \"1.9.0-candidate\"')",
-              'functional impairment lineage syntax',
-          )
-          migrate_source(
-              "replace_text(\"tests/test_i2a_action_demand_canonical_registration.py\", 'previous_contract_version\"] == \"1.8.0-candidate\"', 'previous_contract_version\"] == \"1.9.0-candidate\"')",
-              "replace_text(\"tests/test_i2a_action_demand_canonical_registration.py\", 'previous_contract_version\"] == \"1.8.0-candidate\"', 'previous_contract_version\"] == \"1.9.0-candidate\"')",
-              'action demand lineage syntax',
-          )
-          migrate_source(
-              "    for rel in graph_files:\n        replace_text(rel, OLD_GRAPH, NEW_GRAPH)\n",
-              "    for rel in graph_files:\n        replace_text(rel, OLD_GRAPH, NEW_GRAPH)\n        replace_text(rel, OLD_PARENT, NEW_PARENT)\n",
-              'current graph context parent migration',
-          )
-          migrate_source(
-              '    b["historical_b0_review_context"] = b.pop("parent_review_context")\n',
-              '    b["historical_b0_review_context"] = copy.deepcopy(b["parent_review_context"])\n',
-              'preserve B0 review context',
-          )
-
-          promotion_anchor = '''        "assessment_level_not_material_identity_invariant_preserved": True,\n    }\n    b["hard_locks"]["STAGE_B1_CANONICAL_REGISTRATION_NOT_AUTHORIZED"] = False\n'''
-          promotion_repair = '''        "assessment_level_not_material_identity_invariant_preserved": True,\n    }\n    b["promotion_gate"].update({\n        "stage_b1_required": True,\n        "independent_accept_of_b0_required": True,\n        "parent_contract_version_must_advance": True,\n        "golden_suite_version_must_advance": True,\n        "b1_must_preserve_assessment_level_not_material_identity_invariant": True,\n        "b1_real_replay_valid_source_provenance_required": True,\n        "b1_must_not_promote_synthetic_fixture_hashes_as_source_proof": True,\n        "canonical_open_decisions_must_be_fresh_reconciled_before_b1": True,\n        "parent_authority_graph_version_must_advance": True,\n        "b1_golden_registration_must_use_replay_valid_fixture_artifact_not_b0_synthetic_suite": True,\n        "b1_must_preserve_source_ref_admission_semantics": True,\n    })\n    b["hard_locks"]["STAGE_B1_CANONICAL_REGISTRATION_NOT_AUTHORIZED"] = False\n'''
-          migrate_source(promotion_anchor, promotion_repair, 'preserve B0 promotion gate evidence')
-
-          digest_function = '''\n\ndef refresh_rebound_integrity_digests() -> None:\n    manifest_path = "registries/AF001-AF-D-REFERENCE-INSTANCES.json"\n    binding_path = "contracts/AF001-AF-D-INSTANCE-ADMISSION-BINDING.json"\n    parent_path = "contracts/AF001-LIVING-STORY-CONTRACTS.json"\n    binding_id = "AWRSE-AF001-AF-D-INSTANCE-ADMISSION-BINDING"\n\n    manifest = load(manifest_path)\n    manifest_digest = sha256_bytes(canonical_json_bytes(manifest))\n\n    binding = load(binding_path)\n    manifest_registration = binding.get("canonical_instance_manifest")\n    if not isinstance(manifest_registration, dict):\n        raise RuntimeError("B1_AF_D_MANIFEST_REGISTRATION_MISSING")\n    manifest_registration["canonical_sha256"] = manifest_digest\n    dump(binding_path, binding)\n    binding_digest = sha256_bytes(canonical_json_bytes(binding))\n\n    parent = load(parent_path)\n    registration = parent.get("registered_contract_extensions", {}).get(binding_id)\n    if not isinstance(registration, dict):\n        raise RuntimeError("B1_AF_D_PARENT_REGISTRATION_MISSING")\n    registration["binding_canonical_sha256"] = binding_digest\n    parent_manifest = registration.get("canonical_instance_manifest")\n    if not isinstance(parent_manifest, dict):\n        raise RuntimeError("B1_AF_D_PARENT_MANIFEST_REGISTRATION_MISSING")\n    parent_manifest["canonical_sha256"] = manifest_digest\n    dump(parent_path, parent)\n'''
-          function_anchor = '\n\ndef load_a2_test_helpers():'
-          if 'def refresh_rebound_integrity_digests()' not in t:
-              if function_anchor not in t:
-                  raise SystemExit('generator repair anchor missing: digest function insertion')
-              t = t.replace(function_anchor, digest_function + function_anchor, 1)
-
-          migrate_source(
-              '    migrate_branch_binding()\n    migrate_golden()\n',
-              '    migrate_branch_binding()\n    refresh_rebound_integrity_digests()\n    migrate_golden()\n',
-              'refresh rebound integrity digests',
-          )
-
-          current_test_anchor = '''    replace_text("tests/test_i2a_action_demand_canonical_registration.py", 'previous_contract_version"] == "1.8.0-candidate"', 'previous_contract_version"] == "1.9.0-candidate"')\n'''
-          current_test_repair = current_test_anchor + '''    replace_text("tests/test_i2a_action_demand_admission.py", 'contract["contract_version"] = "1.8.0-candidate"', 'contract["contract_version"] = "1.9.0-candidate"')\n    replace_text("tests/test_i2a_action_demand_admission.py", 'registration["parent_contract_version"] = "1.8.0-candidate"', 'registration["parent_contract_version"] = "1.9.0-candidate"')\n    replace_text("tests/test_i2a_action_demand_admission.py", 'binding["parent_machine_contract"]["contract_version"] = "1.8.0-candidate"', 'binding["parent_machine_contract"]["contract_version"] = "1.9.0-candidate"')\n    replace_text("tests/test_i2a_skill_ledger_contract_freeze.py", 'assert contract["contract_version"] == "1.9.0-candidate"', 'assert contract["contract_version"] == "1.10.0-candidate"')\n    replace_text("tests/test_i2a_skill_ledger_contract_freeze.py", 'assert suite["suite_version"] == "1.7.0-candidate"', 'assert suite["suite_version"] == "1.8.0-candidate"')\n\n    architecture_path = ROOT / "tests/test_af001_architecture_freeze.py"\n    architecture_text = architecture_path.read_text(encoding="utf-8")\n    old_architecture = ''' + '"""' + '''    assert contract["contract_version"] == "1.9.0-candidate"\n    assert contract["versioning_and_migration"]["contract_version_lineage"] == {\n        "previous_contract_version": "1.8.0-candidate",\n        "semantic_delta": [\n            "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",\n            "ACTION_DEMAND_PROJECTION_EXTENSION_AUTHORITY_IS_PARENT_REGISTERED_AND_VERSION_BOUND",\n            "PRE_REGISTRATION_1_8_PARENT_VERSION_CANNOT_AUTHORIZE_NEW_EXTENSION",\n        ],\n        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_ACTION_DEMAND_EXTENSION_AUTHORITY_FROM_PRE_REGISTRATION_1_8_STATE",\n    }\n    assert suite["suite_version"] == "1.7.0-candidate"\n    assert suite["required_contract_version"] == contract["contract_version"]\n    assert bindings["version"] == "1.2.0-candidate"\n    assert bindings["required_contract_version"] == contract["contract_version"]\n''' + '"""' + '''\n    new_architecture = ''' + '"""' + '''    assert contract["contract_version"] == "1.10.0-candidate"\n    lineage = contract["versioning_and_migration"]["contract_version_lineage"]\n    assert lineage["previous_contract_version"] == "1.9.0-candidate"\n    assert set(lineage["semantic_delta"]) >= {\n        "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",\n        "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW_CANONICAL_EXTENSION_REGISTRATION",\n        "BRANCH_QUALITY_EVIDENCE_AUTHORITY_PROFILE_ADDED_WITH_CANONICAL_DATA_AUTHORITY_NONE",\n        "EXISTING_REGISTERED_EXTENSIONS_REBOUND_TO_NEW_PARENT_REGISTRY_EPOCH_WITHOUT_GAMEPLAY_SEMANTIC_CHANGE",\n        "PRE_I8DB1_1_9_PARENT_AUTHORITY_GRAPH_AND_GOLDEN_TUPLE_CANNOT_AUTHORIZE_BRANCH_QUALITY_EXTENSION",\n    }\n    assert "BRANCH_QUALITY_EVIDENCE_REQUIRES_PARENT_AND_GOLDEN_INVERSE_REGISTRATION_AND_REPLAY_VALID_PROVENANCE" in lineage["consumer_rule"]\n    assert suite["suite_version"] == "1.8.0-candidate"\n    assert suite["required_contract_version"] == contract["contract_version"]\n    assert bindings["version"] == "1.3.0-candidate"\n    assert bindings["required_contract_version"] == contract["contract_version"]\n''' + '"""' + '''\n    if old_architecture in architecture_text:\n        architecture_text = architecture_text.replace(old_architecture, new_architecture, 1)\n    elif new_architecture not in architecture_text:\n        raise RuntimeError("B1_ARCHITECTURE_CURRENT_ASSERTION_ANCHOR_MISSING")\n    architecture_path.write_text(architecture_text, encoding="utf-8")\n'''
-          if 'B1_ARCHITECTURE_CURRENT_ASSERTION_ANCHOR_MISSING' not in t:
-              if current_test_anchor not in t:
-                  raise SystemExit('generator repair anchor missing: current canonical tests')
-              t = t.replace(current_test_anchor, current_test_repair, 1)
+          old_main = '''def main() -> None:\n    migrate_parent()\n'''
+          new_main = '''def main() -> None:\n    if migration_already_materialized():\n        print(json.dumps({"status":"B1_MIGRATION_ALREADY_MATERIALIZED","parent":NEW_PARENT,"graph":NEW_GRAPH,"golden":NEW_GOLDEN,"decision":NEW_DECISION}, indent=2))\n        return\n    migrate_parent()\n'''
+          if old_main in t:
+              t = t.replace(old_main, new_main, 1)
+          elif new_main not in t:
+              raise SystemExit('idempotency main anchor not found')
 
           p.write_text(t, encoding='utf-8')
           PY
           python -m py_compile tools/i8d_b1_migrate.py
-      - name: Migrate historical Stage A promotion guard
+      - name: Verify materialized B1 migration
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('evals/i8d_branch_quality_evidence_experiment.py')
-          t = p.read_text(encoding='utf-8')
-          old = '''    registry = contract.get("type_registry")\n    if not isinstance(registry, Mapping):\n        raise ValueError("I8D_TYPE_REGISTRY_MISSING")\n    forbidden_promotions = {"BranchQuality", "BranchQualityEvidence", "BranchQualityScore"}\n    if forbidden_promotions & set(registry):\n        raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")\n'''
-          new = '''    registry = contract.get("type_registry")\n    if not isinstance(registry, Mapping):\n        raise ValueError("I8D_TYPE_REGISTRY_MISSING")\n    if {"BranchQuality", "BranchQualityScore"} & set(registry):\n        raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")\n    if "BranchQualityEvidence" in registry:\n        promoted = registry.get("BranchQualityEvidence")\n        registration = contract.get("registered_contract_extensions", {}).get(\n            "AWRSE-AF001-BRANCH-QUALITY-EVIDENCE-BINDING"\n        )\n        profile = profiles.get("BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW")\n        if (\n            contract.get("contract_version") != "1.10.0-candidate"\n            or contract.get("authority_graph_version") != "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"\n            or not isinstance(promoted, Mapping)\n            or promoted.get("type_id") != "AF001.BranchQualityEvidence"\n            or promoted.get("authority_profile_ref") != "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW"\n            or not isinstance(registration, Mapping)\n            or registration.get("parent_contract_version") != "1.10.0-candidate"\n            or registration.get("parent_authority_graph_version") != "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"\n            or not isinstance(profile, Mapping)\n            or profile.get("canonical_data_authority") != ["NONE"]\n            or registration.get("runtime_implementation_authorized") is not False\n        ):\n            raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")\n'''
-          if old in t:
-              t = t.replace(old, new, 1)
-          elif new not in t:
-              raise SystemExit('historical Stage A guard anchor not found')
-          p.write_text(t, encoding='utf-8')
-          PY
-      - name: Generate B1 canonical migration
-        run: python tools/i8d_b1_migrate.py
-      - name: Verify generated repository
-        run: |
+          python tools/i8d_b1_migrate.py
           git diff --check
           python -m pytest -q
-      - name: Commit only after full verification succeeds
+      - name: Commit generator hardening only after full verification
         run: |
           if git diff --quiet && git diff --cached --quiet; then
-            echo 'B1 migration already materialized; no commit required.'
+            echo 'B1 migration already materialized and generator already idempotent.'
             exit 0
           fi
           git config user.name 'AWRSE B1 Migration Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add -A
-          git commit -m 'Apply deterministic I8D B1 canonical migration [b1-generated]'
+          git add tools/i8d_b1_migrate.py
+          git commit -m 'Harden I8D B1 migration idempotency [b1-generated]'
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
