@@ -1,14 +1,12 @@
-"""I8D Stage A2 held-out branch-evidence stability experiment.
+"""I8D Stage A2 held-out stability experiment over repaired Stage A R1 evidence.
 
-This module compares strictly replay-valid I8D Stage A experiment packages.  It
-asks whether a small candidate core of authority-grounded diagnostic axes stays
-stable when only non-authority metadata changes, and whether expected upstream
-status changes affect only the core semantics they are allowed to affect.
+This module compares strictly replay-valid I8D Stage A R1/v2 packages. It is
+research/evaluation evidence only. It cannot legalize narrative content, mutate
+world or knowledge state, rank branches, grant PX authority, or create a
+production BranchQuality contract.
 
-Stage A2 is evaluation evidence only.  It does not create a BranchQuality
-production contract, score or rank a branch, legalize a Storylet/opportunity,
-mutate world or knowledge state, resolve PX weights, or grant Director/renderer
-or LLM authority.
+Historical Stage A v1 and historical Stage A2 v1 package identities remain
+provenance artifacts only and are explicitly rejected as current evidence.
 """
 from __future__ import annotations
 
@@ -20,9 +18,12 @@ import json
 from typing import Any
 
 from awrse.model import freeze_value, thaw_value
-import evals.i8d_branch_quality_evidence_experiment as i8d_stage_a
+import evals.i8d_branch_quality_evidence_experiment_v2 as i8d_stage_a
 
 I8D_STAGE_A2_EVALUATION_ONLY = True
+I8D_STAGE_A2_R1_MIGRATION = True
+HISTORICAL_STAGE_A_V1_REJECTED = True
+HISTORICAL_STAGE_A2_V1_NOT_CURRENT = True
 NO_STAGE_B_PRODUCTION_INTERFACE = True
 NO_BRANCH_QUALITY_CANONICAL_TYPE = True
 NO_UNIVERSAL_QUALITY_SCORE = True
@@ -77,10 +78,41 @@ _ALLOWED_AXIS_ASSESSMENTS = {
     "NOT_APPLICABLE",
 }
 _DEFERRED_DECISIONS = ("OD-CLUE-QUALITY-001", "OD-PX-SCORING-001")
-_STAGE_A_SCHEMA = "AWRSE-I8D-BRANCH-EVIDENCE-EXPERIMENT-1"
-_PACKAGE_SCHEMA = "AWRSE-I8D-STAGE-A2-AXIS-STABILITY-1"
-_AUTHORITY_CLASS = "STAGE_A2_EVALUATION_OBSERVATION_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY"
-_FIXTURE_AUTHORITY_CLASS = "STAGE_A2_COMPARISON_FIXTURE_ONLY_NOT_SOURCE_OR_QUALITY_AUTHORITY"
+_HISTORICAL_STAGE_A_SCHEMA = i8d_stage_a.HISTORICAL_V1_PACKAGE_SCHEMA
+_REPAIRED_STAGE_A_SCHEMA = i8d_stage_a.REPAIRED_PACKAGE_SCHEMA
+_HISTORICAL_A2_SCHEMA = "AWRSE-I8D-STAGE-A2-AXIS-STABILITY-1"
+_PACKAGE_SCHEMA = "AWRSE-I8D-STAGE-A2-AXIS-STABILITY-2"
+_AUTHORITY_CLASS = (
+    "STAGE_A2_EVALUATION_OBSERVATION_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY"
+)
+_FIXTURE_AUTHORITY_CLASS = (
+    "STAGE_A2_COMPARISON_FIXTURE_ONLY_NOT_SOURCE_OR_QUALITY_AUTHORITY"
+)
+_STAGE_A_PAYLOAD_FIELDS = {
+    "package_schema",
+    "supersedes_schema",
+    "source_kind",
+    "source_package_sha256",
+    "source_package_b64",
+    "fixture",
+    "semantic_reference_domains",
+    "semantic_reference_domains_sha256",
+    "expected_result",
+}
+_A2_PAYLOAD_FIELDS = {
+    "package_schema",
+    "supersedes_schema",
+    "required_stage_a_schema",
+    "historical_stage_a_schema_rejected",
+    "fixture",
+    "left_stage_a_sha256",
+    "right_stage_a_sha256",
+    "left_semantic_domain_sha256",
+    "right_semantic_domain_sha256",
+    "left_stage_a_b64",
+    "right_stage_a_b64",
+    "expected_observation",
+}
 
 
 @dataclass(frozen=True)
@@ -97,6 +129,8 @@ class MinimalCoreStabilityObservation:
     comparison_kind: str
     left_stage_a_sha256: str
     right_stage_a_sha256: str
+    left_semantic_domain_sha256: str | None
+    right_semantic_domain_sha256: str | None
     left_evaluation_id: str | None
     right_evaluation_id: str | None
     left_source_kind: str | None
@@ -167,10 +201,11 @@ def _reject_nonfinite(value: str) -> None:
 
 
 def _validate_governance() -> None:
-    # Stage A owns the canonical governance guard. Reusing it ensures Stage A2
-    # cannot quietly reinterpret AF-F/AF-G authority, promote BranchQuality, or
-    # close the still-open clue-quality/PX decisions.
-    i8d_stage_a._load_governance()
+    i8d_stage_a._load_repair_guard()
+    if i8d_stage_a.REPAIRED_PACKAGE_SCHEMA != _REPAIRED_STAGE_A_SCHEMA:
+        raise ValueError("I8D_A2_REPAIRED_STAGE_A_SCHEMA_DRIFT")
+    if i8d_stage_a.HISTORICAL_V1_PACKAGE_SCHEMA != _HISTORICAL_STAGE_A_SCHEMA:
+        raise ValueError("I8D_A2_HISTORICAL_STAGE_A_SCHEMA_DRIFT")
 
 
 def _validate_fixture(fixture: StageA2ComparisonFixture) -> StageA2ComparisonFixture:
@@ -178,7 +213,9 @@ def _validate_fixture(fixture: StageA2ComparisonFixture) -> StageA2ComparisonFix
         raise TypeError("I8D_A2_COMPARISON_FIXTURE_REQUIRED")
     if fixture.authority_class != _FIXTURE_AUTHORITY_CLASS:
         raise ValueError("I8D_A2_FIXTURE_AUTHORITY_ESCALATION")
-    comparison_id = _require_string(fixture.comparison_id, "I8D_A2_COMPARISON_ID_REQUIRED")
+    comparison_id = _require_string(
+        fixture.comparison_id, "I8D_A2_COMPARISON_ID_REQUIRED"
+    )
     comparison_kind = _require_string(
         fixture.comparison_kind, "I8D_A2_COMPARISON_KIND_REQUIRED"
     )
@@ -211,17 +248,33 @@ def _parse_stage_a_payload(package: bytes) -> Mapping[str, Any]:
     if not isinstance(envelope, Mapping) or set(envelope) != {"payload", "sha256"}:
         raise ValueError("I8D_A2_STAGE_A_ENVELOPE_SCHEMA_INVALID")
     payload = envelope.get("payload")
-    if not isinstance(payload, Mapping) or payload.get("package_schema") != _STAGE_A_SCHEMA:
-        raise ValueError("I8D_A2_STAGE_A_PACKAGE_SCHEMA_INVALID")
+    if not isinstance(payload, Mapping) or set(payload) != _STAGE_A_PAYLOAD_FIELDS:
+        raise ValueError("I8D_A2_STAGE_A_PAYLOAD_SCHEMA_INVALID")
+    if payload.get("package_schema") == _HISTORICAL_STAGE_A_SCHEMA:
+        raise ValueError("I8D_A2_HISTORICAL_STAGE_A_V1_REJECTED")
+    if payload.get("package_schema") != _REPAIRED_STAGE_A_SCHEMA:
+        raise ValueError("I8D_A2_REPAIRED_STAGE_A_SCHEMA_REQUIRED")
+    if payload.get("supersedes_schema") != _HISTORICAL_STAGE_A_SCHEMA:
+        raise ValueError("I8D_A2_STAGE_A_SUPERSESSION_BINDING_DRIFT")
     if envelope.get("sha256") != _sha256(payload):
         raise ValueError("I8D_A2_STAGE_A_OUTER_DIGEST_MISMATCH")
+    domains = payload.get("semantic_reference_domains")
+    if not isinstance(domains, Mapping) or set(domains) != {
+        "meaningful_delta_refs",
+        "repetition_keys",
+    }:
+        raise ValueError("I8D_A2_STAGE_A_SEMANTIC_DOMAIN_SCHEMA_INVALID")
+    for field in ("meaningful_delta_refs", "repetition_keys"):
+        _require_sequence(
+            domains.get(field), f"I8D_A2_STAGE_A_SEMANTIC_DOMAIN_INVALID:{field}"
+        )
+    if payload.get("semantic_reference_domains_sha256") != _sha256(domains):
+        raise ValueError("I8D_A2_STAGE_A_SEMANTIC_DOMAIN_DIGEST_MISMATCH")
     return payload
 
 
 def _stage_a_fixture(payload: Mapping[str, Any]) -> Mapping[str, Any]:
     fixture = payload.get("fixture")
-    if not isinstance(fixture, Mapping):
-        raise ValueError("I8D_A2_STAGE_A_FIXTURE_MISSING")
     expected = {
         "fixture_id",
         "authored_design_fit",
@@ -231,9 +284,16 @@ def _stage_a_fixture(payload: Mapping[str, Any]) -> Mapping[str, Any]:
         "prior_occurrence_count",
         "authority_class",
     }
-    if set(fixture) != expected:
+    if not isinstance(fixture, Mapping) or set(fixture) != expected:
         raise ValueError("I8D_A2_STAGE_A_FIXTURE_SCHEMA_INVALID")
     return fixture
+
+
+def _semantic_domain_sha(payload: Mapping[str, Any]) -> str:
+    return _require_string(
+        payload.get("semantic_reference_domains_sha256"),
+        "I8D_A2_STAGE_A_SEMANTIC_DOMAIN_DIGEST_REQUIRED",
+    )
 
 
 def _axis_material(result: Any) -> dict[str, dict[str, Any]]:
@@ -311,9 +371,17 @@ def _integrity_observation(
     right_bytes: bytes,
     failures: Sequence[str],
 ) -> MinimalCoreStabilityObservation:
-    failure_tuple = tuple(sorted(set(_require_string(value, "I8D_A2_FAILURE_CODE_INVALID") for value in failures)))
+    failure_tuple = tuple(
+        sorted(
+            set(
+                _require_string(value, "I8D_A2_FAILURE_CODE_INVALID")
+                for value in failures
+            )
+        )
+    )
     identity = _sha256(
         {
+            "migration_schema": _PACKAGE_SCHEMA,
             "comparison": _fixture_material(fixture),
             "left": _sha256_bytes(left_bytes),
             "right": _sha256_bytes(right_bytes),
@@ -321,11 +389,13 @@ def _integrity_observation(
         }
     )
     return MinimalCoreStabilityObservation(
-        observation_id=f"I8D:A2:INTEGRITY:{identity[:24]}",
+        observation_id=f"I8D:A2:R1:INTEGRITY:{identity[:24]}",
         outcome="CORE_INTEGRITY_FAILURE",
         comparison_kind=fixture.comparison_kind,
         left_stage_a_sha256=_sha256_bytes(left_bytes),
         right_stage_a_sha256=_sha256_bytes(right_bytes),
+        left_semantic_domain_sha256=None,
+        right_semantic_domain_sha256=None,
         left_evaluation_id=None,
         right_evaluation_id=None,
         left_source_kind=None,
@@ -370,10 +440,17 @@ def _comparison_outcome(
     fixture_diff = _stage_a_fixture_diff(left_fixture, right_fixture)
 
     if comparison_kind == "IDENTICAL_CONTROL":
-        if left_payload != right_payload or changed_core_material or changed_mechanism or changed_authored:
+        if (
+            left_payload != right_payload
+            or changed_core_material
+            or changed_mechanism
+            or changed_authored
+        ):
             failures.append("IDENTICAL_CONTROL_MATERIAL_DRIFT")
         return (
-            "CORE_STABLE_UNDER_IDENTICAL_CONTROL" if not failures else "COMPARISON_NOT_VALID",
+            "CORE_STABLE_UNDER_IDENTICAL_CONTROL"
+            if not failures
+            else "COMPARISON_NOT_VALID",
             tuple(failures),
         )
 
@@ -420,7 +497,10 @@ def _comparison_outcome(
     if comparison_kind == "REPETITION_HISTORY_ONLY":
         if not (same_source and same_kind and same_status):
             failures.append("REPETITION_COMPARISON_REQUIRES_IDENTICAL_SOURCE")
-        if not fixture_diff or set(fixture_diff) - {"repetition_key", "prior_occurrence_count"}:
+        if not fixture_diff or set(fixture_diff) - {
+            "repetition_key",
+            "prior_occurrence_count",
+        }:
             failures.append("REPETITION_COMPARISON_HAS_NON_REPETITION_FIXTURE_CHANGE")
         if changed_core_material:
             failures.append("REPETITION_HISTORY_CHANGED_AUTHORITY_GROUNDED_CORE")
@@ -450,7 +530,10 @@ def _comparison_outcome(
             "agency_legibility",
             "knowledge_provenance_integrity",
         ):
-            if left_axes[stable_axis]["assessment"] != right_axes[stable_axis]["assessment"]:
+            if (
+                left_axes[stable_axis]["assessment"]
+                != right_axes[stable_axis]["assessment"]
+            ):
                 failures.append(f"UPSTREAM_STATUS_DESTABILIZED_CORE:{stable_axis}")
         return (
             "EXPECTED_CORE_AXIS_CHANGE_FROM_UPSTREAM_STATUS_CHANGE"
@@ -469,13 +552,17 @@ def _comparison_outcome(
                 "knowledge_provenance_integrity",
             ):
                 if axes[stable_axis]["assessment"] != "SUPPORTED":
-                    failures.append(f"{side_name}_CROSS_SOURCE_CORE_NOT_SUPPORTED:{stable_axis}")
+                    failures.append(
+                        f"{side_name}_CROSS_SOURCE_CORE_NOT_SUPPORTED:{stable_axis}"
+                    )
             if axes["legal_dead_end_opportunity_scarcity_risk"]["assessment"] not in {
                 "ABSENT",
                 "RISK",
             }:
                 failures.append(f"{side_name}_SCARCITY_CORE_SHAPE_INVALID")
-            if any(axes[name]["assessment"] == "NOT_APPLICABLE" for name in _CORE_AXES):
+            if any(
+                axes[name]["assessment"] == "NOT_APPLICABLE" for name in _CORE_AXES
+            ):
                 failures.append(f"{side_name}_CORE_AXIS_NOT_APPLICABLE")
         return (
             "CORE_SHAPE_STABLE_ACROSS_SOURCE_KINDS"
@@ -514,10 +601,15 @@ def _build_observation(
     changed_core_material = _changed_axes(left_axes, right_axes, _CORE_AXES)
     changed_mechanism = _changed_axes(left_axes, right_axes, _MECHANISM_AXES)
     changed_authored = _changed_axes(left_axes, right_axes, _AUTHORED_AXES)
+    left_domain_sha = _semantic_domain_sha(left_payload)
+    right_domain_sha = _semantic_domain_sha(right_payload)
     material = {
+        "migration_schema": _PACKAGE_SCHEMA,
         "comparison": _fixture_material(fixture),
         "left_stage_a_sha256": _sha256_bytes(left_bytes),
         "right_stage_a_sha256": _sha256_bytes(right_bytes),
+        "left_semantic_domain_sha256": left_domain_sha,
+        "right_semantic_domain_sha256": right_domain_sha,
         "left_evaluation_id": left_result.evaluation_id,
         "right_evaluation_id": right_result.evaluation_id,
         "outcome": outcome,
@@ -527,11 +619,13 @@ def _build_observation(
     }
     identity = _sha256(material)
     return MinimalCoreStabilityObservation(
-        observation_id=f"I8D:A2:{identity[:24]}",
+        observation_id=f"I8D:A2:R1:{identity[:24]}",
         outcome=outcome,
         comparison_kind=fixture.comparison_kind,
         left_stage_a_sha256=_sha256_bytes(left_bytes),
         right_stage_a_sha256=_sha256_bytes(right_bytes),
+        left_semantic_domain_sha256=left_domain_sha,
+        right_semantic_domain_sha256=right_domain_sha,
         left_evaluation_id=left_result.evaluation_id,
         right_evaluation_id=right_result.evaluation_id,
         left_source_kind=left_result.source_kind,
@@ -563,7 +657,7 @@ def evaluate_stage_a2_axis_stability(
     fixture: StageA2ComparisonFixture,
     caller_core_evidence: Mapping[str, Any] | None = None,
 ) -> MinimalCoreStabilityObservation:
-    """Compare two Stage A packages without granting their diagnostics authority."""
+    """Compare two repaired Stage A R1 packages without granting authority."""
     if caller_core_evidence is not None:
         raise ValueError("I8D_A2_CALLER_AUTHORED_CORE_EVIDENCE_FORBIDDEN")
     _validate_governance()
@@ -579,14 +673,14 @@ def evaluate_stage_a2_axis_stability(
         left_result = i8d_stage_a.replay_branch_evidence_experiment_package(left_bytes)
         left_payload = _parse_stage_a_payload(left_bytes)
     except (ValueError, TypeError) as exc:
-        failures.append(f"LEFT_STAGE_A_REJECTED:{str(exc) or exc.__class__.__name__}")
+        failures.append(f"LEFT_STAGE_A_R1_REJECTED:{str(exc) or exc.__class__.__name__}")
         left_result = None
         left_payload = None
     try:
         right_result = i8d_stage_a.replay_branch_evidence_experiment_package(right_bytes)
         right_payload = _parse_stage_a_payload(right_bytes)
     except (ValueError, TypeError) as exc:
-        failures.append(f"RIGHT_STAGE_A_REJECTED:{str(exc) or exc.__class__.__name__}")
+        failures.append(f"RIGHT_STAGE_A_R1_REJECTED:{str(exc) or exc.__class__.__name__}")
         right_result = None
         right_payload = None
     if failures:
@@ -598,12 +692,15 @@ def evaluate_stage_a2_axis_stability(
         )
     assert left_result is not None and right_result is not None
     assert left_payload is not None and right_payload is not None
-    if left_result.diagnostic_class == "INTEGRITY_FAILURE_PRESENT" or right_result.diagnostic_class == "INTEGRITY_FAILURE_PRESENT":
+    if (
+        left_result.diagnostic_class == "INTEGRITY_FAILURE_PRESENT"
+        or right_result.diagnostic_class == "INTEGRITY_FAILURE_PRESENT"
+    ):
         return _integrity_observation(
             fixture=fixture,
             left_bytes=left_bytes,
             right_bytes=right_bytes,
-            failures=("STAGE_A_INTEGRITY_FAILURE_RESULT_NOT_COMPARABLE",),
+            failures=("STAGE_A_R1_INTEGRITY_FAILURE_RESULT_NOT_COMPARABLE",),
         )
     return _build_observation(
         left_bytes=left_bytes,
@@ -625,6 +722,8 @@ def _observation_material(observation: MinimalCoreStabilityObservation) -> dict[
                 "comparison_kind": observation.comparison_kind,
                 "left_stage_a_sha256": observation.left_stage_a_sha256,
                 "right_stage_a_sha256": observation.right_stage_a_sha256,
+                "left_semantic_domain_sha256": observation.left_semantic_domain_sha256,
+                "right_semantic_domain_sha256": observation.right_semantic_domain_sha256,
                 "left_evaluation_id": observation.left_evaluation_id,
                 "right_evaluation_id": observation.right_evaluation_id,
                 "left_source_kind": observation.left_source_kind,
@@ -641,8 +740,12 @@ def _observation_material(observation: MinimalCoreStabilityObservation) -> dict[
                 "changed_core_material": list(observation.changed_core_material),
                 "changed_mechanism_axes": list(observation.changed_mechanism_axes),
                 "changed_authored_axes": list(observation.changed_authored_axes),
-                "left_not_applicable_mechanism_axes": list(observation.left_not_applicable_mechanism_axes),
-                "right_not_applicable_mechanism_axes": list(observation.right_not_applicable_mechanism_axes),
+                "left_not_applicable_mechanism_axes": list(
+                    observation.left_not_applicable_mechanism_axes
+                ),
+                "right_not_applicable_mechanism_axes": list(
+                    observation.right_not_applicable_mechanism_axes
+                ),
                 "integrity_failures": list(observation.integrity_failures),
                 "deferred_decisions": list(observation.deferred_decisions),
                 "authority_class": observation.authority_class,
@@ -657,7 +760,7 @@ def export_stage_a2_axis_stability_package(
     right_stage_a_package: bytes | bytearray | memoryview,
     fixture: StageA2ComparisonFixture,
 ) -> bytes:
-    """Export a deterministic Stage A2 observation from strict Stage A inputs."""
+    """Export deterministic Stage A2 v2 evidence from strict Stage A R1 inputs."""
     _validate_governance()
     fixture = _validate_fixture(fixture)
     if not isinstance(left_stage_a_package, (bytes, bytearray, memoryview)):
@@ -666,10 +769,10 @@ def export_stage_a2_axis_stability_package(
         raise TypeError("I8D_A2_RIGHT_STAGE_A_PACKAGE_BYTES_REQUIRED")
     left_bytes = bytes(left_stage_a_package)
     right_bytes = bytes(right_stage_a_package)
-    # Export requires both Stage A inputs to replay strictly. Integrity failures
-    # remain observable through evaluate(), but are never packaged as if valid.
     i8d_stage_a.replay_branch_evidence_experiment_package(left_bytes)
     i8d_stage_a.replay_branch_evidence_experiment_package(right_bytes)
+    left_payload = _parse_stage_a_payload(left_bytes)
+    right_payload = _parse_stage_a_payload(right_bytes)
     observation = evaluate_stage_a2_axis_stability(
         left_stage_a_package=left_bytes,
         right_stage_a_package=right_bytes,
@@ -679,20 +782,27 @@ def export_stage_a2_axis_stability_package(
         raise ValueError("I8D_A2_INTEGRITY_FAILURE_NOT_EXPORTABLE")
     payload = {
         "package_schema": _PACKAGE_SCHEMA,
+        "supersedes_schema": _HISTORICAL_A2_SCHEMA,
+        "required_stage_a_schema": _REPAIRED_STAGE_A_SCHEMA,
+        "historical_stage_a_schema_rejected": _HISTORICAL_STAGE_A_SCHEMA,
         "fixture": _fixture_material(fixture),
         "left_stage_a_sha256": _sha256_bytes(left_bytes),
         "right_stage_a_sha256": _sha256_bytes(right_bytes),
+        "left_semantic_domain_sha256": _semantic_domain_sha(left_payload),
+        "right_semantic_domain_sha256": _semantic_domain_sha(right_payload),
         "left_stage_a_b64": base64.b64encode(left_bytes).decode("ascii"),
         "right_stage_a_b64": base64.b64encode(right_bytes).decode("ascii"),
         "expected_observation": _observation_material(observation),
     }
-    return _canonical_json({"payload": payload, "sha256": _sha256(payload)}).encode("utf-8")
+    return _canonical_json({"payload": payload, "sha256": _sha256(payload)}).encode(
+        "utf-8"
+    )
 
 
 def replay_stage_a2_axis_stability_package(
     package: bytes | bytearray | memoryview,
 ) -> MinimalCoreStabilityObservation:
-    """Strict replay prevents Stage A or nested upstream tamper laundering."""
+    """Replay A2 v2 and recursively revalidate repaired Stage A R1 evidence."""
     _validate_governance()
     if not isinstance(package, (bytes, bytearray, memoryview)):
         raise TypeError("I8D_A2_REPLAY_PACKAGE_BYTES_REQUIRED")
@@ -707,8 +817,18 @@ def replay_stage_a2_axis_stability_package(
     if not isinstance(envelope, Mapping) or set(envelope) != {"payload", "sha256"}:
         raise ValueError("I8D_A2_REPLAY_ENVELOPE_SCHEMA_INVALID")
     payload = envelope.get("payload")
-    if not isinstance(payload, Mapping) or payload.get("package_schema") != _PACKAGE_SCHEMA:
+    if not isinstance(payload, Mapping) or set(payload) != _A2_PAYLOAD_FIELDS:
+        raise ValueError("I8D_A2_REPLAY_PAYLOAD_SCHEMA_INVALID")
+    if payload.get("package_schema") == _HISTORICAL_A2_SCHEMA:
+        raise ValueError("I8D_A2_HISTORICAL_A2_V1_REJECTED")
+    if payload.get("package_schema") != _PACKAGE_SCHEMA:
         raise ValueError("I8D_A2_REPLAY_PACKAGE_SCHEMA_INVALID")
+    if payload.get("supersedes_schema") != _HISTORICAL_A2_SCHEMA:
+        raise ValueError("I8D_A2_REPLAY_SUPERSESSION_BINDING_DRIFT")
+    if payload.get("required_stage_a_schema") != _REPAIRED_STAGE_A_SCHEMA:
+        raise ValueError("I8D_A2_REPLAY_REQUIRED_STAGE_A_SCHEMA_DRIFT")
+    if payload.get("historical_stage_a_schema_rejected") != _HISTORICAL_STAGE_A_SCHEMA:
+        raise ValueError("I8D_A2_REPLAY_HISTORICAL_STAGE_A_BINDING_DRIFT")
     if envelope.get("sha256") != _sha256(payload):
         raise ValueError("I8D_A2_REPLAY_PACKAGE_TAMPERED")
 
@@ -722,6 +842,7 @@ def replay_stage_a2_axis_stability_package(
     fixture = _validate_fixture(StageA2ComparisonFixture(**dict(fixture_raw)))
 
     decoded: list[bytes] = []
+    parsed: list[Mapping[str, Any]] = []
     for side in ("left", "right"):
         encoded = _require_string(
             payload.get(f"{side}_stage_a_b64"),
@@ -730,13 +851,23 @@ def replay_stage_a2_axis_stability_package(
         try:
             stage_a_bytes = base64.b64decode(encoded.encode("ascii"), validate=True)
         except (ValueError, UnicodeEncodeError):
-            raise ValueError(f"I8D_A2_REPLAY_{side.upper()}_STAGE_A_ENCODING_INVALID") from None
+            raise ValueError(
+                f"I8D_A2_REPLAY_{side.upper()}_STAGE_A_ENCODING_INVALID"
+            ) from None
         if _sha256_bytes(stage_a_bytes) != payload.get(f"{side}_stage_a_sha256"):
-            raise ValueError(f"I8D_A2_REPLAY_{side.upper()}_STAGE_A_DIGEST_MISMATCH")
-        # Do not trust a self-consistent Stage A envelope. Replay the complete
-        # Stage A -> I5/I7/I8 chain before rebuilding Stage A2.
+            raise ValueError(
+                f"I8D_A2_REPLAY_{side.upper()}_STAGE_A_DIGEST_MISMATCH"
+            )
         i8d_stage_a.replay_branch_evidence_experiment_package(stage_a_bytes)
+        stage_payload = _parse_stage_a_payload(stage_a_bytes)
+        if _semantic_domain_sha(stage_payload) != payload.get(
+            f"{side}_semantic_domain_sha256"
+        ):
+            raise ValueError(
+                f"I8D_A2_REPLAY_{side.upper()}_SEMANTIC_DOMAIN_BINDING_MISMATCH"
+            )
         decoded.append(stage_a_bytes)
+        parsed.append(stage_payload)
 
     rebuilt = evaluate_stage_a2_axis_stability(
         left_stage_a_package=decoded[0],
@@ -745,6 +876,10 @@ def replay_stage_a2_axis_stability_package(
     )
     if rebuilt.outcome == "CORE_INTEGRITY_FAILURE":
         raise ValueError("I8D_A2_REPLAY_NESTED_INTEGRITY_FAILURE")
+    if rebuilt.left_semantic_domain_sha256 != _semantic_domain_sha(parsed[0]):
+        raise ValueError("I8D_A2_REPLAY_LEFT_DOMAIN_OBSERVATION_DRIFT")
+    if rebuilt.right_semantic_domain_sha256 != _semantic_domain_sha(parsed[1]):
+        raise ValueError("I8D_A2_REPLAY_RIGHT_DOMAIN_OBSERVATION_DRIFT")
     if _observation_material(rebuilt) != payload.get("expected_observation"):
         raise ValueError("I8D_A2_REPLAY_OBSERVATION_MATERIALIZATION_MISMATCH")
     return rebuilt
