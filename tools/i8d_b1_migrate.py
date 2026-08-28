@@ -702,7 +702,37 @@ def migrate_b0_historical_tests() -> None:
     p.write_text(text, encoding="utf-8")
 
 
+def migration_already_materialized() -> bool:
+    try:
+        parent = load("contracts/AF001-LIVING-STORY-CONTRACTS.json")
+        golden = load("evals/AF001-GOLDEN-SCENARIOS.json")
+        decisions = load("evals/AF001-DECISION-LIFECYCLE-BINDINGS.json")
+        binding = load("contracts/AF001-BRANCH-QUALITY-EVIDENCE-BINDING.json")
+    except (OSError, json.JSONDecodeError):
+        return False
+    registration = parent.get("registered_contract_extensions", {}).get(BQ_BINDING_ID)
+    fixture_registration = golden.get("registered_fixture_extensions", {}).get(BQ_PROVENANCE_FIXTURE_ID)
+    return bool(
+        parent.get("contract_version") == NEW_PARENT
+        and parent.get("authority_graph_version") == NEW_GRAPH
+        and isinstance(registration, dict)
+        and registration.get("parent_contract_version") == NEW_PARENT
+        and registration.get("parent_authority_graph_version") == NEW_GRAPH
+        and golden.get("suite_version") == NEW_GOLDEN
+        and golden.get("required_contract_version") == NEW_PARENT
+        and isinstance(fixture_registration, dict)
+        and decisions.get("version") == NEW_DECISION
+        and decisions.get("required_contract_version") == NEW_PARENT
+        and binding.get("status") == "CANONICAL_REGISTERED_INTERFACE_ONLY_NO_RUNTIME"
+        and binding.get("runtime_implementation_authorized") is False
+        and (ROOT / BQ_PROVENANCE_PATH).is_file()
+    )
+
+
 def main() -> None:
+    if migration_already_materialized():
+        print(json.dumps({"status":"B1_MIGRATION_ALREADY_MATERIALIZED","parent":NEW_PARENT,"graph":NEW_GRAPH,"golden":NEW_GOLDEN,"decision":NEW_DECISION}, indent=2))
+        return
     migrate_parent()
     migrate_json_current_context()
     migrate_branch_binding()

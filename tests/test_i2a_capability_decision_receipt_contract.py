@@ -851,9 +851,39 @@ def test_schema_ruleset_and_replay_drift_fail_closed_or_change_identity():
     )
 
 
-def test_runtime_and_r003_persistence_authority_are_exactly_unchanged():
+def test_runtime_and_r003_persistence_authority_are_preserved_with_exact_b1_registry_rebind():
     fixture = _load(FIXTURES_PATH)["unchanged_evidence"]
-    assert _git_object("runtime") == fixture["runtime_tree_sha"]
+
+    def tree_map(treeish):
+        output = subprocess.check_output(
+            ["git", "ls-tree", "-r", treeish], cwd=ROOT, text=True
+        )
+        entries = {}
+        for line in output.splitlines():
+            metadata, path = line.split("\t", 1)
+            entries[path] = metadata.split()[2]
+        return entries
+
+    baseline = tree_map(fixture["runtime_tree_sha"])
+    current = tree_map("HEAD:runtime")
+    allowed = "awrse/functional_impairment_admission.py"
+    assert {k: v for k, v in current.items() if k != allowed} == {
+        k: v for k, v in baseline.items() if k != allowed
+    }
+    assert set(current) == set(baseline)
+
+    old_source = subprocess.check_output(
+        ["git", "cat-file", "blob", baseline[allowed]], cwd=ROOT
+    )
+    current_source = subprocess.check_output(
+        ["git", "cat-file", "blob", current[allowed]], cwd=ROOT
+    )
+    expected_source = old_source.replace(
+        b"AF001-AUTHORITY-GRAPH-1.9-I2A008@1", AUTHORITY_GRAPH.encode("utf-8"), 1
+    )
+    assert current_source == expected_source
+    assert current_source.count(AUTHORITY_GRAPH.encode("utf-8")) == 1
+
     assert _git_object("runtime/awrse/persistence.py") == fixture["persistence_runtime_blob_sha"]
     assert _git_object("evals/R003-I1A-RESTART-REFERENCE.json") == fixture[
         "r003_i1a_reference_blob_sha"
