@@ -1,0 +1,139 @@
+{
+  "fixture_suite_id": "AWRSE-AF001-BRANCH-QUALITY-EVIDENCE-FIXTURES",
+  "fixture_version": "0.1.0-freeze-candidate",
+  "status": "STAGE_B0_INTERFACE_FREEZE_EVIDENCE_NOT_CANONICAL",
+  "governance_issue_ref": "#93",
+  "binding_ref": "contracts/AF001-BRANCH-QUALITY-EVIDENCE-BINDING.json",
+  "canonical_authority": "NONE_UNTIL_B1_INVERSE_REGISTRATION",
+  "mutation_fixture_schema": "BASE_POSITIVE_INSTANCE_PLUS_DECLARED_PATH_MUTATIONS",
+  "positive_cases": [
+    {
+      "fixture_id": "B0-I5-LEGAL-ROUTE",
+      "description": "Legal I5 information opportunity with intact portable integrity and no scarcity risk.",
+      "instance": {
+        "evidence_id": "BQ:I5:LEGAL",
+        "source_candidate_ref": "I5:ENCOUNTER:1",
+        "source_kind": "I5A_INFORMATION_OPPORTUNITY",
+        "source_package_sha256": "189872c7b22d3d7620222894deea1f4de8033532027c3e7b1f6f45b4615f0c8a",
+        "source_i1_sha256": "663034029258be6508c52b6418ac7e8c68f5bdf3f6a98ca46b0bb69692c9a298",
+        "evidence_version": "0.1-freeze-candidate",
+        "authority_class": "DERIVED_EVIDENCE_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY",
+        "causal_world_integrity": {"assessment": "SUPPORTED", "source_refs": ["I5:ENCOUNTER:1:causal"]},
+        "agency_legibility": {"assessment": "SUPPORTED", "source_refs": ["I5:ENCOUNTER:1:agency"]},
+        "knowledge_provenance_integrity": {"assessment": "SUPPORTED", "source_refs": ["I5:ENCOUNTER:1:knowledge"]},
+        "opportunity_scarcity_evidence": {"assessment": "ABSENT", "source_refs": [], "upstream_status_ref": "AVAILABLE"},
+        "mechanism_evidence": {"meaningful_state_information_relationship_delta": {"assessment": "SUPPORTED", "source_refs": ["EVT:NOTICE:1"]}}
+      }
+    },
+    {
+      "fixture_id": "B0-I5-NO-ROUTE",
+      "description": "No legal I5 route is represented as scarcity risk, not integrity failure.",
+      "instance": {
+        "evidence_id": "BQ:I5:NOROUTE",
+        "source_candidate_ref": "I5:NO_VALID_OPPORTUNITY",
+        "source_kind": "I5A_INFORMATION_OPPORTUNITY",
+        "source_package_sha256": "2d69e25b21679b6019b874cbf7da8ab49b2b37f1dfb80264543a2a967fbf2105",
+        "source_i1_sha256": "663034029258be6508c52b6418ac7e8c68f5bdf3f6a98ca46b0bb69692c9a298",
+        "evidence_version": "0.1-freeze-candidate",
+        "authority_class": "DERIVED_EVIDENCE_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY",
+        "causal_world_integrity": {"assessment": "SUPPORTED", "source_refs": ["I5:NO_VALID_OPPORTUNITY:causal"]},
+        "agency_legibility": {"assessment": "SUPPORTED", "source_refs": ["I5:NO_VALID_OPPORTUNITY:agency"]},
+        "knowledge_provenance_integrity": {"assessment": "SUPPORTED", "source_refs": ["I5:NO_VALID_OPPORTUNITY:knowledge"]},
+        "opportunity_scarcity_evidence": {"assessment": "RISK", "source_refs": ["STATUS:NO_VALID_OPPORTUNITY"], "upstream_status_ref": "NO_VALID_OPPORTUNITY"},
+        "mechanism_evidence": {}
+      }
+    },
+    {
+      "fixture_id": "B0-I7-NOVELTY-SUPPRESSED",
+      "description": "Repeated private World Echo keeps integrity intact while repetition risk remains mechanism-local.",
+      "instance": {
+        "evidence_id": "BQ:I7:REPEAT",
+        "source_candidate_ref": "I7:ECHO:SUPPRESSED",
+        "source_kind": "I7A_WORLD_ECHO",
+        "source_package_sha256": "fe845129f59ce01311893ee13387b0d99e75ee212511ee499b2d99bd77d9124a",
+        "source_i1_sha256": "d7226c9a121f6e44a0c83de2be974b0c4bd1281ec9d7fc1200c473a358f596d9",
+        "evidence_version": "0.1-freeze-candidate",
+        "authority_class": "DERIVED_EVIDENCE_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY",
+        "causal_world_integrity": {"assessment": "SUPPORTED", "source_refs": ["I7:ECHO:SUPPRESSED:causal"]},
+        "agency_legibility": {"assessment": "SUPPORTED", "source_refs": ["I7:ECHO:SUPPRESSED:agency"]},
+        "knowledge_provenance_integrity": {"assessment": "SUPPORTED", "source_refs": ["I7:ECHO:SUPPRESSED:knowledge"]},
+        "opportunity_scarcity_evidence": {"assessment": "RISK", "source_refs": ["STATUS:SILENCE"], "upstream_status_ref": "SILENCE"},
+        "mechanism_evidence": {"contrivance_repetition_risk": {"assessment": "RISK", "source_refs": ["NOVELTY:DOOR:1"]}}
+      }
+    },
+    {
+      "fixture_id": "B0-I8-STORYLET-DELTA",
+      "description": "Eligible Storylet may expose a typed meaningful delta without promoting authored fit metadata.",
+      "instance": {
+        "evidence_id": "BQ:I8:DELTA",
+        "source_candidate_ref": "I8:STORYLET:1",
+        "source_kind": "I8C_STORYLET",
+        "source_package_sha256": "940996c4ed03bb8077f5cedbd179542338c317df086c68a044c45fcc88469a48",
+        "source_i1_sha256": "a1dd8d6ef6702a13408531b38bee3ac49fedc31854a690873d27d509565d8ca9",
+        "evidence_version": "0.1-freeze-candidate",
+        "authority_class": "DERIVED_EVIDENCE_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY",
+        "causal_world_integrity": {"assessment": "SUPPORTED", "source_refs": ["I8:STORYLET:1:causal"]},
+        "agency_legibility": {"assessment": "SUPPORTED", "source_refs": ["I8:STORYLET:1:agency"]},
+        "knowledge_provenance_integrity": {"assessment": "SUPPORTED", "source_refs": ["I8:STORYLET:1:knowledge"]},
+        "opportunity_scarcity_evidence": {"assessment": "ABSENT", "source_refs": [], "upstream_status_ref": "AVAILABLE"},
+        "mechanism_evidence": {
+          "meaningful_state_information_relationship_delta": {"assessment": "SUPPORTED", "source_refs": ["WORLD_EVENT:EVT:1"]},
+          "setup_promise_anchor_continuity": {"assessment": "SUPPORTED", "source_refs": ["PROMISE:P1"]}
+        }
+      }
+    },
+    {
+      "fixture_id": "B0-I8-NO-STORYLET",
+      "description": "No valid Storylet is a dynamic opportunity state; it does not invalidate world/agency/provenance.",
+      "instance": {
+        "evidence_id": "BQ:I8:NONE",
+        "source_candidate_ref": "I8:NO_VALID_STORYLET",
+        "source_kind": "I8C_STORYLET",
+        "source_package_sha256": "377a6d56849618642a8a64e1360a512f45fe335347c7e9f7491bf581c606c342",
+        "source_i1_sha256": "a1dd8d6ef6702a13408531b38bee3ac49fedc31854a690873d27d509565d8ca9",
+        "evidence_version": "0.1-freeze-candidate",
+        "authority_class": "DERIVED_EVIDENCE_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY",
+        "causal_world_integrity": {"assessment": "SUPPORTED", "source_refs": ["I8:NO_VALID_STORYLET:causal"]},
+        "agency_legibility": {"assessment": "SUPPORTED", "source_refs": ["I8:NO_VALID_STORYLET:agency"]},
+        "knowledge_provenance_integrity": {"assessment": "SUPPORTED", "source_refs": ["I8:NO_VALID_STORYLET:knowledge"]},
+        "opportunity_scarcity_evidence": {"assessment": "RISK", "source_refs": ["STATUS:NO_VALID_STORYLET"], "upstream_status_ref": "NO_VALID_STORYLET"},
+        "mechanism_evidence": {"setup_promise_anchor_continuity": {"assessment": "NOT_APPLICABLE", "source_refs": []}}
+      }
+    },
+    {
+      "fixture_id": "B0-INTEGRITY-FAILURE-EVIDENCE",
+      "description": "Detected integrity failure is evidence only and carries no legalization or repair command.",
+      "instance": {
+        "evidence_id": "BQ:I5:INTEGRITY",
+        "source_candidate_ref": "I5:INVALID_SOURCE",
+        "source_kind": "I5A_INFORMATION_OPPORTUNITY",
+        "source_package_sha256": "a637d86425a8d2f7117fa33574c70104187a909d7075e125c3dff3d9db7c1a74",
+        "source_i1_sha256": "3243526210278fdc30668b4a65157a0f23d21651b0762b450ff0063c1835a9f8",
+        "evidence_version": "0.1-freeze-candidate",
+        "authority_class": "DERIVED_EVIDENCE_ONLY_NOT_WORLD_LEGALITY_OR_PX_AUTHORITY",
+        "causal_world_integrity": {"assessment": "INTEGRITY_FAILURE", "source_refs": ["I5:INVALID_SOURCE:causal"]},
+        "agency_legibility": {"assessment": "SUPPORTED", "source_refs": ["I5:INVALID_SOURCE:agency"]},
+        "knowledge_provenance_integrity": {"assessment": "INTEGRITY_FAILURE", "source_refs": ["I5:INVALID_SOURCE:knowledge"]},
+        "opportunity_scarcity_evidence": {"assessment": "RISK", "source_refs": ["STATUS:INTEGRITY_FAILURE_PRESENT"], "upstream_status_ref": "INTEGRITY_FAILURE_PRESENT"},
+        "mechanism_evidence": {}
+      }
+    }
+  ],
+  "negative_cases": [
+    {"fixture_id":"B0-NEG-AUTHORED-METADATA","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["genre_theme_design_fit"],"value":"HIGH"}],"expected_error":"B0_EVIDENCE_UNKNOWN_FIELDS"},
+    {"fixture_id":"B0-NEG-SCORE","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["quality_score"],"value":"HIGH"}],"expected_error":"B0_EVIDENCE_UNKNOWN_FIELDS"},
+    {"fixture_id":"B0-NEG-RANK","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["rank"],"value":"1"}],"expected_error":"B0_EVIDENCE_UNKNOWN_FIELDS"},
+    {"fixture_id":"B0-NEG-LEGALITY","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["legality_result"],"value":"LEGAL"}],"expected_error":"B0_EVIDENCE_UNKNOWN_FIELDS"},
+    {"fixture_id":"B0-NEG-UNVALIDATED-SOURCE","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["source_kind"],"value":"I9_UNKNOWN"}],"expected_error":"B0_SOURCE_KIND_NOT_EVIDENCE_VALIDATED"},
+    {"fixture_id":"B0-NEG-BAD-HASH","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["source_package_sha256"],"value":"bad"}],"expected_error":"B0_SOURCE_PACKAGE_SHA256_INVALID"},
+    {"fixture_id":"B0-NEG-WRONG-AUTHORITY","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["authority_class"],"value":"CANONICAL_WORLD_AUTHORITY"}],"expected_error":"B0_AUTHORITY_CLASS_INVALID"},
+    {"fixture_id":"B0-NEG-NUMERIC-NESTED","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["mechanism_evidence","contrivance_repetition_risk"],"value":{"assessment":"RISK","source_refs":["R"],"weight":0.5}}],"expected_error":"B0_NUMERIC_SCALAR_FORBIDDEN"},
+    {"fixture_id":"B0-NEG-UNKNOWN-MECHANISM","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["mechanism_evidence","genre_theme_design_fit"],"value":{"assessment":"SUPPORTED","source_refs":["META"]}}],"expected_error":"B0_MECHANISM_AXIS_UNKNOWN"},
+    {"fixture_id":"B0-NEG-NA-WITH-REFS","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["mechanism_evidence","contrivance_repetition_risk"],"value":{"assessment":"NOT_APPLICABLE","source_refs":["R"]}}],"expected_error":"B0_MECHANISM_NOT_APPLICABLE_REFS_FORBIDDEN"},
+    {"fixture_id":"B0-NEG-SUPPORTED-NO-REFS","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["mechanism_evidence","contrivance_repetition_risk"],"value":{"assessment":"SUPPORTED","source_refs":[]}}],"expected_error":"B0_MECHANISM_EVIDENCE_REFS_REQUIRED"},
+    {"fixture_id":"B0-NEG-INVALID-SCARCITY","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["opportunity_scarcity_evidence","assessment"],"value":"SUPPORTED"}],"expected_error":"B0_SCARCITY_ASSESSMENT_INVALID"},
+    {"fixture_id":"B0-NEG-EMPTY-CANDIDATE","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["source_candidate_ref"],"value":""}],"expected_error":"B0_SOURCE_CANDIDATE_REF_REQUIRED"},
+    {"fixture_id":"B0-NEG-PLAYER-INTENT","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["player_intent"],"value":"accept quest"}],"expected_error":"B0_EVIDENCE_UNKNOWN_FIELDS"},
+    {"fixture_id":"B0-NEG-REALIZATION","description":"","base_fixture_ref":"B0-I5-LEGAL-ROUTE","mutations":[{"op":"set","path":["realize_storylet"],"value":true}],"expected_error":"B0_EVIDENCE_UNKNOWN_FIELDS"}
+  ]
+}
