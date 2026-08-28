@@ -22,7 +22,7 @@ from awrse import (
     import_solo_replay_package,
     rehydrate_solo_replay_package,
 )
-from awrse.model import freeze_value, thaw_value
+from awrse.model import thaw_value
 import evals.i8b_promise_callback_opportunity_reference as i8b_reference
 
 I8C_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED = True
@@ -58,6 +58,19 @@ _EXPECTED_STORYLET_FIELDS = {
     "consequence_templates",
     "repeat_policy",
     "version",
+}
+_EXPECTED_NARRATIVE_DESIGN_PROFILE = {
+    "canonical_data_authority": ["NONE"],
+    "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+    "producer_or_assembler": [
+        "AWRSE_NARRATIVE_DESIGN_LOADER",
+        "NARRATIVE_DESIGN_NON_CANONICAL",
+    ],
+    "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
+    "staging_authority": ["NONE"],
+    "mutation_constraint": (
+        "AUTHORED_NARRATIVE_CONSTRAINTS_MAY_PROPOSE_OR_FILTER_BUT_CANNOT_RETCON_CANONICAL_WORLD_TRUTH"
+    ),
 }
 _REQUIRED_AF_F_INVARIANTS = {
     "STORY_STRUCTURE_IS_NOT_WORLD_TRUTH",
@@ -100,7 +113,13 @@ def _require_sequence(value: Any, code: str) -> tuple[Any, ...]:
 
 def _canonical_json(value: Any) -> str:
     try:
-        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+        return json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
     except (TypeError, ValueError) as exc:
         raise ValueError("I8C_VALUE_NOT_CANONICAL_JSON") from exc
 
@@ -129,26 +148,53 @@ def _load_authority() -> tuple[str, str, str]:
         raise ValueError("I8C_CANONICAL_CONTRACT_UNAVAILABLE") from None
     if not isinstance(contract, Mapping):
         raise ValueError("I8C_CANONICAL_CONTRACT_INVALID")
-    parent = (contract.get("contract_id"), contract.get("contract_version"), contract.get("authority_graph_version"))
+
+    parent = (
+        contract.get("contract_id"),
+        contract.get("contract_version"),
+        contract.get("authority_graph_version"),
+    )
     if parent != _EXPECTED_PARENT:
         raise ValueError("I8C_CANONICAL_PARENT_DRIFT")
+
     registry = contract.get("type_registry")
     if not isinstance(registry, Mapping):
         raise ValueError("I8C_TYPE_REGISTRY_MISSING")
     storylet = registry.get("Storylet")
     if not isinstance(storylet, Mapping):
         raise ValueError("I8C_STORYLET_TYPE_MISSING")
-    actual = (storylet.get("type_id"), storylet.get("version"), storylet.get("authority_profile_ref"))
+    actual = (
+        storylet.get("type_id"),
+        storylet.get("version"),
+        storylet.get("authority_profile_ref"),
+    )
     if actual != _EXPECTED_STORYLET_TYPE:
         raise ValueError("I8C_STORYLET_TYPE_DRIFT")
     if set(storylet.get("fields", [])) != _EXPECTED_STORYLET_FIELDS:
         raise ValueError("I8C_STORYLET_FIELDS_DRIFT")
+
+    authority_semantics = contract.get("authority_semantics")
+    if not isinstance(authority_semantics, Mapping):
+        raise ValueError("I8C_AUTHORITY_SEMANTICS_MISSING")
+    profiles = authority_semantics.get("profiles")
+    if not isinstance(profiles, Mapping):
+        raise ValueError("I8C_AUTHORITY_PROFILES_MISSING")
+    narrative_profile = profiles.get("NARRATIVE_DESIGN_NON_CANONICAL")
+    if not isinstance(narrative_profile, Mapping):
+        raise ValueError("I8C_NARRATIVE_DESIGN_PROFILE_MISSING")
+    if dict(narrative_profile) != _EXPECTED_NARRATIVE_DESIGN_PROFILE:
+        raise ValueError("I8C_NARRATIVE_DESIGN_PROFILE_DRIFT")
+
     freeze = contract.get("freeze_domains", {})
     af_f = freeze.get("AF-F")
     af_g = freeze.get("AF-G")
-    if not isinstance(af_f, Mapping) or not _REQUIRED_AF_F_INVARIANTS <= set(af_f.get("invariants", [])):
+    if not isinstance(af_f, Mapping) or not _REQUIRED_AF_F_INVARIANTS <= set(
+        af_f.get("invariants", [])
+    ):
         raise ValueError("I8C_AF_F_INVARIANT_DRIFT")
-    if not isinstance(af_g, Mapping) or not _REQUIRED_AF_G_INVARIANTS <= set(af_g.get("invariants", [])):
+    if not isinstance(af_g, Mapping) or not _REQUIRED_AF_G_INVARIANTS <= set(
+        af_g.get("invariants", [])
+    ):
         raise ValueError("I8C_AF_G_INVARIANT_DRIFT")
     return _EXPECTED_PARENT
 
@@ -158,11 +204,17 @@ def _load_golden_guard() -> None:
         golden = json.loads(_GOLDEN_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         raise ValueError("I8C_GOLDEN_UNAVAILABLE") from None
-    scenario = golden.get("scenarios", {}).get("HOSTILE_PLAYER_BREAKS_PLOT") if isinstance(golden, Mapping) else None
+    scenario = (
+        golden.get("scenarios", {}).get("HOSTILE_PLAYER_BREAKS_PLOT")
+        if isinstance(golden, Mapping)
+        else None
+    )
     if not isinstance(scenario, Mapping):
         raise ValueError("I8C_HOSTILE_PLAYER_GOLDEN_MISSING")
     machine = scenario.get("machine_spec")
-    if not isinstance(machine, Mapping) or "Storylet" not in machine.get("actual_type_refs", []):
+    if not isinstance(machine, Mapping) or "Storylet" not in machine.get(
+        "actual_type_refs", []
+    ):
         raise ValueError("I8C_HOSTILE_PLAYER_GOLDEN_TYPE_DRIFT")
     initial = machine.get("initial_state_predicates", [])
     if not any(
@@ -177,7 +229,9 @@ def _load_golden_guard() -> None:
         raise ValueError("I8C_NO_VALID_OPPORTUNITY_GOLDEN_GUARD_DRIFT")
 
 
-def _validate_storylet_definition(storylet_definition: Mapping[str, Any]) -> dict[str, Any]:
+def _validate_storylet_definition(
+    storylet_definition: Mapping[str, Any],
+) -> dict[str, Any]:
     if not isinstance(storylet_definition, Mapping):
         raise TypeError("I8C_STORYLET_DEFINITION_MAPPING_REQUIRED")
     material = json.loads(_canonical_json(storylet_definition))
@@ -186,13 +240,19 @@ def _validate_storylet_definition(storylet_definition: Mapping[str, Any]) -> dic
     _require_string(material.get("storylet_id"), "I8C_STORYLET_ID_REQUIRED")
     _require_string(material.get("dramatic_purpose"), "I8C_DRAMATIC_PURPOSE_REQUIRED")
     _require_string(material.get("version"), "I8C_STORYLET_VERSION_REQUIRED")
+
     roles = material.get("eligible_roles")
-    if not isinstance(roles, Mapping) or set(roles) != {"player_actor_id", "callback_npc_id"}:
+    if not isinstance(roles, Mapping) or set(roles) != {
+        "player_actor_id",
+        "callback_npc_id",
+    }:
         raise ValueError("I8C_ELIGIBLE_ROLES_REFERENCE_SHAPE_INVALID")
     for key in ("player_actor_id", "callback_npc_id"):
         _require_string(roles.get(key), f"I8C_ELIGIBLE_ROLE_REQUIRED:{key}")
 
-    preconditions = _require_sequence(material.get("preconditions"), "I8C_PRECONDITIONS_SEQUENCE_REQUIRED")
+    preconditions = _require_sequence(
+        material.get("preconditions"), "I8C_PRECONDITIONS_SEQUENCE_REQUIRED"
+    )
     if not preconditions:
         raise ValueError("I8C_PRECONDITIONS_REQUIRED")
     for row in preconditions:
@@ -210,13 +270,18 @@ def _validate_storylet_definition(storylet_definition: Mapping[str, Any]) -> dic
         if set(row) != expected_keys:
             raise ValueError(f"I8C_PRECONDITION_SHAPE_INVALID:{kind}")
 
-    knowledge = _require_sequence(material.get("knowledge_constraints"), "I8C_KNOWLEDGE_CONSTRAINTS_SEQUENCE_REQUIRED")
+    knowledge = _require_sequence(
+        material.get("knowledge_constraints"),
+        "I8C_KNOWLEDGE_CONSTRAINTS_SEQUENCE_REQUIRED",
+    )
     if not knowledge:
         raise ValueError("I8C_KNOWLEDGE_CONSTRAINTS_REQUIRED")
     for row in knowledge:
         if not isinstance(row, Mapping):
             raise ValueError("I8C_KNOWLEDGE_CONSTRAINT_MAPPING_REQUIRED")
-        kind = _require_string(row.get("kind"), "I8C_KNOWLEDGE_CONSTRAINT_KIND_REQUIRED")
+        kind = _require_string(
+            row.get("kind"), "I8C_KNOWLEDGE_CONSTRAINT_KIND_REQUIRED"
+        )
         if kind not in _ALLOWED_KNOWLEDGE_CONSTRAINTS:
             raise ValueError(f"I8C_UNSUPPORTED_KNOWLEDGE_CONSTRAINT:{kind}")
         expected_keys = {
@@ -226,14 +291,23 @@ def _validate_storylet_definition(storylet_definition: Mapping[str, Any]) -> dic
         if set(row) != expected_keys:
             raise ValueError(f"I8C_KNOWLEDGE_CONSTRAINT_SHAPE_INVALID:{kind}")
 
-    forbidden = set(_require_sequence(material.get("forbidden_contradictions"), "I8C_FORBIDDEN_CONTRADICTIONS_SEQUENCE_REQUIRED"))
+    forbidden = set(
+        _require_sequence(
+            material.get("forbidden_contradictions"),
+            "I8C_FORBIDDEN_CONTRADICTIONS_SEQUENCE_REQUIRED",
+        )
+    )
     if not _REQUIRED_FORBIDDEN_CONTRADICTIONS <= forbidden:
         raise ValueError("I8C_REQUIRED_ANTI_WELDING_CONTRADICTIONS_MISSING")
-    consequences = set(_require_sequence(material.get("consequence_templates"), "I8C_CONSEQUENCE_TEMPLATES_SEQUENCE_REQUIRED"))
+    consequences = set(
+        _require_sequence(
+            material.get("consequence_templates"),
+            "I8C_CONSEQUENCE_TEMPLATES_SEQUENCE_REQUIRED",
+        )
+    )
     if not consequences or not consequences <= _ALLOWED_CONSEQUENCE_TEMPLATES:
         raise ValueError("I8C_UNSAFE_OR_UNSUPPORTED_CONSEQUENCE_TEMPLATE")
-    repeat = material.get("repeat_policy")
-    if repeat != {"mode": "NO_AUTO_REALIZATION"}:
+    if material.get("repeat_policy") != {"mode": "NO_AUTO_REALIZATION"}:
         raise ValueError("I8C_REPEAT_POLICY_MUST_NOT_AUTO_REALIZE")
     return material
 
@@ -291,7 +365,9 @@ def _build_from_replay_validated_world(
     _load_golden_guard()
     storylet = _validate_storylet_definition(storylet_definition)
     player_actor_id = _require_string(player_actor_id, "I8C_PLAYER_ACTOR_ID_REQUIRED")
-    candidate_npc_id = _require_string(candidate_npc_id, "I8C_CANDIDATE_NPC_ID_REQUIRED")
+    candidate_npc_id = _require_string(
+        candidate_npc_id, "I8C_CANDIDATE_NPC_ID_REQUIRED"
+    )
 
     callback = i8b_reference._build_from_replay_validated_world(
         world=world,
@@ -301,8 +377,14 @@ def _build_from_replay_validated_world(
         target_object_id=target_object_id,
         source_speech_event_id=source_speech_event_id,
     )
-    callback_concept = None if callback.response_concept is None else thaw_value(callback.response_concept)
-    callback_concept_id = None if callback_concept is None else callback_concept.get("response_concept_id")
+    callback_concept = (
+        None if callback.response_concept is None else thaw_value(callback.response_concept)
+    )
+    callback_concept_id = (
+        None
+        if callback_concept is None
+        else callback_concept.get("response_concept_id")
+    )
     evidence: list[str] = []
 
     def result(outcome: str, reason: str) -> StoryletEligibilityReference:
@@ -329,8 +411,13 @@ def _build_from_replay_validated_world(
     evidence.append(f"CALLBACK:{callback_concept_id}")
 
     roles = storylet["eligible_roles"]
-    if roles.get("player_actor_id") != player_actor_id or roles.get("callback_npc_id") != candidate_npc_id:
-        return result("NO_VALID_STORYLET", "AUTHORED_ROLE_BINDING_NOT_CURRENTLY_VALID")
+    if (
+        roles.get("player_actor_id") != player_actor_id
+        or roles.get("callback_npc_id") != candidate_npc_id
+    ):
+        return result(
+            "NO_VALID_STORYLET", "AUTHORED_ROLE_BINDING_NOT_CURRENTLY_VALID"
+        )
     evidence.append(f"ROLE:PLAYER:{player_actor_id}")
     evidence.append(f"ROLE:NPC:{candidate_npc_id}")
 
@@ -340,39 +427,79 @@ def _build_from_replay_validated_world(
         if kind == "CALLBACK_OPPORTUNITY_REQUIRED":
             evidence.append(f"PRECONDITION:CALLBACK:{callback_concept_id}")
         elif kind == "TARGET_OBJECT_PRESENT":
-            object_id = _require_string(row.get("object_id"), "I8C_PRECONDITION_OBJECT_ID_REQUIRED")
+            object_id = _require_string(
+                row.get("object_id"), "I8C_PRECONDITION_OBJECT_ID_REQUIRED"
+            )
             obj = world.objects.get(object_id)
             if obj is None or obj.scene_id != world.active_scene_id:
-                return result("NO_VALID_STORYLET", "TARGET_OBJECT_NOT_PRESENT_IN_REPLAY_VALID_ACTIVE_SCENE")
+                return result(
+                    "NO_VALID_STORYLET",
+                    "TARGET_OBJECT_NOT_PRESENT_IN_REPLAY_VALID_ACTIVE_SCENE",
+                )
             evidence.append(f"OBJECT_PRESENT:{object_id}")
         elif kind == "ACTORS_SHARE_ACTIVE_SCENE":
-            actor_ids = tuple(_require_string(value, "I8C_PRECONDITION_ACTOR_ID_REQUIRED") for value in _require_sequence(row.get("actor_ids"), "I8C_PRECONDITION_ACTOR_IDS_REQUIRED"))
+            actor_ids = tuple(
+                _require_string(value, "I8C_PRECONDITION_ACTOR_ID_REQUIRED")
+                for value in _require_sequence(
+                    row.get("actor_ids"), "I8C_PRECONDITION_ACTOR_IDS_REQUIRED"
+                )
+            )
             if not actor_ids or any(actor_id not in world.actors for actor_id in actor_ids):
-                return result("NO_VALID_STORYLET", "REQUIRED_ACTOR_ABSENT_FROM_CANONICAL_WORLD")
-            if any(world.actors[actor_id].scene_id != world.active_scene_id for actor_id in actor_ids):
-                return result("NO_VALID_STORYLET", "REQUIRED_ACTORS_NOT_IN_REPLAY_VALID_ACTIVE_SCENE")
+                return result(
+                    "NO_VALID_STORYLET", "REQUIRED_ACTOR_ABSENT_FROM_CANONICAL_WORLD"
+                )
+            if any(
+                world.actors[actor_id].scene_id != world.active_scene_id
+                for actor_id in actor_ids
+            ):
+                return result(
+                    "NO_VALID_STORYLET",
+                    "REQUIRED_ACTORS_NOT_IN_REPLAY_VALID_ACTIVE_SCENE",
+                )
             evidence.extend(f"ACTIVE_SCENE_ACTOR:{actor_id}" for actor_id in actor_ids)
         elif kind == "WORLD_EVENT_PRESENT":
-            event_id = _require_string(row.get("event_id"), "I8C_PRECONDITION_EVENT_ID_REQUIRED")
+            event_id = _require_string(
+                row.get("event_id"), "I8C_PRECONDITION_EVENT_ID_REQUIRED"
+            )
             if event_id not in committed:
-                return result("NO_VALID_STORYLET", "REQUIRED_WORLD_EVENT_NOT_COMMITTED")
+                return result(
+                    "NO_VALID_STORYLET", "REQUIRED_WORLD_EVENT_NOT_COMMITTED"
+                )
             evidence.append(f"WORLD_EVENT:{event_id}")
 
     required_callback_facts = list(callback_concept.get("required_fact_refs", []))
     for row in storylet["knowledge_constraints"]:
         kind = row["kind"]
         if kind == "CALLBACK_REQUIRED_FACTS_EXACT":
-            refs = list(_require_sequence(row.get("fact_refs"), "I8C_KNOWLEDGE_FACT_REFS_REQUIRED"))
+            refs = list(
+                _require_sequence(
+                    row.get("fact_refs"), "I8C_KNOWLEDGE_FACT_REFS_REQUIRED"
+                )
+            )
             if refs != required_callback_facts:
-                return result("NO_VALID_STORYLET", "STORYLET_KNOWLEDGE_REFS_DO_NOT_MATCH_CALLBACK_EVIDENCE")
+                return result(
+                    "NO_VALID_STORYLET",
+                    "STORYLET_KNOWLEDGE_REFS_DO_NOT_MATCH_CALLBACK_EVIDENCE",
+                )
             evidence.extend(f"KNOWLEDGE_FACT:{ref}" for ref in refs)
         elif kind == "EXACT_CALLBACK_RECIPIENT":
-            npc_id = _require_string(row.get("npc_id"), "I8C_KNOWLEDGE_NPC_ID_REQUIRED")
-            if npc_id != candidate_npc_id or npc_id != callback.promise_recipient_npc_id:
-                return result("NO_VALID_STORYLET", "STORYLET_CALLBACK_RECIPIENT_IDENTITY_MISMATCH")
+            npc_id = _require_string(
+                row.get("npc_id"), "I8C_KNOWLEDGE_NPC_ID_REQUIRED"
+            )
+            if (
+                npc_id != candidate_npc_id
+                or npc_id != callback.promise_recipient_npc_id
+            ):
+                return result(
+                    "NO_VALID_STORYLET",
+                    "STORYLET_CALLBACK_RECIPIENT_IDENTITY_MISMATCH",
+                )
             evidence.append(f"KNOWLEDGE_RECIPIENT:{npc_id}")
 
-    return result("STORYLET_ELIGIBLE", "ALL_AUTHORED_PRECONDITIONS_REVALIDATED_FROM_CANONICAL_EVIDENCE")
+    return result(
+        "STORYLET_ELIGIBLE",
+        "ALL_AUTHORED_PRECONDITIONS_REVALIDATED_FROM_CANONICAL_EVIDENCE",
+    )
 
 
 def build_storylet_eligibility_reference(
@@ -442,14 +569,22 @@ def export_storylet_eligibility_package(
         "source_i1_replay_b64": base64.b64encode(solo_package).decode("ascii"),
         "expected_reference": _reference_material(reference),
     }
-    return _canonical_json({"payload": payload, "sha256": _sha256(payload)}).encode("utf-8")
+    return _canonical_json({"payload": payload, "sha256": _sha256(payload)}).encode(
+        "utf-8"
+    )
 
 
-def replay_storylet_eligibility_package(package: bytes | bytearray | memoryview) -> StoryletEligibilityReference:
+def replay_storylet_eligibility_package(
+    package: bytes | bytearray | memoryview,
+) -> StoryletEligibilityReference:
     if not isinstance(package, (bytes, bytearray, memoryview)):
         raise TypeError("I8C_REPLAY_PACKAGE_BYTES_REQUIRED")
     try:
-        envelope = json.loads(bytes(package).decode("utf-8"), object_pairs_hook=_reject_duplicate_keys, parse_constant=_reject_nonfinite)
+        envelope = json.loads(
+            bytes(package).decode("utf-8"),
+            object_pairs_hook=_reject_duplicate_keys,
+            parse_constant=_reject_nonfinite,
+        )
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise ValueError("I8C_REPLAY_PACKAGE_JSON_INVALID") from None
     if not isinstance(envelope, Mapping) or set(envelope) != {"payload", "sha256"}:
@@ -459,12 +594,16 @@ def replay_storylet_eligibility_package(package: bytes | bytearray | memoryview)
         raise ValueError("I8C_REPLAY_PACKAGE_SCHEMA_INVALID")
     if envelope.get("sha256") != _sha256(payload):
         raise ValueError("I8C_REPLAY_PACKAGE_TAMPERED")
-    replay_b64 = _require_string(payload.get("source_i1_replay_b64"), "I8C_I1_REPLAY_REQUIRED")
+    replay_b64 = _require_string(
+        payload.get("source_i1_replay_b64"), "I8C_I1_REPLAY_REQUIRED"
+    )
     try:
         solo_package = base64.b64decode(replay_b64.encode("ascii"), validate=True)
     except (ValueError, UnicodeEncodeError):
         raise ValueError("I8C_I1_REPLAY_ENCODING_INVALID") from None
-    if hashlib.sha256(solo_package).hexdigest() != payload.get("source_i1_replay_sha256"):
+    if hashlib.sha256(solo_package).hexdigest() != payload.get(
+        "source_i1_replay_sha256"
+    ):
         raise ValueError("I8C_I1_REPLAY_DIGEST_MISMATCH")
     evidence = import_solo_replay_package(solo_package)
     world = rehydrate_solo_replay_package(solo_package)
@@ -477,7 +616,10 @@ def replay_storylet_eligibility_package(package: bytes | bytearray | memoryview)
         target_object_id=payload.get("target_object_id"),
         source_speech_event_id=payload.get("source_speech_event_id"),
     )
-    if rebuilt.source_world_id != evidence.world_id or rebuilt.source_baseline_version != evidence.baseline_version:
+    if (
+        rebuilt.source_world_id != evidence.world_id
+        or rebuilt.source_baseline_version != evidence.baseline_version
+    ):
         raise ValueError("I8C_REPLAY_I1_SOURCE_BINDING_MISMATCH")
     if _reference_material(rebuilt) != payload.get("expected_reference"):
         raise ValueError("I8C_REPLAY_REFERENCE_MATERIALIZATION_MISMATCH")
