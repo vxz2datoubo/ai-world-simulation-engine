@@ -1,4 +1,4 @@
-name: I8D B1 Generate Migration
+name: I8D B1 Verify Migration
 
 on:
   pull_request:
@@ -7,13 +7,15 @@ on:
       - 'tools/i8d_b1_migrate.py'
       - '.github/workflows/i8d-b1-generate.yml'
       - 'contracts/**'
+      - 'docs/**'
       - 'evals/**'
       - 'registries/**'
       - 'runtime/**'
       - 'tests/**'
+      - '.gitignore'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   generate-and-verify:
@@ -22,67 +24,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - name: Install test tooling
         run: python -m pip install --upgrade pip pytest
-      - name: Make materialized migration idempotent
+      - name: Verify B1 migration is already materialized and idempotent
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          p = Path('tools/i8d_b1_migrate.py')
-          t = p.read_text(encoding='utf-8')
-
-          gate = '''\n\ndef migration_already_materialized() -> bool:\n    try:\n        parent = load("contracts/AF001-LIVING-STORY-CONTRACTS.json")\n        golden = load("evals/AF001-GOLDEN-SCENARIOS.json")\n        decisions = load("evals/AF001-DECISION-LIFECYCLE-BINDINGS.json")\n        binding = load("contracts/AF001-BRANCH-QUALITY-EVIDENCE-BINDING.json")\n    except (OSError, json.JSONDecodeError):\n        return False\n    registration = parent.get("registered_contract_extensions", {}).get(BQ_BINDING_ID)\n    fixture_registration = golden.get("registered_fixture_extensions", {}).get(BQ_PROVENANCE_FIXTURE_ID)\n    return bool(\n        parent.get("contract_version") == NEW_PARENT\n        and parent.get("authority_graph_version") == NEW_GRAPH\n        and isinstance(registration, dict)\n        and registration.get("parent_contract_version") == NEW_PARENT\n        and registration.get("parent_authority_graph_version") == NEW_GRAPH\n        and golden.get("suite_version") == NEW_GOLDEN\n        and golden.get("required_contract_version") == NEW_PARENT\n        and isinstance(fixture_registration, dict)\n        and decisions.get("version") == NEW_DECISION\n        and decisions.get("required_contract_version") == NEW_PARENT\n        and binding.get("status") == "CANONICAL_REGISTERED_INTERFACE_ONLY_NO_RUNTIME"\n        and binding.get("runtime_implementation_authorized") is False\n        and (ROOT / BQ_PROVENANCE_PATH).is_file()\n    )\n'''
-          if 'def migration_already_materialized()' not in t:
-              anchor = '\n\ndef main() -> None:'
-              if anchor not in t:
-                  raise SystemExit('idempotency function anchor not found')
-              t = t.replace(anchor, gate + anchor, 1)
-
-          old_main = '''def main() -> None:\n    migrate_parent()\n'''
-          new_main = '''def main() -> None:\n    if migration_already_materialized():\n        print(json.dumps({"status":"B1_MIGRATION_ALREADY_MATERIALIZED","parent":NEW_PARENT,"graph":NEW_GRAPH,"golden":NEW_GOLDEN,"decision":NEW_DECISION}, indent=2))\n        return\n    migrate_parent()\n'''
-          if old_main in t:
-              t = t.replace(old_main, new_main, 1)
-          elif new_main not in t:
-              raise SystemExit('idempotency main anchor not found')
-
-          p.write_text(t, encoding='utf-8')
-          PY
-          python -m py_compile tools/i8d_b1_migrate.py
-      - name: Refine historical runtime invariance gate for B1 registry rebind
+          output="$(python tools/i8d_b1_migrate.py)"
+          printf '%s\n' "$output"
+          printf '%s\n' "$output" | grep -q 'B1_MIGRATION_ALREADY_MATERIALIZED'
+          git diff --exit-code
+      - name: Verify full repository
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          p = Path('tests/test_i2a_capability_decision_receipt_contract.py')
-          t = p.read_text(encoding='utf-8')
-          old = '''def test_runtime_and_r003_persistence_authority_are_exactly_unchanged():\n    fixture = _load(FIXTURES_PATH)["unchanged_evidence"]\n    assert _git_object("runtime") == fixture["runtime_tree_sha"]\n    assert _git_object("runtime/awrse/persistence.py") == fixture["persistence_runtime_blob_sha"]\n    assert _git_object("evals/R003-I1A-RESTART-REFERENCE.json") == fixture[\n        "r003_i1a_reference_blob_sha"\n    ]\n'''
-          new = '''def test_runtime_and_r003_persistence_authority_are_preserved_with_exact_b1_registry_rebind():\n    fixture = _load(FIXTURES_PATH)["unchanged_evidence"]\n\n    def tree_map(treeish):\n        output = subprocess.check_output(\n            ["git", "ls-tree", "-r", treeish], cwd=ROOT, text=True\n        )\n        entries = {}\n        for line in output.splitlines():\n            metadata, path = line.split("\\t", 1)\n            entries[path] = metadata.split()[2]\n        return entries\n\n    baseline = tree_map(fixture["runtime_tree_sha"])\n    current = tree_map("HEAD:runtime")\n    allowed = "awrse/functional_impairment_admission.py"\n    assert {k: v for k, v in current.items() if k != allowed} == {\n        k: v for k, v in baseline.items() if k != allowed\n    }\n    assert set(current) == set(baseline)\n\n    old_source = subprocess.check_output(\n        ["git", "cat-file", "blob", baseline[allowed]], cwd=ROOT\n    )\n    current_source = subprocess.check_output(\n        ["git", "cat-file", "blob", current[allowed]], cwd=ROOT\n    )\n    expected_source = old_source.replace(\n        b"AF001-AUTHORITY-GRAPH-1.9-I2A008@1", AUTHORITY_GRAPH.encode("utf-8"), 1\n    )\n    assert current_source == expected_source\n    assert current_source.count(AUTHORITY_GRAPH.encode("utf-8")) == 1\n\n    assert _git_object("runtime/awrse/persistence.py") == fixture["persistence_runtime_blob_sha"]\n    assert _git_object("evals/R003-I1A-RESTART-REFERENCE.json") == fixture[\n        "r003_i1a_reference_blob_sha"\n    ]\n'''
-          if old in t:
-              t = t.replace(old, new, 1)
-          elif new not in t:
-              raise SystemExit('runtime invariance gate anchor not found')
-          p.write_text(t, encoding='utf-8')
-          PY
-      - name: Verify materialized B1 migration
-        run: |
-          python tools/i8d_b1_migrate.py
           git diff --check
           python -m pytest -q
-      - name: Commit hardening only after full verification
+      - name: Verify exact-head repository remains clean
         run: |
-          if git diff --quiet && git diff --cached --quiet; then
-            echo 'B1 migration hardening already materialized.'
-            exit 0
-          fi
-          git config user.name 'AWRSE B1 Migration Bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add tools/i8d_b1_migrate.py tests/test_i2a_capability_decision_receipt_contract.py
-          git commit -m 'Harden I8D B1 replay and runtime invariants [b1-generated]'
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git diff --exit-code
+          test -z "$(git status --porcelain --untracked-files=all)"
