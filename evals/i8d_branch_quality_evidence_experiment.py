@@ -67,6 +67,15 @@ _EXPECTED_PX_PROFILE = {
         "PX_MAY_RANK_ONLY_ALREADY_LEGAL_CANDIDATES_AND_CANNOT_LEGALIZE_INVALID_CANDIDATES_OR_CREATE_FACTS"
     ),
 }
+_REQUIRED_AF_F_INVARIANTS = {
+    "STORY_STRUCTURE_IS_NOT_WORLD_TRUTH",
+    "AUTHORED_NARRATIVE_NE_PROMISE_HISTORY",
+    "BRANCH_QUALITY_CANNOT_JUSTIFY_RETCON_OR_RESURRECTION",
+}
+_REQUIRED_AF_G_INVARIANTS = {
+    "NO_VALID_OPPORTUNITY_IS_VALID",
+    "PX_CANNOT_INVENT_FACTS_OR_INJECT_KNOWLEDGE",
+}
 _REQUIRED_GOLDEN_SCENARIOS = {
     "HOSTILE_PLAYER_BREAKS_PLOT",
     "PROMISE_RETURN_CALLBACK",
@@ -96,6 +105,17 @@ _ALLOWED_ASSESSMENTS = {
 }
 _ALLOWED_AUTHORED_FIT = {"SUPPORTED", "THIN", "NOT_APPLICABLE"}
 _SOURCE_KINDS = {"I5A_INFORMATION_OPPORTUNITY", "I7A_WORLD_ECHO", "I8C_STORYLET"}
+_EVIDENCE_TOKEN_PREFIXES = (
+    "KNOWLEDGE_FACT:",
+    "WORLD_EVENT:",
+    "PRECONDITION:CALLBACK:",
+    "CALLBACK:",
+    "OBJECT_PRESENT:",
+    "ACTIVE_SCENE_ACTOR:",
+    "ROLE:PLAYER:",
+    "ROLE:NPC:",
+    "KNOWLEDGE_RECIPIENT:",
+)
 _AUTHORITY_CLASS = "EVALUATION_EVIDENCE_ONLY_NOT_LEGALITY_WORLD_OR_PX_AUTHORITY"
 _FIXTURE_AUTHORITY_CLASS = "BOUNDED_EVAL_FIXTURE_ONLY_NOT_WORLD_OR_PX_EVIDENCE"
 _PACKAGE_SCHEMA = "AWRSE-I8D-BRANCH-EVIDENCE-EXPERIMENT-1"
@@ -178,6 +198,23 @@ def _reject_nonfinite(value: str) -> None:
     raise ValueError(f"I8D_JSON_NONFINITE:{value}")
 
 
+def _decision_section(traceability: str, decision: str) -> str:
+    heading = f"### {decision}"
+    start = traceability.find(heading)
+    if start < 0:
+        raise ValueError(f"I8D_OPEN_DECISION_TRACE_MISSING:{decision}")
+    candidates = [
+        value
+        for value in (
+            traceability.find("\n### OD-", start + len(heading)),
+            traceability.find("\n## ", start + len(heading)),
+        )
+        if value >= 0
+    ]
+    end = min(candidates) if candidates else len(traceability)
+    return traceability[start:end]
+
+
 def _load_governance() -> tuple[str, str, str]:
     try:
         contract = json.loads(_CONTRACT_PATH.read_text(encoding="utf-8"))
@@ -206,6 +243,20 @@ def _load_governance() -> tuple[str, str, str]:
     if not isinstance(px, Mapping) or dict(px) != _EXPECTED_PX_PROFILE:
         raise ValueError("I8D_PX_AUTHORITY_DRIFT")
 
+    freeze = contract.get("freeze_domains")
+    if not isinstance(freeze, Mapping):
+        raise ValueError("I8D_FREEZE_DOMAINS_MISSING")
+    af_f = freeze.get("AF-F")
+    af_g = freeze.get("AF-G")
+    if not isinstance(af_f, Mapping) or not _REQUIRED_AF_F_INVARIANTS <= set(
+        af_f.get("invariants", [])
+    ):
+        raise ValueError("I8D_AF_F_INVARIANT_DRIFT")
+    if not isinstance(af_g, Mapping) or not _REQUIRED_AF_G_INVARIANTS <= set(
+        af_g.get("invariants", [])
+    ):
+        raise ValueError("I8D_AF_G_INVARIANT_DRIFT")
+
     registry = contract.get("type_registry")
     if not isinstance(registry, Mapping):
         raise ValueError("I8D_TYPE_REGISTRY_MISSING")
@@ -220,8 +271,11 @@ def _load_governance() -> tuple[str, str, str]:
         raise ValueError("I8D_REQUIRED_GOLDEN_CORPUS_DRIFT")
 
     for decision in _DEFERRED_DECISIONS:
-        if f"### {decision}" not in traceability:
-            raise ValueError(f"I8D_OPEN_DECISION_TRACE_MISSING:{decision}")
+        section = _decision_section(traceability, decision)
+        if "- **Required experiment/research:**" not in section:
+            raise ValueError(f"I8D_OPEN_DECISION_RESEARCH_GATE_DRIFT:{decision}")
+        if "RESOLVED_ARCHITECTURAL_SUBSTRATE" in section:
+            raise ValueError(f"I8D_OPEN_DECISION_PREMATURELY_RESOLVED:{decision}")
     return _EXPECTED_PARENT
 
 
@@ -262,11 +316,9 @@ def _result_material(result: BranchEvidenceExperimentResult) -> dict[str, Any]:
     )
 
 
-def _normalize_fixture(
+def _validate_fixture_intrinsics(
     fixture: BranchEvidenceExperimentFixture,
-    *,
-    allowed_source_refs: set[str],
-) -> BranchEvidenceExperimentFixture:
+) -> tuple[tuple[str, ...], tuple[str, ...], str | None]:
     if not isinstance(fixture, BranchEvidenceExperimentFixture):
         raise TypeError("I8D_BRANCH_EVIDENCE_FIXTURE_REQUIRED")
     if fixture.authority_class != _FIXTURE_AUTHORITY_CLASS:
@@ -274,17 +326,16 @@ def _normalize_fixture(
     _require_string(fixture.fixture_id, "I8D_FIXTURE_ID_REQUIRED")
     if fixture.authored_design_fit not in _ALLOWED_AUTHORED_FIT:
         raise ValueError("I8D_AUTHORED_DESIGN_FIT_INVALID")
+
     meaningful = tuple(
         _require_string(value, "I8D_MEANINGFUL_DELTA_REF_INVALID")
         for value in _require_sequence(
-            fixture.meaningful_delta_refs, "I8D_MEANINGFUL_DELTA_REFS_SEQUENCE_REQUIRED"
+            fixture.meaningful_delta_refs,
+            "I8D_MEANINGFUL_DELTA_REFS_SEQUENCE_REQUIRED",
         )
     )
     if len(meaningful) != len(set(meaningful)):
         raise ValueError("I8D_DUPLICATE_MEANINGFUL_DELTA_REF")
-    invented = sorted(set(meaningful) - allowed_source_refs)
-    if invented:
-        raise ValueError(f"I8D_MEANINGFUL_DELTA_REF_NOT_IN_VALIDATED_SOURCE:{invented[0]}")
 
     threads = tuple(
         _require_string(value, "I8D_RECOVERABLE_THREAD_REF_INVALID")
@@ -299,8 +350,6 @@ def _normalize_fixture(
     repetition_key = fixture.repetition_key
     if repetition_key is not None:
         repetition_key = _require_string(repetition_key, "I8D_REPETITION_KEY_INVALID")
-        if repetition_key not in allowed_source_refs:
-            raise ValueError("I8D_REPETITION_KEY_NOT_IN_VALIDATED_SOURCE")
     if isinstance(fixture.prior_occurrence_count, bool) or not isinstance(
         fixture.prior_occurrence_count, int
     ):
@@ -309,6 +358,22 @@ def _normalize_fixture(
         raise ValueError("I8D_PRIOR_OCCURRENCE_COUNT_NEGATIVE")
     if fixture.prior_occurrence_count and repetition_key is None:
         raise ValueError("I8D_REPETITION_KEY_REQUIRED_WHEN_PRIOR_OCCURRENCES_EXIST")
+    return meaningful, threads, repetition_key
+
+
+def _normalize_fixture(
+    fixture: BranchEvidenceExperimentFixture,
+    *,
+    allowed_source_refs: set[str],
+) -> BranchEvidenceExperimentFixture:
+    meaningful, threads, repetition_key = _validate_fixture_intrinsics(fixture)
+    invented = sorted(set(meaningful) - allowed_source_refs)
+    if invented:
+        raise ValueError(
+            f"I8D_MEANINGFUL_DELTA_REF_NOT_IN_VALIDATED_SOURCE:{invented[0]}"
+        )
+    if repetition_key is not None and repetition_key not in allowed_source_refs:
+        raise ValueError("I8D_REPETITION_KEY_NOT_IN_VALIDATED_SOURCE")
 
     return BranchEvidenceExperimentFixture(
         fixture_id=fixture.fixture_id,
@@ -325,6 +390,9 @@ def _string_leaves(value: Any) -> set[str]:
     leaves: set[str] = set()
     if isinstance(value, str):
         leaves.add(value)
+        for prefix in _EVIDENCE_TOKEN_PREFIXES:
+            if value.startswith(prefix) and len(value) > len(prefix):
+                leaves.add(value[len(prefix) :])
     elif isinstance(value, Mapping):
         for child in value.values():
             leaves.update(_string_leaves(child))
@@ -615,7 +683,9 @@ def _validated_axes(
     else:
         diagnostic = "ROBUST_BRANCH_EVIDENCE"
 
-    storylet_continuity = source_kind == "I8C_STORYLET" and source_status == "STORYLET_ELIGIBLE"
+    storylet_continuity = (
+        source_kind == "I8C_STORYLET" and source_status == "STORYLET_ELIGIBLE"
+    )
     axes["character_relationship_continuity"] = _axis(
         "SUPPORTED" if storylet_continuity else "NOT_APPLICABLE",
         [source_material.get("candidate_npc_id", "")] if storylet_continuity else (),
@@ -739,6 +809,7 @@ def evaluate_branch_evidence_experiment(
         raise ValueError("I8D_SOURCE_KIND_UNSUPPORTED")
     if not isinstance(source_package, (bytes, bytearray, memoryview)):
         raise TypeError("I8D_SOURCE_PACKAGE_BYTES_REQUIRED")
+    _validate_fixture_intrinsics(fixture)
     package_bytes = bytes(source_package)
     try:
         result, source_material = _strict_replay_source(source_kind, package_bytes)
@@ -768,6 +839,7 @@ def export_branch_evidence_experiment_package(
         raise ValueError("I8D_SOURCE_KIND_UNSUPPORTED")
     if not isinstance(source_package, (bytes, bytearray, memoryview)):
         raise TypeError("I8D_SOURCE_PACKAGE_BYTES_REQUIRED")
+    _validate_fixture_intrinsics(fixture)
     package_bytes = bytes(source_package)
     result, source_material = _strict_replay_source(source_kind, package_bytes)
     evaluated = _evaluate_validated_source(
@@ -847,6 +919,7 @@ def replay_branch_evidence_experiment_package(
         prior_occurrence_count=fixture_raw["prior_occurrence_count"],
         authority_class=fixture_raw["authority_class"],
     )
+    _validate_fixture_intrinsics(fixture)
 
     # Strict nested replay is intentional. A tampered I5/I7/I8 package must not be
     # laundered into a newly self-consistent I8D package by changing expected_result.
