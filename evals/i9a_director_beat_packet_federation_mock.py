@@ -1,13 +1,18 @@
 """I9A V0 deterministic AWRSE -> AI Film federation mock.
 
-This is a bounded reference/eval implementation only.  It consumes replay
-packages from already accepted I8C and I3A paths, replays them locally, and
-materializes the frozen AF-H DIRECTOR-BEAT-PACKET fields.  It does not call a
-provider, renderer, network service, or mutate world/runtime state.
+Bounded reference/eval implementation only. It consumes replay packages from
+already accepted I8C and I3A paths, replays them locally, and materializes the
+frozen AF-H DIRECTOR-BEAT-PACKET fields. It does not call a provider, renderer,
+network service, or mutate world/runtime state.
 
-Important trust rule: the mock consumer never accepts a caller-asserted
-"already validated" packet as authority.  It rebuilds the packet from the I8C
-and I3A replay packages on every consume operation.
+Trust rule: neither packet assembly nor the mock consumer accepts caller-
+asserted "already validated" packet/world/presentation material. Every consume
+operation rebuilds the packet from replay packages.
+
+V0 presentation gaps are deliberately preserved rather than laundered through
+AF-H fields: current AF-D scene/view admission is not actor-visible-identity
+authority, SurfaceState has no frozen ActorPresentationRequirements field, and
+there is no functional-to-visible-condition cue assembler in this slice.
 """
 from __future__ import annotations
 
@@ -22,9 +27,7 @@ from typing import Any
 from awrse import import_solo_replay_package, rehydrate_solo_replay_package
 from awrse.model import freeze_value, thaw_value
 from evals.i3a_presentation_reference import replay_package as replay_i3a_package
-from evals.i8c_storylet_eligibility_reference import (
-    replay_storylet_eligibility_package,
-)
+from evals.i8c_storylet_eligibility_reference import replay_storylet_eligibility_package
 
 I9A_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED = True
 NO_PROVIDER_INTEGRATION = True
@@ -87,12 +90,21 @@ _EXPECTED_STAGING_AUTHORITY = ["AI_DIRECTOR"]
 _EXPECTED_MOCK_AUTHORITY = "NON_CANONICAL_MOCK_AI_FILM_STAGING_EVIDENCE_ONLY"
 _EXPECTED_PACKET_AUTHORITY = "NON_CANONICAL_I9A_DIRECTOR_BEAT_PACKET_REFERENCE_ONLY"
 _ALLOWED_STAGING_KEYS = {"camera", "performance", "edit", "sound"}
+_ALLOWED_VISIBILITY_POLICY_TOKENS = {
+    "MUST_RENDER_IF_VISIBLE_IN_SHOT",
+    "MUST_NOT_CONTRADICT",
+    "HIDDEN_BY_CLOTHING",
+    "PRESENTATION_OPTIONAL",
+}
 _MANDATORY_AF_H_FORBIDDEN = (
     "AF_H_NO_WORLD_OR_EVENT_OUTCOME_REWRITE",
     "AF_H_NO_KNOWLEDGE_VISIBILITY_REWRITE",
     "AF_H_NO_ACTOR_IDENTITY_REWRITE",
     "AF_H_NO_PRESENTATION_TRUTH_REWRITE",
 )
+_GAP_MISSING_VISIBLE_IDENTITY = "MISSING_CANONICAL_VISIBLE_IDENTITY_REF"
+_GAP_SURFACE_NOT_EXPRESSIBLE = "SURFACE_STATE_PRESENT_UPSTREAM_BUT_NOT_EXPRESSIBLE_IN_FROZEN_PACKET_V0"
+_GAP_NO_VISIBLE_CUE_ASSEMBLER = "NO_FUNCTIONAL_TO_VISIBLE_CONDITION_CUE_ASSEMBLER_IN_I9A_V0"
 
 
 def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -229,10 +241,7 @@ def _load_af_h_authority() -> tuple[str, str, str]:
         raise ValueError("I9A_DIRECTOR_MUTATION_CONSTRAINT_DRIFT")
     if presentation_profile.get("staging_authority") != ["NONE"]:
         raise ValueError("I9A_PRESENTATION_STAGING_AUTHORITY_DRIFT")
-    if (
-        presentation_profile.get("mutation_constraint")
-        != _EXPECTED_PRESENTATION_MUTATION_CONSTRAINT
-    ):
+    if presentation_profile.get("mutation_constraint") != _EXPECTED_PRESENTATION_MUTATION_CONSTRAINT:
         raise ValueError("I9A_PRESENTATION_MUTATION_CONSTRAINT_DRIFT")
     return parent
 
@@ -254,19 +263,20 @@ def _load_af_d_manifest() -> Mapping[str, Any]:
 @dataclass(frozen=True)
 class DirectorBeatPacketReference:
     beat_id: str
-    world_state_version: int
+    world_state_version: str
     confirmed_event_refs: tuple[str, ...]
     scene_view_asset_refs: Mapping[str, Any]
     player_visible_knowledge_refs: tuple[str, ...]
     public_visible_knowledge_refs: tuple[str, ...]
     private_forbidden_knowledge_refs: tuple[str, ...]
-    actor_presentation_requirements: Mapping[str, Any]
+    actor_presentation_requirements: tuple[Mapping[str, Any], ...]
     presentation_goal: str
     forbidden_inventions: tuple[str, ...]
     contract_version: str
     packet_type_version: str
     source_i8c_sha256: str
     source_i3a_sha256: str
+    coverage_gaps: tuple[str, ...]
     authority_class: str
 
 
@@ -275,7 +285,7 @@ class MockAIFilmReceipt:
     status: str
     source_packet_sha256: str
     beat_id: str
-    world_state_version: int
+    world_state_version: str
     staging_metadata: Mapping[str, str]
     protected_material_sha256: str
     world_mutation_count: int
@@ -283,8 +293,8 @@ class MockAIFilmReceipt:
     authority_class: str
 
 
-def _packet_material(packet: DirectorBeatPacketReference) -> dict[str, Any]:
-    return {
+def _frozen_packet_material(packet: DirectorBeatPacketReference) -> dict[str, Any]:
+    material = {
         "beat_id": packet.beat_id,
         "world_state_version": packet.world_state_version,
         "confirmed_event_refs": list(packet.confirmed_event_refs),
@@ -292,25 +302,35 @@ def _packet_material(packet: DirectorBeatPacketReference) -> dict[str, Any]:
         "player_visible_knowledge_refs": list(packet.player_visible_knowledge_refs),
         "public_visible_knowledge_refs": list(packet.public_visible_knowledge_refs),
         "private_forbidden_knowledge_refs": list(packet.private_forbidden_knowledge_refs),
-        "actor_presentation_requirements": thaw_value(
-            packet.actor_presentation_requirements
-        ),
+        "actor_presentation_requirements": [
+            thaw_value(item) for item in packet.actor_presentation_requirements
+        ],
         "presentation_goal": packet.presentation_goal,
         "forbidden_inventions": list(packet.forbidden_inventions),
         "contract_version": packet.contract_version,
+    }
+    if set(material) != _EXPECTED_PACKET_FIELDS:
+        raise ValueError("I9A_INTERNAL_PACKET_FIELD_SHAPE_DRIFT")
+    return material
+
+
+def _reference_material(packet: DirectorBeatPacketReference) -> dict[str, Any]:
+    return {
+        "packet": _frozen_packet_material(packet),
         "packet_type_version": packet.packet_type_version,
         "source_i8c_sha256": packet.source_i8c_sha256,
         "source_i3a_sha256": packet.source_i3a_sha256,
+        "coverage_gaps": list(packet.coverage_gaps),
         "authority_class": packet.authority_class,
     }
 
 
 def packet_sha256(packet: DirectorBeatPacketReference) -> str:
-    return _sha256_json(_packet_material(packet))
+    return _sha256_json(_reference_material(packet))
 
 
 def protected_material_sha256(packet: DirectorBeatPacketReference) -> str:
-    material = _packet_material(packet)
+    material = _frozen_packet_material(packet)
     protected = {
         key: material[key]
         for key in (
@@ -324,15 +344,12 @@ def protected_material_sha256(packet: DirectorBeatPacketReference) -> str:
             "presentation_goal",
             "forbidden_inventions",
             "contract_version",
-            "packet_type_version",
         )
     }
     return _sha256_json(protected)
 
 
-def _decode_i8c_sources(
-    package: bytes,
-) -> tuple[Mapping[str, Any], bytes, Any]:
+def _decode_i8c_sources(package: bytes) -> tuple[Mapping[str, Any], bytes, Any]:
     envelope = _strict_json_from_bytes(package, "I9A_I8C_PACKAGE_JSON_INVALID")
     payload = envelope.get("payload")
     if not isinstance(payload, Mapping):
@@ -351,9 +368,7 @@ def _decode_i8c_sources(
     return payload, solo_package, world
 
 
-def _ordered_confirmed_event_refs(
-    world: Any, storylet: Mapping[str, Any]
-) -> tuple[str, ...]:
+def _ordered_confirmed_event_refs(world: Any, storylet: Mapping[str, Any]) -> tuple[str, ...]:
     required: list[str] = []
     for row in storylet.get("preconditions", []):
         if isinstance(row, Mapping) and row.get("kind") == "WORLD_EVENT_PRESENT":
@@ -363,18 +378,14 @@ def _ordered_confirmed_event_refs(
             refs = row.get("fact_refs")
             if isinstance(refs, (str, bytes, bytearray)) or not isinstance(refs, Sequence):
                 raise ValueError("I9A_CALLBACK_FACT_REFS_INVALID")
-            required.extend(
-                _require_string(ref, "I9A_CALLBACK_FACT_REF_INVALID") for ref in refs
-            )
+            required.extend(_require_string(ref, "I9A_CALLBACK_FACT_REF_INVALID") for ref in refs)
     required_set = set(required)
     if not required_set:
         raise ValueError("I9A_CONFIRMED_EVENT_REFS_REQUIRED")
     committed = set(world.committed_event_ids)
     if not required_set <= committed:
         raise ValueError("I9A_CONFIRMED_EVENT_NOT_COMMITTED_IN_SOURCE_WORLD")
-    ordered = tuple(
-        event.event_id for event in world.event_log if event.event_id in required_set
-    )
+    ordered = tuple(event.event_id for event in world.event_log if event.event_id in required_set)
     if set(ordered) != required_set or len(ordered) != len(required_set):
         raise ValueError("I9A_CONFIRMED_EVENT_ORDER_REBUILD_FAILED")
     return ordered
@@ -442,8 +453,8 @@ def _scene_view_material(
     base_asset_refs = tuple(scene.base_asset_refs)
     if not base_asset_refs:
         raise ValueError("I9A_SCENE_BASE_ASSET_REFS_REQUIRED")
-    for asset_id in base_asset_refs:
-        asset_id = _require_string(asset_id, "I9A_SCENE_BASE_ASSET_REF_INVALID")
+    for raw_asset_id in base_asset_refs:
+        asset_id = _require_string(raw_asset_id, "I9A_SCENE_BASE_ASSET_REF_INVALID")
         asset = asset_rows.get(asset_id)
         if not isinstance(asset, Mapping):
             raise ValueError("I9A_SCENE_ASSET_NOT_IN_CANONICAL_AF_D_MANIFEST")
@@ -475,53 +486,63 @@ def _scene_view_material(
     )
 
 
-def _presentation_requirements(presentation: Any) -> Mapping[str, Any]:
+def _presentation_requirements(presentation: Any) -> tuple[Mapping[str, Any], ...]:
+    """Map replay-valid I3A truth into the already-frozen minimal V0 shape.
+
+    AF-D manifest/admission/View evidence remains scene/view provenance and must
+    never populate actor visual identity. SurfaceState remains upstream replay
+    evidence but is intentionally not serialized into a field with different
+    frozen semantics.
+    """
     outfit = thaw_value(presentation.outfit_state)
     slots = outfit.get("slot_bindings", {}) if isinstance(outfit, Mapping) else {}
-    outfit_refs = [
-        {"slot": slot, "object_ref": object_ref}
-        for slot, object_ref in sorted(slots.items())
-    ]
-    dressing_refs = []
+    if not isinstance(slots, Mapping):
+        raise ValueError("I9A_OUTFIT_SLOT_BINDINGS_INVALID")
+    outfit_refs = tuple(sorted({_require_string(ref, "I9A_OUTFIT_REF_INVALID") for ref in slots.values()}))
+
+    dressing_rows: list[Mapping[str, Any]] = []
     for raw in presentation.dressing_states:
         row = thaw_value(raw)
-        dressing_refs.append(
-            {
-                "dressing_id": row["dressing_id"],
-                "body_region": row["body_region"],
-                "side": row["side"],
-                "material_ref": row["material_ref"],
-                "appearance_state": row["appearance_state"],
-                "covered_by_refs": list(row.get("covered_by_refs", ())),
-            }
-        )
-    visible_cues = []
-    for raw in presentation.surface_states:
-        row = thaw_value(raw)
-        visible_cues.append(
-            {
-                "surface_state_id": row["surface_state_id"],
-                "target_ref": row["target_ref"],
-                "surface_type": row["surface_type"],
-                "intensity": row["intensity"],
-            }
-        )
-    identity_refs = [
-        f"AF_D_MANIFEST:{presentation.identity_manifest_id}@{presentation.identity_manifest_version}:{presentation.identity_manifest_sha256}",
-        f"AF_D_ADMISSION:{presentation.identity_admission_issuer_id}@{presentation.identity_admission_issuer_version}:{presentation.identity_admission_authority_epoch}:{presentation.identity_receipt_sha256}",
-        f"VIEW:{presentation.view_id}",
-    ]
-    return freeze_value(
-        {
-            "actor_id": presentation.actor_id,
-            "identity_refs": identity_refs,
-            "outfit_refs": outfit_refs,
-            "dressing_refs": dressing_refs,
-            "visible_condition_cues": visible_cues,
-            "visibility_policy": "MUST_RENDER_IF_VISIBLE_AND_MUST_NOT_CONTRADICT",
-            "state_version": str(presentation.presentation_state["state_version"]),
-        }
-    )
+        if not isinstance(row, Mapping):
+            raise ValueError("I9A_DRESSING_STATE_INVALID")
+        dressing_rows.append(row)
+    dressing_rows.sort(key=lambda row: _require_string(row.get("dressing_id"), "I9A_DRESSING_REF_INVALID"))
+    dressing_refs = tuple(row["dressing_id"] for row in dressing_rows)
+
+    policies: list[tuple[str, str]] = []
+    worn = set(outfit_refs)
+    for ref in outfit_refs:
+        policies.append((ref, "MUST_NOT_CONTRADICT"))
+    for row in dressing_rows:
+        dressing_id = row["dressing_id"]
+        covered_raw = row.get("covered_by_refs", ())
+        if isinstance(covered_raw, (str, bytes, bytearray)) or not isinstance(covered_raw, Sequence):
+            raise ValueError("I9A_DRESSING_COVER_REFS_INVALID")
+        covered = {_require_string(ref, "I9A_DRESSING_COVER_REF_INVALID") for ref in covered_raw}
+        token = "HIDDEN_BY_CLOTHING" if covered.intersection(worn) else "MUST_RENDER_IF_VISIBLE_IN_SHOT"
+        if token not in _ALLOWED_VISIBILITY_POLICY_TOKENS:
+            raise ValueError("I9A_VISIBILITY_POLICY_TOKEN_INVALID")
+        policies.append((dressing_id, token))
+
+    requirement = {
+        "actor_id": presentation.actor_id,
+        "identity_refs": (),
+        "outfit_refs": outfit_refs,
+        "dressing_refs": dressing_refs,
+        "visible_condition_cues": (),
+        "visibility_policy": tuple(policies),
+        "state_version": str(presentation.presentation_state["state_version"]),
+    }
+    if set(requirement) != _EXPECTED_PRESENTATION_FIELDS:
+        raise ValueError("I9A_INTERNAL_PRESENTATION_FIELD_SHAPE_DRIFT")
+    return (freeze_value(requirement),)
+
+
+def _coverage_gaps(presentation: Any) -> tuple[str, ...]:
+    gaps = [_GAP_MISSING_VISIBLE_IDENTITY, _GAP_NO_VISIBLE_CUE_ASSEMBLER]
+    if presentation.surface_states:
+        gaps.append(_GAP_SURFACE_NOT_EXPRESSIBLE)
+    return tuple(gaps)
 
 
 def build_director_beat_packet_reference(
@@ -529,12 +550,7 @@ def build_director_beat_packet_reference(
     i8c_replay_package: bytes | bytearray | memoryview,
     i3a_replay_package_json: str,
 ) -> DirectorBeatPacketReference | None:
-    """Rebuild both accepted replay paths and materialize one bounded packet.
-
-    ``None`` is the only output for a replay-valid I8C ``NO_VALID_STORYLET``.
-    No caller may supply world facts, actor identity, View, asset identity,
-    knowledge partitions, Storylet eligibility, or prevalidated evidence.
-    """
+    """Rebuild accepted replay paths and materialize one bounded packet."""
     parent = _load_af_h_authority()
     manifest = _load_af_d_manifest()
     if not isinstance(i8c_replay_package, (bytes, bytearray, memoryview)):
@@ -596,14 +612,14 @@ def build_director_beat_packet_reference(
         "source_i3a_sha256": i3a_digest,
         "storylet_id": storylet_reference.storylet_id,
         "world_id": world.world_id,
-        "world_state_version": world.state_version,
+        "world_state_version": world.world_state_version,
         "view_id": presentation.view_id,
     }
     beat_id = f"I9A-BEAT-{_sha256_json(beat_seed)[:32]}"
 
     return DirectorBeatPacketReference(
         beat_id=beat_id,
-        world_state_version=world.state_version,
+        world_state_version=world.world_state_version,
         confirmed_event_refs=confirmed_event_refs,
         scene_view_asset_refs=scene_view_asset_refs,
         player_visible_knowledge_refs=(),
@@ -616,6 +632,7 @@ def build_director_beat_packet_reference(
         packet_type_version=_EXPECTED_PACKET_TYPE[1],
         source_i8c_sha256=i8c_digest,
         source_i3a_sha256=i3a_digest,
+        coverage_gaps=_coverage_gaps(presentation),
         authority_class=_EXPECTED_PACKET_AUTHORITY,
     )
 
