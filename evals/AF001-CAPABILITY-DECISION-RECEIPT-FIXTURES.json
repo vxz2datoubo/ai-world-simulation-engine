@@ -4,8 +4,8 @@
   "governance_issue_ref": "#58",
   "implementation_scope": "CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED",
   "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-  "parent_contract_version": "1.9.0-candidate",
-  "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+  "parent_contract_version": "1.10.0-candidate",
+  "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
   "capability_decision_receipt_authority_epoch": "AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1",
   "binding_id": "AWRSE-AF001-CAPABILITY-DECISION-RECEIPT-BINDING",
   "binding_version": "1.0.0-candidate",
@@ -37,7 +37,7 @@
         "E_PROFILE_TRAINED"
       ],
       "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-      "canonical_contract_version": "1.9.0-candidate"
+      "canonical_contract_version": "1.10.0-candidate"
     },
     "skill_ledger_evidence": {
       "actor_id": "ACTOR-FIGHTER-001",
@@ -61,7 +61,7 @@
       ],
       "source_event_cursor": "CURSOR-SKILL-10",
       "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-      "canonical_contract_version": "1.9.0-candidate"
+      "canonical_contract_version": "1.10.0-candidate"
     },
     "action_demand_evidence": {
       "demand_id": "DEMAND-CUT-001",
@@ -85,7 +85,7 @@
       "replay_input_ref": "REPLAY-INPUT-001",
       "hard_prerequisite_receipt_ref": "NOT_APPLICABLE",
       "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-      "canonical_contract_version": "1.9.0-candidate",
+      "canonical_contract_version": "1.10.0-candidate",
       "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
       "binding_version": "1.0.0-candidate"
     },
@@ -114,8 +114,8 @@
         "replay_input_ref": "REPLAY-INPUT-001",
         "numeric_effect_status": "DEFERRED_RULESET_TUNING",
         "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-        "canonical_contract_version": "1.9.0-candidate",
-        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "canonical_contract_version": "1.10.0-candidate",
+        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
         "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
         "binding_version": "1.0.0-candidate"
       }
@@ -148,8 +148,8 @@
         "replay_input_ref": "REPLAY-INPUT-001",
         "numeric_effect_status": "DEFERRED_RULESET_TUNING",
         "canonical_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-        "canonical_contract_version": "1.9.0-candidate",
-        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+        "canonical_contract_version": "1.10.0-candidate",
+        "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
         "binding_id": "AWRSE-AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING",
         "binding_version": "1.0.0-candidate"
       }

@@ -30,8 +30,8 @@ _GOLDEN_PATH = _ROOT / "evals" / "AF001-GOLDEN-SCENARIOS.json"
 
 _EXPECTED_PARENT = (
     "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-    "1.9.0-candidate",
-    "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+    "1.10.0-candidate",
+    "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
 )
 _EXPECTED_TYPES = {
     "InformationPacket": (

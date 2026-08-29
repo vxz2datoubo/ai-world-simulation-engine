@@ -41,8 +41,8 @@ _TRACEABILITY_PATH = _ROOT / "docs" / "AF001-TRACEABILITY.md"
 
 _EXPECTED_PARENT = (
     "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-    "1.9.0-candidate",
-    "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+    "1.10.0-candidate",
+    "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
 )
 _EXPECTED_NARRATIVE_PROFILE = {
     "canonical_data_authority": ["NONE"],
@@ -260,9 +260,28 @@ def _load_governance() -> tuple[str, str, str]:
     registry = contract.get("type_registry")
     if not isinstance(registry, Mapping):
         raise ValueError("I8D_TYPE_REGISTRY_MISSING")
-    forbidden_promotions = {"BranchQuality", "BranchQualityEvidence", "BranchQualityScore"}
-    if forbidden_promotions & set(registry):
+    if {"BranchQuality", "BranchQualityScore"} & set(registry):
         raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")
+    if "BranchQualityEvidence" in registry:
+        promoted = registry.get("BranchQualityEvidence")
+        registration = contract.get("registered_contract_extensions", {}).get(
+            "AWRSE-AF001-BRANCH-QUALITY-EVIDENCE-BINDING"
+        )
+        profile = profiles.get("BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW")
+        if (
+            contract.get("contract_version") != "1.10.0-candidate"
+            or contract.get("authority_graph_version") != "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"
+            or not isinstance(promoted, Mapping)
+            or promoted.get("type_id") != "AF001.BranchQualityEvidence"
+            or promoted.get("authority_profile_ref") != "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW"
+            or not isinstance(registration, Mapping)
+            or registration.get("parent_contract_version") != "1.10.0-candidate"
+            or registration.get("parent_authority_graph_version") != "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1"
+            or not isinstance(profile, Mapping)
+            or profile.get("canonical_data_authority") != ["NONE"]
+            or registration.get("runtime_implementation_authorized") is not False
+        ):
+            raise ValueError("I8D_STAGE_B_PRODUCTION_TYPE_PREMATURELY_PROMOTED")
 
     scenarios = golden.get("scenarios")
     if not isinstance(scenarios, Mapping):

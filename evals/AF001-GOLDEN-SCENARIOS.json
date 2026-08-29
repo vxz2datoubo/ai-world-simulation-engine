@@ -1,9 +1,9 @@
 {
   "eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
-  "suite_version": "1.7.0-candidate",
+  "suite_version": "1.8.0-candidate",
   "status": "ARCHITECTURE_FREEZE_EXECUTABLE_SPEC_CANDIDATE",
   "contract_registry": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
-  "required_contract_version": "1.9.0-candidate",
+  "required_contract_version": "1.10.0-candidate",
   "decision_lifecycle_binding_registry": "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json",
   "foundation_eval_registry": "evals/AWRSE-CORE-EVALS.yaml",
   "registered_fixture_extensions": {
@@ -11,11 +11,20 @@
       "path": "evals/AF001-ACTION-DEMAND-PROJECTION-FIXTURES.json",
       "fixture_version": "1.0.0-candidate",
       "parent_eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
-      "parent_suite_version": "1.7.0-candidate",
+      "parent_suite_version": "1.8.0-candidate",
       "binding_id": "AWRSE-AF001-ACTION-DEMAND-PROJECTION-BINDING",
       "authority": "GOLDEN_EXECUTABLE_SPEC_REGISTRY_DELEGATED_EXTENSION"
-    }
-  },
+    },
+    "AWRSE-AF001-BRANCH-QUALITY-EVIDENCE-PROVENANCE-FIXTURES": {
+        "path": "evals/AF001-BRANCH-QUALITY-EVIDENCE-PROVENANCE-FIXTURES.json",
+        "fixture_version": "1.0.0-candidate",
+        "parent_eval_suite_id": "AWRSE-AF001-GOLDEN-SCENARIOS",
+        "parent_suite_version": "1.8.0-candidate",
+        "binding_id": "AWRSE-AF001-BRANCH-QUALITY-EVIDENCE-BINDING",
+        "authority": "GOLDEN_EXECUTABLE_SPEC_REGISTRY_DELEGATED_EXTENSION",
+        "evidence_class": "REAL_REPLAY_REBUILT_CANONICAL_SOURCE_PROOF"
+      }
+},
   "fixture_extension_authority_rule": "ONLY_FIXTURE_EXTENSIONS_EXPLICITLY_REGISTERED_BY_THIS_GOLDEN_EXECUTABLE_SPEC_REGISTRY_ARE_CANONICAL; CHILD_TO_PARENT_SELF_DECLARATION_ALONE_CONFERS_NO_AUTHORITY",
   "required_fields_per_scenario": [
     "initial_canonical_state",
@@ -285,6 +294,7 @@
     "FORBIDDEN_PREDICATES_ARE_MACHINE_CHECKABLE",
     "SKILL_LEDGER_ADMISSION_FIXTURES_BOUND_TO_FIGHTER_VS_SCHOLAR",
     "ACTION_DEMAND_PROJECTION_FIXTURE_EXTENSION_EXPLICITLY_REGISTERED_BY_CANONICAL_SUITE",
+    "BRANCH_QUALITY_REPLAY_PROVENANCE_FIXTURE_EXPLICITLY_REGISTERED_BY_CANONICAL_SUITE",
     "NO_SCENARIO_CLAIMS_RUNTIME_IMPLEMENTATION_BEYOND_ACCEPTED_R001_R002_FOUNDATION"
   ]
 }

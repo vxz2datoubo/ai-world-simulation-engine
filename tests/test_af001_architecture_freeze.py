@@ -454,19 +454,20 @@ def test_b04_resolved_capability_decisions_are_machine_classified_without_erasin
     bindings = load_json(DECISION_BINDING_PATH)
     lifecycle = contract["decision_lifecycle_registry"]
 
-    assert contract["contract_version"] == "1.9.0-candidate"
-    assert contract["versioning_and_migration"]["contract_version_lineage"] == {
-        "previous_contract_version": "1.8.0-candidate",
-        "semantic_delta": [
-            "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",
-            "ACTION_DEMAND_PROJECTION_EXTENSION_AUTHORITY_IS_PARENT_REGISTERED_AND_VERSION_BOUND",
-            "PRE_REGISTRATION_1_8_PARENT_VERSION_CANNOT_AUTHORIZE_NEW_EXTENSION",
-        ],
-        "consumer_rule": "CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_ACTION_DEMAND_EXTENSION_AUTHORITY_FROM_PRE_REGISTRATION_1_8_STATE",
+    assert contract["contract_version"] == "1.10.0-candidate"
+    lineage = contract["versioning_and_migration"]["contract_version_lineage"]
+    assert lineage["previous_contract_version"] == "1.9.0-candidate"
+    assert set(lineage["semantic_delta"]) >= {
+        "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",
+        "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW_CANONICAL_EXTENSION_REGISTRATION",
+        "BRANCH_QUALITY_EVIDENCE_AUTHORITY_PROFILE_ADDED_WITH_CANONICAL_DATA_AUTHORITY_NONE",
+        "EXISTING_REGISTERED_EXTENSIONS_REBOUND_TO_NEW_PARENT_REGISTRY_EPOCH_WITHOUT_GAMEPLAY_SEMANTIC_CHANGE",
+        "PRE_I8DB1_1_9_PARENT_AUTHORITY_GRAPH_AND_GOLDEN_TUPLE_CANNOT_AUTHORIZE_BRANCH_QUALITY_EXTENSION",
     }
-    assert suite["suite_version"] == "1.7.0-candidate"
+    assert "BRANCH_QUALITY_EVIDENCE_REQUIRES_PARENT_AND_GOLDEN_INVERSE_REGISTRATION_AND_REPLAY_VALID_PROVENANCE" in lineage["consumer_rule"]
+    assert suite["suite_version"] == "1.8.0-candidate"
     assert suite["required_contract_version"] == contract["contract_version"]
-    assert bindings["version"] == "1.2.0-candidate"
+    assert bindings["version"] == "1.3.0-candidate"
     assert bindings["required_contract_version"] == contract["contract_version"]
     assert suite["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"
     assert contract["decision_lifecycle_binding_registry"] == "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json"

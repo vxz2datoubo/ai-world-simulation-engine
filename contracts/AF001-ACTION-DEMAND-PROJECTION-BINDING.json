@@ -13,7 +13,7 @@
   "parent_machine_contract": {
     "path": "contracts/AF001-LIVING-STORY-CONTRACTS.json",
     "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-    "contract_version": "1.9.0-candidate",
+    "contract_version": "1.10.0-candidate",
     "type_ref": "AF001.ActionDemandProfile",
     "type_version": "1.0.0-candidate"
   },

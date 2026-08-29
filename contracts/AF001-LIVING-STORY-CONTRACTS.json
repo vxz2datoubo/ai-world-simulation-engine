@@ -1,7 +1,7 @@
 {
   "contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-  "contract_version": "1.9.0-candidate",
-  "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+  "contract_version": "1.10.0-candidate",
+  "authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
   "capability_decision_receipt_authority_epoch": "AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1",
   "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1",
   "status": "ARCHITECTURE_FREEZE_CANDIDATE",
@@ -19,7 +19,7 @@
       "path": "contracts/AF001-ACTION-DEMAND-PROJECTION-BINDING.json",
       "binding_version": "1.0.0-candidate",
       "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-      "parent_contract_version": "1.9.0-candidate",
+      "parent_contract_version": "1.10.0-candidate",
       "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",
       "scope": "AF-C_ACTION_DEMAND_PROFILE_TO_EXISTING_CAPABILITY_RESOLVER_PROJECTION",
       "runtime_implementation_authorized": false
@@ -28,8 +28,8 @@
       "path": "contracts/AF001-FUNCTIONAL-IMPAIRMENT-CAPABILITY-BINDING.json",
       "binding_version": "1.0.0-candidate",
       "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-      "parent_contract_version": "1.9.0-candidate",
-      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+      "parent_contract_version": "1.10.0-candidate",
+      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
       "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",
       "scope": "AF-C_FUNCTION_LOCAL_INJURY_EVIDENCE_TO_CURRENT_CAPABILITY_APPLICABILITY_PROJECTION",
       "registration_class": "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION",
@@ -40,8 +40,8 @@
       "path": "contracts/AF001-CAPABILITY-DECISION-RECEIPT-BINDING.json",
       "binding_version": "1.0.0-candidate",
       "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-      "parent_contract_version": "1.9.0-candidate",
-      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+      "parent_contract_version": "1.10.0-candidate",
+      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
       "capability_decision_receipt_authority_epoch": "AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1",
       "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",
       "scope": "AF-C_DETERMINISTIC_CAPABILITY_DECISION_RECEIPT_DERIVED_EVIDENCE_ONLY",
@@ -52,10 +52,10 @@
     "AWRSE-AF001-AF-D-INSTANCE-ADMISSION-BINDING": {
       "path": "contracts/AF001-AF-D-INSTANCE-ADMISSION-BINDING.json",
       "binding_version": "1.0.0-candidate",
-      "binding_canonical_sha256": "ca3db148b9256a55ac1cb814a71ce6323d73e417ec0cbf524b2d3c67071aae66",
+      "binding_canonical_sha256": "6a4cb2d994712c916a09f7e2ee019d42be828329e0e7409e7273eac3dbbe22a3",
       "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-      "parent_contract_version": "1.9.0-candidate",
-      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+      "parent_contract_version": "1.10.0-candidate",
+      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
       "af_d_instance_admission_authority_epoch": "AF001-AF-D-INSTANCE-ADMISSION-001@1",
       "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",
       "scope": "AF-D_BOUNDED_REFERENCE_VIEW_ASSET_INSTANCE_AUTHORITY_AND_TYPED_ADMISSION_RECEIPT",
@@ -67,18 +67,51 @@
         "path": "registries/AF001-AF-D-REFERENCE-INSTANCES.json",
         "manifest_id": "AWRSE-AF001-AF-D-REFERENCE-INSTANCE-MANIFEST",
         "manifest_version": "1.0.0-candidate",
-        "canonical_sha256": "291e7d6f3f4f947e101013403328772a5a83a5a036d00d7d7173c6bc126aaf4e"
+        "canonical_sha256": "aad58315f12054115ea3277b8418465cb743958e12352f82c28fcefe12a76965"
       }
+    },
+    "AWRSE-AF001-BRANCH-QUALITY-EVIDENCE-BINDING": {
+      "path": "contracts/AF001-BRANCH-QUALITY-EVIDENCE-BINDING.json",
+      "binding_version": "1.0.0-candidate",
+      "parent_contract_id": "AWRSE-AF001-LIVING-STORY-CONTRACTS",
+      "parent_contract_version": "1.10.0-candidate",
+      "parent_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
+      "authority": "MACHINE_CONTRACT_REGISTRY_DELEGATED_EXTENSION",
+      "scope": "AF_F_BRANCH_QUALITY_DERIVED_EVIDENCE_VIEW_ONLY",
+      "registration_class": "ADDITIVE_NON_RUNTIME_CANDIDATE_EXTENSION",
+      "governance_issue_ref": "#95",
+      "runtime_implementation_authorized": false,
+      "canonical_data_authority": "NONE"
     }
   },
   "contract_extension_authority_rule": "ONLY_EXTENSIONS_EXPLICITLY_REGISTERED_BY_THIS_MACHINE_CONTRACT_REGISTRY_ARE_CANONICAL; CHILD_TO_PARENT_SELF_DECLARATION_ALONE_CONFERS_NO_AUTHORITY",
   "functional_impairment_extension_authority_rule": "EXACT_PARENT_CONTRACT_ID_PLUS_CONTRACT_VERSION_PLUS_AUTHORITY_GRAPH_VERSION_MATCH_REQUIRED; PRE_I2A008_1_9_WITHOUT_AUTHORITY_GRAPH_DISCRIMINATOR_CANNOT_AUTHORIZE; MISSING_OR_MISMATCHED_AUTHORITY_GRAPH_VERSION_FAILS_CLOSED",
   "capability_decision_receipt_extension_authority_rule": "EXACT_PARENT_CONTRACT_ID_PLUS_CONTRACT_VERSION_PLUS_AUTHORITY_GRAPH_VERSION_PLUS_CAPABILITY_DECISION_RECEIPT_AUTHORITY_EPOCH_MATCH_REQUIRED; PRE_I2A010_PARENT_WITHOUT_RECEIPT_EPOCH_CANNOT_AUTHORIZE; MISSING_OR_MISMATCHED_RECEIPT_EPOCH_FAILS_CLOSED; THIS_RULE_IS_SCOPED_ONLY_TO_THE_CAPABILITY_DECISION_RECEIPT_EXTENSION_AND_DOES_NOT_REINTERPRET_EXISTING_EXTENSION_AUTHORITY",
   "af_d_instance_admission_extension_authority_rule": "EXACT_PARENT_CONTRACT_ID_PLUS_CONTRACT_VERSION_PLUS_AUTHORITY_GRAPH_VERSION_PLUS_AF_D_INSTANCE_ADMISSION_AUTHORITY_EPOCH_PLUS_PARENT_REGISTERED_BINDING_AND_MANIFEST_DIGEST_MATCH_REQUIRED; PRE_AF_D_INSTANCE_ADMISSION_PARENT_WITHOUT_THE_SCOPED_EPOCH_CANNOT_AUTHORIZE; CALLER_DECLARATION_OR_EVAL_FIXTURE_SELF_DECLARATION_CONFERS_NO_INSTANCE_AUTHORITY; THIS_RULE_IS_SCOPED_ONLY_TO_THE_AF_D_REFERENCE_INSTANCE_ADMISSION_EXTENSION_AND_DOES_NOT_REINTERPRET_EXISTING_I2_AUTHORITY",
+  "branch_quality_evidence_extension_authority_rule": "EXACT_PARENT_CONTRACT_ID_PLUS_CONTRACT_VERSION_PLUS_AUTHORITY_GRAPH_VERSION_PLUS_PARENT_INVERSE_REGISTRATION_PLUS_GOLDEN_REPLAY_PROVENANCE_REGISTRATION_REQUIRED; PRE_I8DB1_PARENT_OR_CHILD_SELF_DECLARATION_OR_SYNTHETIC_B0_FIXTURE_CANNOT_AUTHORIZE_BRANCH_QUALITY_EVIDENCE; CANONICAL_DATA_AUTHORITY_REMAINS_NONE",
   "canonical_architecture_master": "ARCHITECTURE.md",
   "decision_lifecycle_registry": {
-    "OD-CAPABILITY-ATTR-001": {"historical_status":"OPEN_DECISION","current_architecture_status":"RESOLVED_ARCHITECTURAL_SUBSTRATE","architecture_blocking_class":"HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER","deferred_policy_tracks":["DEFERRED_RULESET_TUNING","DEFERRED_PLAYER_BALANCE","DEFERRED_GENRE_EXTENSION_POLICY"],"runtime_binding_requirement":"EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME"},
-    "OD-CAPABILITY-MATH-001": {"historical_status":"OPEN_DECISION","current_architecture_status":"RESOLVED_ARCHITECTURAL_SUBSTRATE","architecture_blocking_class":"HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER","deferred_policy_tracks":["DEFERRED_RULESET_TUNING","DEFERRED_PLAYER_BALANCE"],"runtime_binding_requirement":"EXPLICIT_VERSIONED_RULESET_REQUIRED_BEFORE_RUNTIME"}
+    "OD-CAPABILITY-ATTR-001": {
+      "historical_status": "OPEN_DECISION",
+      "current_architecture_status": "RESOLVED_ARCHITECTURAL_SUBSTRATE",
+      "architecture_blocking_class": "HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER",
+      "deferred_policy_tracks": [
+        "DEFERRED_RULESET_TUNING",
+        "DEFERRED_PLAYER_BALANCE",
+        "DEFERRED_GENRE_EXTENSION_POLICY"
+      ],
+      "runtime_binding_requirement": "EXPLICIT_VERSIONED_PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED_BEFORE_RUNTIME"
+    },
+    "OD-CAPABILITY-MATH-001": {
+      "historical_status": "OPEN_DECISION",
+      "current_architecture_status": "RESOLVED_ARCHITECTURAL_SUBSTRATE",
+      "architecture_blocking_class": "HISTORICAL_TRACE_PLUS_DEFERRED_RULESET_BINDING_NOT_ARCHITECTURE_BLOCKER",
+      "deferred_policy_tracks": [
+        "DEFERRED_RULESET_TUNING",
+        "DEFERRED_PLAYER_BALANCE"
+      ],
+      "runtime_binding_requirement": "EXPLICIT_VERSIONED_RULESET_REQUIRED_BEFORE_RUNTIME"
+    }
   },
   "decision_lifecycle_binding_registry": "evals/AF001-DECISION-LIFECYCLE-BINDINGS.json",
   "authority_order": [
@@ -155,193 +188,475 @@
     ],
     "profiles": {
       "WORLD_CANONICAL_STATE": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_B_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_WORLD_STATE_PROJECTOR"],
-        "downstream_consumer": ["CAPABILITY_STATE_RESOLUTION", "KNOWLEDGE_MEMORY", "NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_WORLD_STATE_PROJECTOR"
+        ],
+        "downstream_consumer": [
+          "CAPABILITY_STATE_RESOLUTION",
+          "KNOWLEDGE_MEMORY",
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "ONLY_AUTHORIZED_WORLD_TRANSITIONS_MAY_ADVANCE_CANONICAL_STATE"
       },
       "CAPABILITY_CANONICAL_RESOLUTION": {
-        "canonical_data_authority": ["CAPABILITY_STATE_RESOLUTION"],
+        "canonical_data_authority": [
+          "CAPABILITY_STATE_RESOLUTION"
+        ],
         "contract_schema_steward": "AWRSE_AF_C_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_CAPABILITY_PROJECTOR"],
-        "downstream_consumer": ["WORLD_RULES_AUTHORITY", "KNOWLEDGE_MEMORY", "NARRATIVE_OPPORTUNITY", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_CAPABILITY_PROJECTOR"
+        ],
+        "downstream_consumer": [
+          "WORLD_RULES_AUTHORITY",
+          "KNOWLEDGE_MEMORY",
+          "NARRATIVE_OPPORTUNITY",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "NARRATIVE_OR_PRESENTATION_SYSTEMS_CANNOT_LOWER_DIFFICULTY_OR_REWRITE_CAPABILITY_RESULTS"
       },
       "PRESENTATION_CANONICAL_STATE": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "AWRSE_PRESENTATION_STATE_AUTHORITY"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "AWRSE_PRESENTATION_STATE_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_WORLD_STATE_PROJECTOR"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_WORLD_STATE_PROJECTOR"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "GENERATED_PIXELS_OR_DIRECTOR_CHOICES_CANNOT_CREATE_OR_REWRITE_CANONICAL_DYNAMIC_APPEARANCE_OR_TREATMENT_FACTS"
       },
       "SPATIAL_VIEW_DEFINITION_REGISTRY": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_SPATIAL_VIEW_REGISTRY"],
-        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_ASSET_REGISTRY", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_SPATIAL_VIEW_REGISTRY"
+        ],
+        "downstream_consumer": [
+          "AWRSE_PRESENTATION_STATE_AUTHORITY",
+          "AWRSE_ASSET_REGISTRY",
+          "AWRSE_DIRECTOR_PACKET_ASSEMBLER",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "DIRECTOR_RENDERER_OR_GENERATED_MEDIA_CANNOT_REDEFINE_CANONICAL_CAMERA_ANCHOR_OR_VIEW_SPATIAL_SEMANTICS"
       },
       "ASSET_LOGICAL_IDENTITY_REGISTRY": {
-        "canonical_data_authority": ["ASSET_REGISTRY_AUTHORITY"],
+        "canonical_data_authority": [
+          "ASSET_REGISTRY_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_ASSET_REGISTRY"],
-        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_ASSET_VERSION_REGISTRAR", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_ASSET_REGISTRY"
+        ],
+        "downstream_consumer": [
+          "AWRSE_PRESENTATION_STATE_AUTHORITY",
+          "AWRSE_ASSET_VERSION_REGISTRAR",
+          "AWRSE_DIRECTOR_PACKET_ASSEMBLER",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "MEDIA_BYTES_MEDIA_VERSION_OR_LOCATOR_CHANGES_CANNOT_REDEFINE_STABLE_MEDIA_ASSET_IDENTITY_AND_WORLD_STATE_PROJECTOR_CANNOT_CREATE_ASSET_IDENTITY"
       },
       "ASSET_IMMUTABLE_VERSION_REGISTRY": {
-        "canonical_data_authority": ["ASSET_REGISTRY_AUTHORITY", "ASSET_VERIFICATION_PROMOTION_AUTHORITY"],
+        "canonical_data_authority": [
+          "ASSET_REGISTRY_AUTHORITY",
+          "ASSET_VERIFICATION_PROMOTION_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
-        "producer_or_assembler": ["MEDIA_GENERATION_OR_CAPTURE_PIPELINE", "AWRSE_ASSET_VERSION_REGISTRAR"],
-        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_ASSET_LOCATOR_RESOLVER", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "MEDIA_GENERATION_OR_CAPTURE_PIPELINE",
+          "AWRSE_ASSET_VERSION_REGISTRAR"
+        ],
+        "downstream_consumer": [
+          "AWRSE_PRESENTATION_STATE_AUTHORITY",
+          "AWRSE_ASSET_LOCATOR_RESOLVER",
+          "AWRSE_DIRECTOR_PACKET_ASSEMBLER",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "MEDIA_VERSION_CONTENT_HASH_AND_GENERATION_OR_CAPTURE_PROVENANCE_ARE_IMMUTABLE_AFTER_REGISTRATION; ONLY_ASSET_VERIFICATION_PROMOTION_AUTHORITY_MAY_ADVANCE_VERIFICATION_STATE; WORLD_STATE_PROJECTOR_CANNOT_CREATE_OR_PROMOTE_MEDIA_VERSIONS"
       },
       "ASSET_LOCATOR_RESOLUTION": {
-        "canonical_data_authority": ["ASSET_LOCATOR_REGISTRY_AUTHORITY"],
+        "canonical_data_authority": [
+          "ASSET_LOCATOR_REGISTRY_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_D_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_ASSET_LOCATOR_RESOLVER"],
-        "downstream_consumer": ["AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_ASSET_LOCATOR_RESOLVER"
+        ],
+        "downstream_consumer": [
+          "AWRSE_PRESENTATION_STATE_AUTHORITY",
+          "AWRSE_DIRECTOR_PACKET_ASSEMBLER",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "LOCATOR_MIGRATION_MAY_CHANGE_RETRIEVAL_LOCATION_PROVIDER_OR_STATUS_BUT_CANNOT_CHANGE_MEDIA_ASSET_OR_MEDIA_VERSION_IDENTITY; WORLD_STATE_PROJECTOR_CANNOT_AUTHOR_LOCATOR_REGISTRY_TRUTH"
       },
       "KNOWLEDGE_DERIVED_PROJECTION": {
-        "canonical_data_authority": ["PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "canonical_data_authority": [
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE"
+        ],
         "contract_schema_steward": "AWRSE_AF_E_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_KNOWLEDGE_PROJECTION_BUILDER", "KNOWLEDGE_MEMORY"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_KNOWLEDGE_PROJECTION_BUILDER",
+          "KNOWLEDGE_MEMORY"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "KNOWLEDGE_MEMORY_MAY_MATERIALIZE_OR_DERIVE_RECIPIENT_LOCAL_STATE_BUT_CANNOT_INVENT_ACQUISITION_EVIDENCE_OR_REWRITE_SOURCE_EVENTS"
       },
       "PLAYER_EXPLICIT_CHARACTER_CORE": {
-        "canonical_data_authority": ["PLAYER_EXPLICIT_AUTHORITY"],
+        "canonical_data_authority": [
+          "PLAYER_EXPLICIT_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_E_CONTRACT_STEWARD",
-        "producer_or_assembler": ["PLAYER_EXPLICIT_AUTHORITY"],
-        "downstream_consumer": ["KNOWLEDGE_MEMORY", "NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "PLAYER_EXPLICIT_AUTHORITY"
+        ],
+        "downstream_consumer": [
+          "KNOWLEDGE_MEMORY",
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "KNOWLEDGE_MEMORY_OR_PERSONA_INFERENCE_MAY_NOT_SILENTLY_MODIFY_EXPLICIT_PLAYER_AUTHORED_CHARACTER_SETTINGS"
       },
       "EVIDENCE_DERIVED_PERSONA_HYPOTHESIS": {
-        "canonical_data_authority": ["PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "canonical_data_authority": [
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE"
+        ],
         "contract_schema_steward": "AWRSE_AF_E_CONTRACT_STEWARD",
-        "producer_or_assembler": ["KNOWLEDGE_MEMORY"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "KNOWLEDGE_MEMORY"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "DERIVED_PERSONA_IS_PRIVATE_PROBABILISTIC_AND_MAY_NOT_OVERRIDE_EXPLICIT_PLAYER_INTENT_OR_CHARACTER_CORE"
       },
       "PLAYER_EXPLICIT_AUTO_EXPRESSION_POLICY": {
-        "canonical_data_authority": ["PLAYER_EXPLICIT_AUTHORITY"],
+        "canonical_data_authority": [
+          "PLAYER_EXPLICIT_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_G_CONTRACT_STEWARD",
-        "producer_or_assembler": ["PLAYER_EXPLICIT_AUTHORITY"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "PLAYER_EXPLICIT_AUTHORITY"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "AUTO_EXPRESSION_POLICY_CHANGES_REQUIRE_EXPLICIT_PLAYER_POLICY_TRANSITION"
       },
       "NARRATIVE_DESIGN_NON_CANONICAL": {
-        "canonical_data_authority": ["NONE"],
+        "canonical_data_authority": [
+          "NONE"
+        ],
         "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_NARRATIVE_DESIGN_LOADER", "NARRATIVE_DESIGN_NON_CANONICAL"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_NARRATIVE_DESIGN_LOADER",
+          "NARRATIVE_DESIGN_NON_CANONICAL"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "AUTHORED_NARRATIVE_CONSTRAINTS_MAY_PROPOSE_OR_FILTER_BUT_CANNOT_RETCON_CANONICAL_WORLD_TRUTH"
       },
       "NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW": {
-        "canonical_data_authority": ["NONE"],
+        "canonical_data_authority": [
+          "NONE"
+        ],
         "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_NARRATIVE_COMPOSITE_VIEW_ASSEMBLER"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_NARRATIVE_COMPOSITE_VIEW_ASSEMBLER"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "COMPOSITE_VIEW_ASSEMBLY_DOES_NOT_GRANT_AUTHORITY_OVER_AUTHORED_DEFINITION_FIELDS_OR_EVIDENCE_DERIVED_DYNAMIC_FIELDS; EACH_FIELD_CLASS_MUST_FOLLOW_ITS_DECLARED_FIELD_AUTHORITY_PROFILE"
       },
       "CAUSAL_ANCHOR_VALIDITY_LIFECYCLE": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE"
+        ],
         "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_CAUSAL_ANCHOR_REVALIDATOR"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_CAUSAL_ANCHOR_REVALIDATOR"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "HARD_CAUSAL_ANCHOR_STATUS_MUST_REBUILD_DETERMINISTICALLY_FROM_DECLARED_CAUSE_REFS_AND_CANONICAL_EVENT_EVIDENCE; DESTROYED_INVALID_MISSING_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED_TO_NON_VALID; NARRATIVE_DESIGN_CANNOT_SET_ADVANCE_OR_RESTORE_VALID_STATUS; ONLY_LEGITIMATE_CAUSE_EVENT_EVIDENCE_PLUS_REVALIDATION_MAY_CHANGE_DERIVED_STATUS"
       },
       "SOFT_ATTRACTOR_STATUS_LIFECYCLE": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE"
+        ],
         "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_SOFT_ATTRACTOR_STATUS_PROJECTOR"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_SOFT_ATTRACTOR_STATUS_PROJECTOR"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "SOFT_ATTRACTOR_STATUS_IS_DERIVED_ELIGIBILITY_EXPIRY_OR_INVALIDATION_STATE_FROM_CANONICAL_WORLD_HISTORY_EVIDENCE; AUTHORED_DRAMATIC_DESIRE_CANNOT_FORCE_AN_INELIGIBLE_EXPIRED_OR_INVALIDATED_ATTRACTOR_ACTIVE"
       },
       "CHARACTER_ARC_STATE_LIFECYCLE": {
-        "canonical_data_authority": ["PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "canonical_data_authority": [
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE"
+        ],
         "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_CHARACTER_ARC_PROJECTOR"],
-        "downstream_consumer": ["NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_CHARACTER_ARC_PROJECTOR"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "CURRENT_CHARACTER_ARC_STATE_IS_A_DERIVED_NARRATIVE_PROJECTION_FROM_RECORDED_HISTORY_CHOICES_AND_EVIDENCE; AUTHORED_ARC_DESIRE_CANNOT_ADVANCE_OR_REWRITE_CURRENT_ARC_STATE_WITHOUT_SUPPORTING_HISTORY"
       },
       "INFORMATION_PROVENANCE_LIFECYCLE": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE"
+        ],
         "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_INFORMATION_PACKET_ASSEMBLER"],
-        "downstream_consumer": ["KNOWLEDGE_MEMORY", "NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_INFORMATION_PACKET_ASSEMBLER"
+        ],
+        "downstream_consumer": [
+          "KNOWLEDGE_MEMORY",
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "NARRATIVE_DESIGN_NARRATIVE_OPPORTUNITY_PX_DIRECTOR_AND_KNOWLEDGE_PROJECTIONS_MAY_CONSUME_OR_REQUEST_DELIVERY_BUT_CANNOT_INVENT_SOURCE_FACTS_SOURCE_OR_WITNESS_PROVENANCE_VERIFICATION_CONFIDENCE_OR_RECIPIENT_KNOWLEDGE_EVIDENCE"
       },
       "EVIDENCE_DERIVED_PROMISE_LIFECYCLE": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE"
+        ],
         "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_PROMISE_LIFECYCLE_PROJECTOR"],
-        "downstream_consumer": ["KNOWLEDGE_MEMORY", "NARRATIVE_OPPORTUNITY", "PX_RANKING", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_PROMISE_LIFECYCLE_PROJECTOR"
+        ],
+        "downstream_consumer": [
+          "KNOWLEDGE_MEMORY",
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "UNDERLYING_PROMISE_TRUTH_REQUIRES_EXPLICIT_SPEECH_ACTION_OR_OTHER_SOURCE_EVENT_EVIDENCE; AUTHORED_NARRATIVE_CANNOT_INVENT_A_PROMISE; NARRATIVE_MAY_EVALUATE_CALLBACK_OR_PAYOFF_ELIGIBILITY_AND_WORLD_DRIVEN_INVALIDATION_ONLY_FROM_BOUND_SOURCE_HISTORY"
       },
       "NARRATIVE_OPPORTUNITY_NON_CANONICAL": {
-        "canonical_data_authority": ["NONE"],
+        "canonical_data_authority": [
+          "NONE"
+        ],
         "contract_schema_steward": "AWRSE_AF_G_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_NARRATIVE_OPPORTUNITY_PRODUCER", "NARRATIVE_OPPORTUNITY"],
-        "downstream_consumer": ["PX_RANKING", "WORLD_ACTION_AUTHORITY", "AI_DIRECTOR"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_NARRATIVE_OPPORTUNITY_PRODUCER",
+          "NARRATIVE_OPPORTUNITY"
+        ],
+        "downstream_consumer": [
+          "PX_RANKING",
+          "WORLD_ACTION_AUTHORITY",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "OPPORTUNITY_MAY_ONLY_PROPOSE_LEGAL_CANDIDATES_AND_CANNOT_INVENT_FACTS_KNOWLEDGE_SUCCESS_OR_ACTIONS"
       },
       "PX_RANKING_NON_CANONICAL": {
-        "canonical_data_authority": ["NONE"],
+        "canonical_data_authority": [
+          "NONE"
+        ],
         "contract_schema_steward": "AWRSE_AF_G_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_PX_RANKER", "PX_RANKING"],
-        "downstream_consumer": ["AI_DIRECTOR", "WORLD_ACTION_AUTHORITY"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_PX_RANKER",
+          "PX_RANKING"
+        ],
+        "downstream_consumer": [
+          "AI_DIRECTOR",
+          "WORLD_ACTION_AUTHORITY"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "PX_MAY_RANK_ONLY_ALREADY_LEGAL_CANDIDATES_AND_CANNOT_LEGALIZE_INVALID_CANDIDATES_OR_CREATE_FACTS"
       },
       "AWRSE_DIRECTOR_HANDOFF": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE", "AWRSE_KNOWLEDGE_VISIBILITY_POLICY_AUTHORITY", "AWRSE_PRESENTATION_STATE_AUTHORITY"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE",
+          "AWRSE_KNOWLEDGE_VISIBILITY_POLICY_AUTHORITY",
+          "AWRSE_PRESENTATION_STATE_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_H_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_DIRECTOR_PACKET_ASSEMBLER"],
-        "downstream_consumer": ["AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["AI_DIRECTOR"],
+        "producer_or_assembler": [
+          "AWRSE_DIRECTOR_PACKET_ASSEMBLER"
+        ],
+        "downstream_consumer": [
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "AI_DIRECTOR"
+        ],
         "mutation_constraint": "AI_DIRECTOR_MAY_CHOOSE_STAGING_CAMERA_PERFORMANCE_EDIT_AND_SOUND_ONLY_INSIDE_THE_PACKET_ENVELOPE_AND_MAY_NOT_REWRITE_PACKET_FACTS_KNOWLEDGE_VISIBILITY_ACTOR_IDENTITY_OR_PRESENTATION_REQUIREMENTS"
       },
       "AWRSE_PRESENTATION_REQUIREMENTS": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "AWRSE_PRESENTATION_STATE_AUTHORITY", "AWRSE_KNOWLEDGE_VISIBILITY_POLICY_AUTHORITY"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "AWRSE_PRESENTATION_STATE_AUTHORITY",
+          "AWRSE_KNOWLEDGE_VISIBILITY_POLICY_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_H_CONTRACT_STEWARD",
-        "producer_or_assembler": ["AWRSE_PRESENTATION_REQUIREMENTS_ASSEMBLER"],
-        "downstream_consumer": ["AWRSE_DIRECTOR_PACKET_ASSEMBLER", "AI_DIRECTOR", "RENDERER_PUBLICATION"],
-        "staging_authority": ["NONE"],
+        "producer_or_assembler": [
+          "AWRSE_PRESENTATION_REQUIREMENTS_ASSEMBLER"
+        ],
+        "downstream_consumer": [
+          "AWRSE_DIRECTOR_PACKET_ASSEMBLER",
+          "AI_DIRECTOR",
+          "RENDERER_PUBLICATION"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
         "mutation_constraint": "AI_DIRECTOR_AND_RENDERER_MUST_CONSUME_THE_REQUIREMENTS_AS_CONSTRAINTS_AND_CANNOT_AUTHOR_OR_REWRITE_IDENTITY_OUTFIT_DRESSING_VISIBLE_CONDITION_OR_VISIBILITY_TRUTH"
       },
       "PUBLICATION_DERIVED_PROJECTION": {
-        "canonical_data_authority": ["WORLD_RULES_AUTHORITY", "PROVENANCE_BEARING_SOURCE_EVIDENCE", "AWRSE_KNOWLEDGE_VISIBILITY_POLICY_AUTHORITY"],
+        "canonical_data_authority": [
+          "WORLD_RULES_AUTHORITY",
+          "PROVENANCE_BEARING_SOURCE_EVIDENCE",
+          "AWRSE_KNOWLEDGE_VISIBILITY_POLICY_AUTHORITY"
+        ],
         "contract_schema_steward": "AWRSE_AF_H_CONTRACT_STEWARD",
-        "producer_or_assembler": ["RENDERER_PUBLICATION"],
-        "downstream_consumer": ["PUBLICATION_AUDIENCE"],
-        "staging_authority": ["RENDERER_PUBLICATION"],
+        "producer_or_assembler": [
+          "RENDERER_PUBLICATION"
+        ],
+        "downstream_consumer": [
+          "PUBLICATION_AUDIENCE"
+        ],
+        "staging_authority": [
+          "RENDERER_PUBLICATION"
+        ],
         "mutation_constraint": "PUBLICATION_MAY_SELECT_POLICY_AUTHORIZED_AUDIENCE_PROJECTION_BUT_CANNOT_FLOW_BACK_INTO_PLAYER_OR_NPC_KNOWLEDGE_OR_REWRITE_SOURCE_TRUTH"
+      },
+      "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW": {
+        "canonical_data_authority": [
+          "NONE"
+        ],
+        "contract_schema_steward": "AWRSE_AF_F_CONTRACT_STEWARD",
+        "producer_or_assembler": [
+          "AWRSE_NARRATIVE_COMPOSITE_VIEW_ASSEMBLER"
+        ],
+        "downstream_consumer": [
+          "NARRATIVE_OPPORTUNITY",
+          "PX_RANKING",
+          "AI_DIRECTOR"
+        ],
+        "staging_authority": [
+          "NONE"
+        ],
+        "mutation_constraint": "DERIVED_BRANCH_EVIDENCE_MAY_DESCRIBE_ALREADY_VALIDATED_EVIDENCE_ONLY_AND_CANNOT_LEGALIZE_INVALID_CANDIDATES_CREATE_OR_REWRITE_WORLD_FACTS_OR_KNOWLEDGE_LOWER_CAPABILITY_DIFFICULTY_CREATE_PLAYER_INTENT_FORCE_STORYLET_OR_ENCOUNTER_REALIZATION_RETCON_RESURRECT_OR_FORCE_RECONVERGENCE"
       }
     }
   },
   "foundations": {
-    "accepted_runtime": ["R001", "R002"],
+    "accepted_runtime": [
+      "R001",
+      "R002"
+    ],
     "preserved_contracts": [
       "schemas/ACTION-DSL.yaml",
       "schemas/WORLD-STATE.yaml",
@@ -377,7 +692,15 @@
       "profile_version": "R001_R002_ACCEPTED_1",
       "implementation_state": "ACCEPTED_RUNTIME_ACTIVE",
       "source_type": "runtime.awrse.model.Event",
-      "required_fields": ["event_id", "event_type", "actor_id", "scene_id", "baseline_version", "payload", "caused_by_action_id"],
+      "required_fields": [
+        "event_id",
+        "event_type",
+        "actor_id",
+        "scene_id",
+        "baseline_version",
+        "payload",
+        "caused_by_action_id"
+      ],
       "field_semantics": {
         "event_id": "STABLE_EVENT_ID",
         "event_type": "EVENT_KIND",
@@ -393,8 +716,22 @@
     "AF001_VNEXT_EVENT_ENVELOPE": {
       "profile_version": "1.0.0-candidate",
       "implementation_state": "FUTURE_CONTRACT_NOT_RUNTIME_ACTIVE",
-      "required_fields": ["event_id", "event_type", "schema_version", "ruleset_version", "world_id", "authority_scope_ref", "ordering_or_version_cursor", "payload"],
-      "optional_compatibility_fields": ["actor_id", "scene_id", "causal_action_ref", "legacy_baseline_version"],
+      "required_fields": [
+        "event_id",
+        "event_type",
+        "schema_version",
+        "ruleset_version",
+        "world_id",
+        "authority_scope_ref",
+        "ordering_or_version_cursor",
+        "payload"
+      ],
+      "optional_compatibility_fields": [
+        "actor_id",
+        "scene_id",
+        "causal_action_ref",
+        "legacy_baseline_version"
+      ],
       "mandatory_activation_gate": "ONLY_FOR_NEW_EVENTS_AFTER_A_LATER_BOUNDED_RUNTIME_MIGRATION_TASK_IS_IMPLEMENTED_INDEPENDENTLY_REVIEWED_AND_CONTROL_TOWER_RELEASED",
       "retroactive_requirement": false
     }
@@ -431,7 +768,13 @@
     "source_events_never_rewritten": true
   },
   "governed_reference_semantics": {
-    "reference_kinds": ["TYPE_REF", "FIELD_REF", "ALIAS_REF", "OPEN_DECISION", "EXTERNAL_FOUNDATION"],
+    "reference_kinds": [
+      "TYPE_REF",
+      "FIELD_REF",
+      "ALIAS_REF",
+      "OPEN_DECISION",
+      "EXTERNAL_FOUNDATION"
+    ],
     "external_foundation_refs": [
       "UI_OR_SOCIAL_PROJECTIONS_ONLY",
       "RENDER_OR_QUERY_PROJECTIONS",
@@ -443,7 +786,9 @@
   "state_ownership_registry": {
     "legal_social_ownership": {
       "canonical_owner": "ObjectAggregate.owner_ref",
-      "projection_or_index_copies": ["EXTERNAL_FOUNDATION:UI_OR_SOCIAL_PROJECTIONS_ONLY"],
+      "projection_or_index_copies": [
+        "EXTERNAL_FOUNDATION:UI_OR_SOCIAL_PROJECTIONS_ONLY"
+      ],
       "authorized_mutation_source": "FUTURE_AUTHORIZED_OWNERSHIP_TRANSFER_EVENT",
       "consistency_invariant": "LEGAL_OWNER_IS_NOT_INFERRED_FROM_POSSESSION_OR_INVENTORY",
       "rebuild_direction": "OWNERSHIP_EVENTS_TO_ObjectAggregate.owner_ref_TO_PROJECTIONS",
@@ -451,7 +796,9 @@
     },
     "physical_possession": {
       "canonical_owner": "ObjectAggregate.possessor_ref",
-      "projection_or_index_copies": ["ActorAggregate.inventory_refs"],
+      "projection_or_index_copies": [
+        "ActorAggregate.inventory_refs"
+      ],
       "authorized_mutation_source": "AUTHORIZED_PICK_DROP_THROW_OR_OTHER_POSSESSION_TRANSITION_EVENT",
       "consistency_invariant": "ONE_OBJECT_HAS_AT_MOST_ONE_POSSESSOR_AND_INVENTORY_INDEX_MUST_EXACTLY_AGREE",
       "rebuild_direction": "ObjectAggregate.possessor_ref_TO_ActorAggregate.inventory_refs",
@@ -459,7 +806,9 @@
     },
     "inventory": {
       "canonical_owner": "DERIVED_INDEX_FROM_ObjectAggregate.possessor_ref",
-      "projection_or_index_copies": ["ActorAggregate.inventory_refs"],
+      "projection_or_index_copies": [
+        "ActorAggregate.inventory_refs"
+      ],
       "authorized_mutation_source": "NO_INDEPENDENT_MUTATION; CHANGES_ONLY_AS_PART_OF_AUTHORIZED_POSSESSION_TRANSITION",
       "consistency_invariant": "INVENTORY_IS_NOT_A_SECOND_POSSESSION_TRUTH",
       "rebuild_direction": "SCAN_ObjectAggregate.possessor_ref_BY_ACTOR_TO_ActorAggregate.inventory_refs",
@@ -467,7 +816,10 @@
     },
     "worn_state": {
       "canonical_owner": "OutfitState.slot_bindings",
-      "projection_or_index_copies": ["ActorPresentationState.outfit_state_ref", "ActorAppearanceSnapshot.presentation_state_ref"],
+      "projection_or_index_copies": [
+        "ActorPresentationState.outfit_state_ref",
+        "ActorAppearanceSnapshot.presentation_state_ref"
+      ],
       "authorized_mutation_source": "FUTURE_AUTHORIZED_WEAR_UNWEAR_OR_OUTFIT_TRANSITION_EVENT",
       "consistency_invariant": "POSSESSED_DOES_NOT_IMPLY_WORN",
       "rebuild_direction": "OUTFIT_EVENTS_TO_OutfitState.slot_bindings_TO_ActorPresentationState.outfit_state_ref",
@@ -475,7 +827,10 @@
     },
     "equipped_state": {
       "canonical_owner": "EquipmentLoadout.equipped_object_refs",
-      "projection_or_index_copies": ["DerivedCapability.derived_values", "ActorPresentationState.visible_equipment_refs"],
+      "projection_or_index_copies": [
+        "DerivedCapability.derived_values",
+        "ActorPresentationState.visible_equipment_refs"
+      ],
       "authorized_mutation_source": "FUTURE_AUTHORIZED_EQUIP_UNEQUIP_EVENT",
       "consistency_invariant": "EQUIPPED_OBJECT_MUST_BE_CANONICALLY_AVAILABLE_AND_EQUIPPED_IS_NOT_INFERRED_FROM_INVENTORY",
       "rebuild_direction": "EQUIPMENT_EVENTS_TO_EquipmentLoadout.equipped_object_refs_TO_DERIVED_CAPABILITY_AND_PRESENTATION",
@@ -483,7 +838,10 @@
     },
     "location": {
       "canonical_owner": "EACH_MATERIAL_AGGREGATE_OWNS_ITS_OWN_scene_id_AND_zone_id",
-      "projection_or_index_copies": ["Scene.occupancy_index_refs", "EXTERNAL_FOUNDATION:RENDER_OR_QUERY_PROJECTIONS"],
+      "projection_or_index_copies": [
+        "Scene.occupancy_index_refs",
+        "EXTERNAL_FOUNDATION:RENDER_OR_QUERY_PROJECTIONS"
+      ],
       "projection_owner": "Scene.occupancy_index_refs",
       "authorized_mutation_source": "AUTHORIZED_MOVEMENT_OR_OBJECT_TRANSFER_TRANSITION_EVENT",
       "consistency_invariant": "CARRIED_OBJECT_LOCATION_MUST_MATCH_POSSESSOR_UNDER_ACCEPTED_R002_RULES",
@@ -492,7 +850,13 @@
     },
     "knowledge_acquisition_evidence": {
       "canonical_owner": "PROVENANCE_BEARING_ACQUISITION_OR_PERCEPTION_EVENT_PATH",
-      "projection_or_index_copies": ["PlayerChronicle.source_acquisition_refs", "NPCPerceptionStream.perception_event_refs", "NPCEpisodicMemory.source_perception_refs", "BeliefState.supporting_refs", "NPCPlayerRelationshipState.source_refs"],
+      "projection_or_index_copies": [
+        "PlayerChronicle.source_acquisition_refs",
+        "NPCPerceptionStream.perception_event_refs",
+        "NPCEpisodicMemory.source_perception_refs",
+        "BeliefState.supporting_refs",
+        "NPCPlayerRelationshipState.source_refs"
+      ],
       "authorized_mutation_source": "VALID_SAW_HEARD_WAS_TOLD_OR_FUTURE_MODE_SPECIFIC_ACQUISITION_SEMANTICS",
       "consistency_invariant": "RECIPIENT_LOCAL_PROJECTIONS_MAY_MATERIALIZE_KNOWLEDGE_BUT_MAY_NOT_CREATE_NEW_KNOWLEDGE_EVIDENCE",
       "rebuild_direction": "ACQUISITION_EVIDENCE_TO_RECIPIENT_LOCAL_PROJECTIONS",
@@ -500,90 +864,1504 @@
     }
   },
   "type_registry": {
-    "WorldInstance": {"type_id":"AF001.WorldInstance","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["world_instance_id","world_id","instance_class","shared_truth_scope","state_version"]},
-    "WorldFrame": {"type_id":"AF001.WorldFrame","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["world_frame_id","world_id","canonical_north","unit_basis_optional","schema_version"]},
-    "Scene": {"type_id":"AF001.Scene","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"R002_FOUNDATION_PLUS_FUTURE_INTERFACE","fields":["scene_id","world_id","world_frame_id","topology_version","occupancy_index_refs"]},
-    "Zone": {"type_id":"AF001.Zone","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"R002_FOUNDATION_PLUS_FUTURE_INTERFACE","fields":["zone_id","scene_id","zone_class","schema_version"]},
-    "Portal": {"type_id":"AF001.Portal","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["portal_id","from_scene_or_zone_id","to_scene_or_zone_id","relation_type","bidirectional","constraints_ref"]},
-    "ActorAggregate": {"type_id":"AF001.ActorAggregate","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"R001_R002_FOUNDATION_ADAPTER_PLUS_INTERFACE","fields":["actor_id","world_id","scene_id","zone_id","inventory_refs","state_version"]},
-    "ObjectAggregate": {"type_id":"AF001.ObjectAggregate","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"R001_R002_FOUNDATION_ADAPTER_PLUS_INTERFACE","fields":["object_id","world_id","scene_id","zone_id","owner_ref","possessor_ref","state_version"]},
-    "PlayerIdentity": {"type_id":"AF001.PlayerIdentity","version":"1.0.0-candidate","domain":"AF-B","authority_profile_ref":"WORLD_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY","fields":["player_id","principal_id","actor_id","world_instance_id","identity_version"]},
-    "ActorBaseProfile": {"type_id":"AF001.ActorBaseProfile","version":"1.1.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","field_semantics":{"profile_version":"VERSION_OF_THE_PROFILE_INSTANCE_WITHIN_ITS_DECLARED_PROFILE_SCHEMA_AND_RULESET_FAMILY","profile_schema_ref":"IMMUTABLE_IDENTIFIER_FOR_THE_ATTRIBUTE_KEY_SCHEMA; MISMATCH_OR_UNKNOWN_SCHEMA_FAILS_CLOSED_FOR_MIGRATION_OR_REPLAY","ruleset_family_ref":"IMMUTABLE_IDENTIFIER_FOR_THE_RULESET_FAMILY_ALLOWED_TO_INTERPRET_base_attribute_map","base_attribute_map":"KEYS_ARE_VALID_ONLY_UNDER_profile_schema_ref_AND_ruleset_family_ref; NEVER_AN_ETERNAL_UNIVERSAL_STAT_ONTOLOGY","source_event_refs":"PROVENANCE_FOR_PROFILE_CREATION_OR_AUTHORIZED_CHANGE"},"migration_invariants":["PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED","UNKNOWN_OR_MISMATCHED_PROFILE_SCHEMA_FAILS_CLOSED","MIGRATION_REQUIRES_EXPLICIT_COMPATIBILITY_OR_TRANSFORMATION_EVIDENCE"],"fields":["actor_id","profile_version","profile_schema_ref","ruleset_family_ref","base_attribute_map","source_event_refs"]},
-    "SkillLedger": {"type_id":"AF001.SkillLedger","version":"1.1.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED","field_semantics":{"actor_id":"NONEMPTY_STABLE_ACTOR_ID; WHEN_PAIRED_WITH_AN_ADMITTED_ActorBaseProfile_THE_IDS_MUST_MATCH_EXACTLY","schema_version":"EXACT_VERSION_BINDING_FOR_THIS_BOUNDED_SKILL_LEDGER_SCHEMA; UNKNOWN_OR_UNSUPPORTED_VERSION_FAILS_CLOSED","skill_entries":"NONEMPTY_ORDERED_CANONICAL_COMPETENCE_ENTRIES; DUPLICATE_skill_id_FAILS_CLOSED; ENTRY_IDENTITY_AND_VALUE_SEMANTICS_ARE_BOUND_TO_schema_version","source_event_cursor":"NONEMPTY_REPLAY_CURSOR_REF_BOUNDING_THE_LEDGER_STATE; DOES_NOT_BY_ITSELF_PROVE_REFERENCED_EVENTS_EXIST"},"entry_contract":{"required_fields":["skill_id","value","source_event_refs"],"field_semantics":{"skill_id":"NONEMPTY_STRING_IDENTITY_WITH_MEANING_BOUND_TO_THE_LEDGER_schema_version; NOT_A_GLOBAL_UNVERSIONED_SKILL_ONTOLOGY","value":"FINITE_NON_BOOLEAN_INT_OR_FLOAT; SCALE_RANGE_PROGRESSION_AND_BALANCE_MEANING_REMAIN_SCHEMA_OR_RULESET_POLICY_AND_ARE_NOT_FROZEN_HERE","source_event_refs":"NONEMPTY_ORDERED_LIST_OF_NONEMPTY_EVENT_REFS_SUPPORTING_CREATION_OR_AUTHORIZED_CHANGE_OF_THIS_SKILL_ENTRY"}},"admission_invariants":["SKILL_LEDGER_ACTOR_BINDING_REQUIRED","SKILL_LEDGER_EXACT_SCHEMA_VERSION_REQUIRED","SKILL_LEDGER_NONEMPTY_ORDERED_ENTRIES_REQUIRED","SKILL_ENTRY_PROVENANCE_REQUIRED","DUPLICATE_SKILL_ID_REJECT_FAIL_CLOSED","UNKNOWN_OR_UNSUPPORTED_SKILL_LEDGER_SCHEMA_FAILS_CLOSED","SKILL_LEDGER_CALLER_INPUT_MUST_NOT_BECOME_MUTABLE_ADMITTED_TRUTH"],"projection_contract":{"consumer_field":"validated_skill_ledger_values","rule":"DETERMINISTIC_ONE_TO_ONE_PROJECTION_OF_EVERY_ADMITTED_skill_id_TO_ITS_ADMITTED_value_WITH_NO_WEIGHTING_AGGREGATION_RANGE_NORMALIZATION_OR_CALLER_OVERRIDE","unrelated_skill_rule":"UNREFERENCED_SKILLS_REMAIN_IN_CANONICAL_LEDGER_AND_VALIDATED_PROJECTION_BUT_EXISTING_DEMAND_SCOPED_RESOLUTION_MAY_CONSUME_ONLY_EXPLICITLY_REQUIRED_SKILL_IDS","authority_rule":"PROJECTION_IS_DERIVED_READ_ONLY_INPUT_AND_NEVER_REPLACES_OR_MUTATES_SkillLedger_CANONICAL_COMPETENCE_TRUTH"},"fields":["actor_id","skill_entries","source_event_cursor","schema_version"]},
-    "DerivedCapability": {"type_id":"AF001.DerivedCapability","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY_DERIVED_PROJECTION","fields":["actor_id","derived_values","source_profile_ref","source_condition_refs","ruleset_version"]},
-    "ActionDemandProfile": {"type_id":"AF001.ActionDemandProfile","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","fields":["demand_id","action_family","method_id","hard_prerequisites","attribute_weights","skill_weights","required_body_functions","hazard_profile","ruleset_version"]},
-    "ActionResolutionReceipt": {"type_id":"AF001.ActionResolutionReceipt","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","fields":["action_id","method_id","feasibility","effective_capability","difficulty_or_resistance","outcome_band","hazard_outcome","random_provenance_optional","ruleset_version"]},
-    "InjuryState": {"type_id":"AF001.InjuryState","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","fields":["injury_id","actor_id","source_event_ref","body_region","severity","functional_impairments","status"]},
-    "FatigueState": {"type_id":"AF001.FatigueState","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","fields":["actor_id","fatigue_measure","source_event_refs","state_version"]},
-    "StatusEffect": {"type_id":"AF001.StatusEffect","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","fields":["status_id","actor_id","status_type","source_ref","duration_policy","modifier_refs"]},
-    "EquipmentModifier": {"type_id":"AF001.EquipmentModifier","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","fields":["object_id","actor_id","effect_refs","requires_possession","requires_equipped_state"]},
-    "EquipmentLoadout": {"type_id":"AF001.EquipmentLoadout","version":"1.0.0-candidate","domain":"AF-C","authority_profile_ref":"CAPABILITY_CANONICAL_RESOLUTION","implementation_state":"INTERFACE_ONLY","fields":["actor_id","equipped_object_refs","source_event_refs","state_version"]},
-    "ActorPresentationState": {"type_id":"AF001.ActorPresentationState","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE","fields":["actor_id","outfit_state_ref","dressing_state_refs","surface_state_refs","visible_equipment_refs","state_version"]},
-    "OutfitState": {"type_id":"AF001.OutfitState","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE","fields":["actor_id","slot_bindings","source_event_refs","state_version"]},
-    "DressingState": {"type_id":"AF001.DressingState","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE","fields":["dressing_id","actor_id","body_region","side","material_ref","appearance_state","source_treatment_event_ref","covered_by_refs"]},
-    "SurfaceState": {"type_id":"AF001.SurfaceState","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE","fields":["surface_state_id","target_ref","surface_type","intensity","source_event_refs"]},
-    "CameraAnchor": {"type_id":"AF001.CameraAnchor","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"SPATIAL_VIEW_DEFINITION_REGISTRY","implementation_state":"INTERFACE_ONLY","definition_semantics":"STABLE_SPATIAL_CAMERA_ANCHOR_DEFINITION","fields":["camera_anchor_id","scene_id","position_semantics","coordinates_optional","height_optional"]},
-    "View": {"type_id":"AF001.View","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"SPATIAL_VIEW_DEFINITION_REGISTRY","implementation_state":"INTERFACE_ONLY","definition_semantics":"STABLE_SPATIAL_VIEW_DEFINITION_NOT_RENDERER_CAMERA_CHOICE","fields":["view_id","scene_id","camera_anchor_id","facing_cardinal_optional","screen_top_cardinal_optional","projection_class","visible_landmark_refs"]},
-    "MediaAsset": {"type_id":"AF001.MediaAsset","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"ASSET_LOGICAL_IDENTITY_REGISTRY","implementation_state":"INTERFACE_ONLY","identity_semantics":"STABLE_LOGICAL_ASSET_IDENTITY","creation_authority":"ASSET_REGISTRY_AUTHORITY","fields":["media_asset_id","logical_role","view_ref_optional","rights_policy_ref_optional"]},
-    "MediaVersion": {"type_id":"AF001.MediaVersion","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"ASSET_IMMUTABLE_VERSION_REGISTRY","implementation_state":"INTERFACE_ONLY","identity_semantics":"IMMUTABLE_MEDIA_REVISION","version_creation_authority":"ASSET_REGISTRY_AUTHORITY","verification_promotion_authority":"ASSET_VERIFICATION_PROMOTION_AUTHORITY","fields":["media_version_id","media_asset_id","content_hash","generation_or_capture_provenance","verification_state"]},
-    "Locator": {"type_id":"AF001.Locator","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"ASSET_LOCATOR_RESOLUTION","implementation_state":"INTERFACE_ONLY","identity_semantics":"REPLACEABLE_RETRIEVAL_OR_STORAGE_LOCATION","migration_authority":"ASSET_LOCATOR_REGISTRY_AUTHORITY","migration_identity_effect":"DOES_NOT_CHANGE_MEDIA_ASSET_OR_MEDIA_VERSION_IDENTITY","fields":["locator_id","media_version_id","location","provider_or_store","status"]},
-    "ActorAppearanceSnapshot": {"type_id":"AF001.ActorAppearanceSnapshot","version":"1.0.0-candidate","domain":"AF-D","authority_profile_ref":"PRESENTATION_CANONICAL_STATE","implementation_state":"INTERFACE_ONLY_REBUILDABLE_PROJECTION","fields":["actor_id","presentation_state_ref","world_event_cursor","schema_version","ruleset_version"]},
-    "PlayerChronicle": {"type_id":"AF001.PlayerChronicle","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_DERIVED_PROJECTION","fields":["player_id","world_instance_id","source_acquisition_refs","source_event_cursor","knowledge_refs","choice_or_promise_refs","schema_version"]},
-    "PlayerSnapshot": {"type_id":"AF001.PlayerSnapshot","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_REBUILDABLE_CACHE","fields":["player_id","chronicle_ref","world_cursor","snapshot_version","source_schema_versions"]},
-    "IntentBelief": {"type_id":"AF001.IntentBelief","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_PRIVATE_DERIVED_HYPOTHESIS","fields":["player_id","hypothesis","evidence_refs","confidence","context_scope","last_revision_cursor"]},
-    "CharacterCore": {"type_id":"AF001.CharacterCore","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"PLAYER_EXPLICIT_CHARACTER_CORE","implementation_state":"INTERFACE_ONLY_EXPLICIT_PLAYER_AUTHORED_PROFILE","fields":["player_id","actor_id","explicit_role_settings","voice_boundaries","stable_values_or_vows","auto_expression_policy_ref","version"]},
-    "EnactedPersonaHypothesis": {"type_id":"AF001.EnactedPersonaHypothesis","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"EVIDENCE_DERIVED_PERSONA_HYPOTHESIS","implementation_state":"INTERFACE_ONLY_PRIVATE_DERIVED_HYPOTHESIS","fields":["player_id","trait_hypotheses","evidence_refs","confidence","recency","context_scope","contradiction_count","explicit_override_ref"]},
-    "NPCPerceptionEvent": {"type_id":"AF001.NPCPerceptionEvent","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"R002_PROVENANCE_FOUNDATION_PLUS_INTERFACE","fields":["perception_id","npc_id","mode","source_event_ref","source_actor_ref_optional","scene_id","acquisition_provenance","ordering_cursor"]},
-    "NPCPerceptionStream": {"type_id":"AF001.NPCPerceptionStream","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_RECIPIENT_LOCAL_INDEX","fields":["npc_id","perception_event_refs","source_cursor","schema_version"]},
-    "NPCEpisodicMemory": {"type_id":"AF001.NPCEpisodicMemory","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_DERIVED_PROJECTION","fields":["memory_id","npc_id","source_perception_refs","source_world_event_refs","provenance_kind","confidence","salience","world_time","supersession_refs"]},
-    "BeliefState": {"type_id":"AF001.BeliefState","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_DERIVED_PROJECTION","fields":["belief_id","npc_id","proposition_ref","confidence","supporting_refs","contradicting_refs","status","last_revision_cursor"]},
-    "NPCPlayerRelationshipState": {"type_id":"AF001.NPCPlayerRelationshipState","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_DERIVED_PROJECTION","fields":["npc_id","player_id","dimension_map","source_refs","last_revision_cursor"]},
-    "NPCContextBundle": {"type_id":"AF001.NPCContextBundle","version":"1.0.0-candidate","domain":"AF-E","authority_profile_ref":"KNOWLEDGE_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY_RETRIEVAL_PROJECTION","fields":["npc_id","world_cursor","current_perception_refs","relationship_refs","episodic_memory_refs","belief_refs","forbidden_hidden_fact_refs","bundle_version"]},
-    "StoryDNA": {"type_id":"AF001.StoryDNA","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["story_id","primary_engine","secondary_engines","setting_envelope","tone_envelope","thematic_inquiries","interaction_structure","version"]},
-    "StoryBible": {"type_id":"AF001.StoryBible","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["story_id","canonical_authored_fact_refs","character_core_refs","world_rule_refs","forbidden_retcon_rules","version"]},
-    "GenreEngine": {"type_id":"AF001.GenreEngine","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["genre_engine_id","craft_constraints","eval_refs","version"]},
-    "CharacterDramaticCore": {"type_id":"AF001.CharacterDramaticCore","version":"1.1.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW","implementation_state":"INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_ARC_STATE","field_authority_profiles":{"authored_definition":{"profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","fields":["external_goal","internal_need_optional","fear","desire","value_conflicts","obligations","non_negotiable_boundaries"]},"derived_lifecycle":{"profile_ref":"CHARACTER_ARC_STATE_LIFECYCLE","fields":["arc_state"],"source_evidence_requirements":["RECORDED_HISTORY_CHOICES_EVENTS_OR_OTHER_PROVENANCE_BEARING_EVIDENCE"],"rebuild_semantics":"DETERMINISTIC_REBUILD_FROM_BOUND_HISTORY_AND_EVIDENCE; NARRATIVE_DESIRE_ALONE_CANNOT_ADVANCE_CURRENT_ARC_STATE"}},"fields":["actor_id","external_goal","internal_need_optional","fear","desire","value_conflicts","obligations","non_negotiable_boundaries","arc_state","version"]},
-    "HardCausalAnchor": {"type_id":"AF001.HardCausalAnchor","version":"1.1.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW","implementation_state":"INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_VALIDITY","field_authority_profiles":{"authored_definition":{"profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","fields":["cause_refs","planned_event_or_process","revalidation_predicates"]},"derived_lifecycle":{"profile_ref":"CAUSAL_ANCHOR_VALIDITY_LIFECYCLE","fields":["status"],"source_evidence_requirements":["cause_refs","CANONICAL_CAUSE_STATE_OR_EVENT_EVIDENCE","CANONICAL_EVENT_CURSOR_OR_EQUIVALENT_ORDERING_EVIDENCE"],"rebuild_semantics":"DETERMINISTIC_REBUILD_FROM_CAUSE_REFS_PLUS_CANONICAL_EVENTS_OR_EVIDENCE; INVALID_DESTROYED_MISSING_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED","rehydration_semantics":"RECOMPUTE_DERIVED_STATUS_FROM_BOUND_CAUSES_AND_EVENT_EVIDENCE; NEVER_REHYDRATE_STATUS_FROM_AUTHORED_DESIRE_OR_STALE_CACHE","revalidation_transition_rule":"ONLY_LEGITIMATE_NEW_CAUSE_OR_EVENT_EVIDENCE_MAY_TRIGGER_REVALIDATION_AND_CHANGE_DERIVED_STATUS"}},"fields":["anchor_id","cause_refs","planned_event_or_process","revalidation_predicates","status"]},
-    "SoftDramaticAttractor": {"type_id":"AF001.SoftDramaticAttractor","version":"1.1.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW","implementation_state":"INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_ELIGIBILITY_STATUS","field_authority_profiles":{"authored_definition":{"profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","fields":["dramatic_function","eligibility_predicates","expiry_policy"]},"derived_lifecycle":{"profile_ref":"SOFT_ATTRACTOR_STATUS_LIFECYCLE","fields":["status"],"source_evidence_requirements":["CANONICAL_WORLD_HISTORY_PLAYER_EVENT_EVIDENCE"],"rebuild_semantics":"REBUILD_ELIGIBILITY_EXPIRY_INVALIDATION_STATUS_FROM_BOUND_EVIDENCE; AUTHORED_DESIRE_CANNOT_FORCE_ACTIVE_STATUS"}},"fields":["attractor_id","dramatic_function","eligibility_predicates","expiry_policy","status"]},
-    "Storylet": {"type_id":"AF001.Storylet","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"INTERFACE_ONLY","fields":["storylet_id","preconditions","eligible_roles","knowledge_constraints","dramatic_purpose","forbidden_contradictions","consequence_templates","repeat_policy","version"]},
-    "EventDeckEntry": {"type_id":"AF001.EventDeckEntry","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"NARRATIVE_DESIGN_NON_CANONICAL","implementation_state":"ALIAS_INTERFACE_ONLY","alias_of":"Storylet","alias_semantics":"DECK_SELECTION_METADATA_MAY_WRAP_A_STORYLET_BUT_CANNOT_CREATE_SEPARATE_WORLD_TRUTH","fields":["storylet_ref","deck_ref","selection_metadata","cooldown_or_weight_metadata"]},
-    "InformationPacket": {"type_id":"AF001.InformationPacket","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"INFORMATION_PROVENANCE_LIFECYCLE","implementation_state":"INTERFACE_ONLY","lifecycle":"WORLD_EVENT_TO_SOURCE_WITNESS_TO_INFORMATION_PACKET_TO_CARRIER_CHANNEL_TO_PERCEPTION_COMMUNICATION_TO_PLAYER_NPC_KNOWLEDGE","source_authority_requirements":["source_fact_or_event_refs","source_refs","verification_state","confidence"],"fields":["info_id","source_fact_or_event_refs","classification","source_refs","verification_state","confidence","distortion_policy","created_world_time","propagation_scope","expiry_policy"]},
-    "NarrativePromise": {"type_id":"AF001.NarrativePromise","version":"1.0.0-candidate","domain":"AF-F","authority_profile_ref":"EVIDENCE_DERIVED_PROMISE_LIFECYCLE","implementation_state":"INTERFACE_ONLY_DERIVED_LIFECYCLE","authored_creation_allowed":false,"lifecycle":"EXPLICIT_SPEECH_OR_ACTION_SOURCE_EVENT_TO_PROMISE_LIFECYCLE_TO_CALLBACK_OR_PAYOFF_OPPORTUNITY","lifecycle_source_requirements":["source_refs"],"fields":["promise_id","source_refs","promise_type","status","callback_eligibility","payoff_refs","invalidation_reason_optional"]},
-    "NarrativeOpportunityBroker": {"type_id":"AF001.NarrativeOpportunityBroker","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["broker_contract_version","input_refs","candidate_policy_ref","plausibility_gate_ref"]},
-    "PlausibilityGate": {"type_id":"AF001.PlausibilityGate","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["gate_version","spatial_checks","temporal_checks","identity_history_checks","motivation_checks","information_provenance_checks","density_checks","asset_availability_checks","anti_repeat_checks"]},
-    "EncounterCandidate": {"type_id":"AF001.EncounterCandidate","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["encounter_id","source_goal_refs","world_scope","time_window","actor_candidate_refs","motivation_refs","known_information_refs","affordance_refs","forbidden_inventions","eligibility_evidence","expiry_policy"]},
-    "WorldEchoOpportunity": {"type_id":"AF001.WorldEchoOpportunity","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["echo_id","source_event_or_delta_refs","speaker_candidate_refs","knowledge_attribution_refs","response_concept_refs","novelty_key","expiry_policy"]},
-    "ResponseConcept": {"type_id":"AF001.ResponseConcept","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"NARRATIVE_OPPORTUNITY_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["response_concept_id","speech_risk_class","required_fact_refs","forbidden_claim_classes","realization_constraints"]},
-    "PlayerAutoExpressionPolicy": {"type_id":"AF001.PlayerAutoExpressionPolicy","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"PLAYER_EXPLICIT_AUTO_EXPRESSION_POLICY","implementation_state":"INTERFACE_ONLY","fields":["player_id","policy_version","private_commentary_enabled","authorized_low_risk_bark_enabled","allowed_risk_classes","explicit_override_ref"]},
-    "PXRankingReceipt": {"type_id":"AF001.PXRankingReceipt","version":"1.0.0-candidate","domain":"AF-G","authority_profile_ref":"PX_RANKING_NON_CANONICAL","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["candidate_refs","selected_refs","suppressed_refs","ranking_evidence","policy_version"]},
-    "DIRECTOR-BEAT-PACKET": {"type_id":"AF001.DIRECTOR-BEAT-PACKET","version":"1.0.0-candidate","domain":"AF-H","authority_profile_ref":"AWRSE_DIRECTOR_HANDOFF","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["beat_id","world_state_version","confirmed_event_refs","scene_view_asset_refs","player_visible_knowledge_refs","public_visible_knowledge_refs","private_forbidden_knowledge_refs","actor_presentation_requirements","presentation_goal","forbidden_inventions","contract_version"]},
-    "ActorPresentationRequirements": {"type_id":"AF001.ActorPresentationRequirements","version":"1.0.0-candidate","domain":"AF-H","authority_profile_ref":"AWRSE_PRESENTATION_REQUIREMENTS","implementation_state":"INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED","fields":["actor_id","identity_refs","outfit_refs","dressing_refs","visible_condition_cues","visibility_policy","state_version"]},
-    "PublicationProjection": {"type_id":"AF001.PublicationProjection","version":"1.0.0-candidate","domain":"AF-H","authority_profile_ref":"PUBLICATION_DERIVED_PROJECTION","implementation_state":"INTERFACE_ONLY","fields":["publication_id","audience_class","source_event_refs","allowed_information_refs","redacted_information_refs","presentation_refs","policy_version"]}
+    "WorldInstance": {
+      "type_id": "AF001.WorldInstance",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "world_instance_id",
+        "world_id",
+        "instance_class",
+        "shared_truth_scope",
+        "state_version"
+      ]
+    },
+    "WorldFrame": {
+      "type_id": "AF001.WorldFrame",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "world_frame_id",
+        "world_id",
+        "canonical_north",
+        "unit_basis_optional",
+        "schema_version"
+      ]
+    },
+    "Scene": {
+      "type_id": "AF001.Scene",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "R002_FOUNDATION_PLUS_FUTURE_INTERFACE",
+      "fields": [
+        "scene_id",
+        "world_id",
+        "world_frame_id",
+        "topology_version",
+        "occupancy_index_refs"
+      ]
+    },
+    "Zone": {
+      "type_id": "AF001.Zone",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "R002_FOUNDATION_PLUS_FUTURE_INTERFACE",
+      "fields": [
+        "zone_id",
+        "scene_id",
+        "zone_class",
+        "schema_version"
+      ]
+    },
+    "Portal": {
+      "type_id": "AF001.Portal",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "portal_id",
+        "from_scene_or_zone_id",
+        "to_scene_or_zone_id",
+        "relation_type",
+        "bidirectional",
+        "constraints_ref"
+      ]
+    },
+    "ActorAggregate": {
+      "type_id": "AF001.ActorAggregate",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "R001_R002_FOUNDATION_ADAPTER_PLUS_INTERFACE",
+      "fields": [
+        "actor_id",
+        "world_id",
+        "scene_id",
+        "zone_id",
+        "inventory_refs",
+        "state_version"
+      ]
+    },
+    "ObjectAggregate": {
+      "type_id": "AF001.ObjectAggregate",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "R001_R002_FOUNDATION_ADAPTER_PLUS_INTERFACE",
+      "fields": [
+        "object_id",
+        "world_id",
+        "scene_id",
+        "zone_id",
+        "owner_ref",
+        "possessor_ref",
+        "state_version"
+      ]
+    },
+    "PlayerIdentity": {
+      "type_id": "AF001.PlayerIdentity",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "player_id",
+        "principal_id",
+        "actor_id",
+        "world_instance_id",
+        "identity_version"
+      ]
+    },
+    "ActorBaseProfile": {
+      "type_id": "AF001.ActorBaseProfile",
+      "version": "1.1.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "field_semantics": {
+        "profile_version": "VERSION_OF_THE_PROFILE_INSTANCE_WITHIN_ITS_DECLARED_PROFILE_SCHEMA_AND_RULESET_FAMILY",
+        "profile_schema_ref": "IMMUTABLE_IDENTIFIER_FOR_THE_ATTRIBUTE_KEY_SCHEMA; MISMATCH_OR_UNKNOWN_SCHEMA_FAILS_CLOSED_FOR_MIGRATION_OR_REPLAY",
+        "ruleset_family_ref": "IMMUTABLE_IDENTIFIER_FOR_THE_RULESET_FAMILY_ALLOWED_TO_INTERPRET_base_attribute_map",
+        "base_attribute_map": "KEYS_ARE_VALID_ONLY_UNDER_profile_schema_ref_AND_ruleset_family_ref; NEVER_AN_ETERNAL_UNIVERSAL_STAT_ONTOLOGY",
+        "source_event_refs": "PROVENANCE_FOR_PROFILE_CREATION_OR_AUTHORIZED_CHANGE"
+      },
+      "migration_invariants": [
+        "PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED",
+        "UNKNOWN_OR_MISMATCHED_PROFILE_SCHEMA_FAILS_CLOSED",
+        "MIGRATION_REQUIRES_EXPLICIT_COMPATIBILITY_OR_TRANSFORMATION_EVIDENCE"
+      ],
+      "fields": [
+        "actor_id",
+        "profile_version",
+        "profile_schema_ref",
+        "ruleset_family_ref",
+        "base_attribute_map",
+        "source_event_refs"
+      ]
+    },
+    "SkillLedger": {
+      "type_id": "AF001.SkillLedger",
+      "version": "1.1.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "field_semantics": {
+        "actor_id": "NONEMPTY_STABLE_ACTOR_ID; WHEN_PAIRED_WITH_AN_ADMITTED_ActorBaseProfile_THE_IDS_MUST_MATCH_EXACTLY",
+        "schema_version": "EXACT_VERSION_BINDING_FOR_THIS_BOUNDED_SKILL_LEDGER_SCHEMA; UNKNOWN_OR_UNSUPPORTED_VERSION_FAILS_CLOSED",
+        "skill_entries": "NONEMPTY_ORDERED_CANONICAL_COMPETENCE_ENTRIES; DUPLICATE_skill_id_FAILS_CLOSED; ENTRY_IDENTITY_AND_VALUE_SEMANTICS_ARE_BOUND_TO_schema_version",
+        "source_event_cursor": "NONEMPTY_REPLAY_CURSOR_REF_BOUNDING_THE_LEDGER_STATE; DOES_NOT_BY_ITSELF_PROVE_REFERENCED_EVENTS_EXIST"
+      },
+      "entry_contract": {
+        "required_fields": [
+          "skill_id",
+          "value",
+          "source_event_refs"
+        ],
+        "field_semantics": {
+          "skill_id": "NONEMPTY_STRING_IDENTITY_WITH_MEANING_BOUND_TO_THE_LEDGER_schema_version; NOT_A_GLOBAL_UNVERSIONED_SKILL_ONTOLOGY",
+          "value": "FINITE_NON_BOOLEAN_INT_OR_FLOAT; SCALE_RANGE_PROGRESSION_AND_BALANCE_MEANING_REMAIN_SCHEMA_OR_RULESET_POLICY_AND_ARE_NOT_FROZEN_HERE",
+          "source_event_refs": "NONEMPTY_ORDERED_LIST_OF_NONEMPTY_EVENT_REFS_SUPPORTING_CREATION_OR_AUTHORIZED_CHANGE_OF_THIS_SKILL_ENTRY"
+        }
+      },
+      "admission_invariants": [
+        "SKILL_LEDGER_ACTOR_BINDING_REQUIRED",
+        "SKILL_LEDGER_EXACT_SCHEMA_VERSION_REQUIRED",
+        "SKILL_LEDGER_NONEMPTY_ORDERED_ENTRIES_REQUIRED",
+        "SKILL_ENTRY_PROVENANCE_REQUIRED",
+        "DUPLICATE_SKILL_ID_REJECT_FAIL_CLOSED",
+        "UNKNOWN_OR_UNSUPPORTED_SKILL_LEDGER_SCHEMA_FAILS_CLOSED",
+        "SKILL_LEDGER_CALLER_INPUT_MUST_NOT_BECOME_MUTABLE_ADMITTED_TRUTH"
+      ],
+      "projection_contract": {
+        "consumer_field": "validated_skill_ledger_values",
+        "rule": "DETERMINISTIC_ONE_TO_ONE_PROJECTION_OF_EVERY_ADMITTED_skill_id_TO_ITS_ADMITTED_value_WITH_NO_WEIGHTING_AGGREGATION_RANGE_NORMALIZATION_OR_CALLER_OVERRIDE",
+        "unrelated_skill_rule": "UNREFERENCED_SKILLS_REMAIN_IN_CANONICAL_LEDGER_AND_VALIDATED_PROJECTION_BUT_EXISTING_DEMAND_SCOPED_RESOLUTION_MAY_CONSUME_ONLY_EXPLICITLY_REQUIRED_SKILL_IDS",
+        "authority_rule": "PROJECTION_IS_DERIVED_READ_ONLY_INPUT_AND_NEVER_REPLACES_OR_MUTATES_SkillLedger_CANONICAL_COMPETENCE_TRUTH"
+      },
+      "fields": [
+        "actor_id",
+        "skill_entries",
+        "source_event_cursor",
+        "schema_version"
+      ]
+    },
+    "DerivedCapability": {
+      "type_id": "AF001.DerivedCapability",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY_DERIVED_PROJECTION",
+      "fields": [
+        "actor_id",
+        "derived_values",
+        "source_profile_ref",
+        "source_condition_refs",
+        "ruleset_version"
+      ]
+    },
+    "ActionDemandProfile": {
+      "type_id": "AF001.ActionDemandProfile",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "demand_id",
+        "action_family",
+        "method_id",
+        "hard_prerequisites",
+        "attribute_weights",
+        "skill_weights",
+        "required_body_functions",
+        "hazard_profile",
+        "ruleset_version"
+      ]
+    },
+    "ActionResolutionReceipt": {
+      "type_id": "AF001.ActionResolutionReceipt",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "action_id",
+        "method_id",
+        "feasibility",
+        "effective_capability",
+        "difficulty_or_resistance",
+        "outcome_band",
+        "hazard_outcome",
+        "random_provenance_optional",
+        "ruleset_version"
+      ]
+    },
+    "InjuryState": {
+      "type_id": "AF001.InjuryState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "injury_id",
+        "actor_id",
+        "source_event_ref",
+        "body_region",
+        "severity",
+        "functional_impairments",
+        "status"
+      ]
+    },
+    "FatigueState": {
+      "type_id": "AF001.FatigueState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "actor_id",
+        "fatigue_measure",
+        "source_event_refs",
+        "state_version"
+      ]
+    },
+    "StatusEffect": {
+      "type_id": "AF001.StatusEffect",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "status_id",
+        "actor_id",
+        "status_type",
+        "source_ref",
+        "duration_policy",
+        "modifier_refs"
+      ]
+    },
+    "EquipmentModifier": {
+      "type_id": "AF001.EquipmentModifier",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "object_id",
+        "actor_id",
+        "effect_refs",
+        "requires_possession",
+        "requires_equipped_state"
+      ]
+    },
+    "EquipmentLoadout": {
+      "type_id": "AF001.EquipmentLoadout",
+      "version": "1.0.0-candidate",
+      "domain": "AF-C",
+      "authority_profile_ref": "CAPABILITY_CANONICAL_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "actor_id",
+        "equipped_object_refs",
+        "source_event_refs",
+        "state_version"
+      ]
+    },
+    "ActorPresentationState": {
+      "type_id": "AF001.ActorPresentationState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "PRESENTATION_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE",
+      "fields": [
+        "actor_id",
+        "outfit_state_ref",
+        "dressing_state_refs",
+        "surface_state_refs",
+        "visible_equipment_refs",
+        "state_version"
+      ]
+    },
+    "OutfitState": {
+      "type_id": "AF001.OutfitState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "PRESENTATION_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE",
+      "fields": [
+        "actor_id",
+        "slot_bindings",
+        "source_event_refs",
+        "state_version"
+      ]
+    },
+    "DressingState": {
+      "type_id": "AF001.DressingState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "PRESENTATION_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE",
+      "fields": [
+        "dressing_id",
+        "actor_id",
+        "body_region",
+        "side",
+        "material_ref",
+        "appearance_state",
+        "source_treatment_event_ref",
+        "covered_by_refs"
+      ]
+    },
+    "SurfaceState": {
+      "type_id": "AF001.SurfaceState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "PRESENTATION_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY_CANONICAL_PRESENTATION_STATE",
+      "fields": [
+        "surface_state_id",
+        "target_ref",
+        "surface_type",
+        "intensity",
+        "source_event_refs"
+      ]
+    },
+    "CameraAnchor": {
+      "type_id": "AF001.CameraAnchor",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "SPATIAL_VIEW_DEFINITION_REGISTRY",
+      "implementation_state": "INTERFACE_ONLY",
+      "definition_semantics": "STABLE_SPATIAL_CAMERA_ANCHOR_DEFINITION",
+      "fields": [
+        "camera_anchor_id",
+        "scene_id",
+        "position_semantics",
+        "coordinates_optional",
+        "height_optional"
+      ]
+    },
+    "View": {
+      "type_id": "AF001.View",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "SPATIAL_VIEW_DEFINITION_REGISTRY",
+      "implementation_state": "INTERFACE_ONLY",
+      "definition_semantics": "STABLE_SPATIAL_VIEW_DEFINITION_NOT_RENDERER_CAMERA_CHOICE",
+      "fields": [
+        "view_id",
+        "scene_id",
+        "camera_anchor_id",
+        "facing_cardinal_optional",
+        "screen_top_cardinal_optional",
+        "projection_class",
+        "visible_landmark_refs"
+      ]
+    },
+    "MediaAsset": {
+      "type_id": "AF001.MediaAsset",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "ASSET_LOGICAL_IDENTITY_REGISTRY",
+      "implementation_state": "INTERFACE_ONLY",
+      "identity_semantics": "STABLE_LOGICAL_ASSET_IDENTITY",
+      "creation_authority": "ASSET_REGISTRY_AUTHORITY",
+      "fields": [
+        "media_asset_id",
+        "logical_role",
+        "view_ref_optional",
+        "rights_policy_ref_optional"
+      ]
+    },
+    "MediaVersion": {
+      "type_id": "AF001.MediaVersion",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "ASSET_IMMUTABLE_VERSION_REGISTRY",
+      "implementation_state": "INTERFACE_ONLY",
+      "identity_semantics": "IMMUTABLE_MEDIA_REVISION",
+      "version_creation_authority": "ASSET_REGISTRY_AUTHORITY",
+      "verification_promotion_authority": "ASSET_VERIFICATION_PROMOTION_AUTHORITY",
+      "fields": [
+        "media_version_id",
+        "media_asset_id",
+        "content_hash",
+        "generation_or_capture_provenance",
+        "verification_state"
+      ]
+    },
+    "Locator": {
+      "type_id": "AF001.Locator",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "ASSET_LOCATOR_RESOLUTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "identity_semantics": "REPLACEABLE_RETRIEVAL_OR_STORAGE_LOCATION",
+      "migration_authority": "ASSET_LOCATOR_REGISTRY_AUTHORITY",
+      "migration_identity_effect": "DOES_NOT_CHANGE_MEDIA_ASSET_OR_MEDIA_VERSION_IDENTITY",
+      "fields": [
+        "locator_id",
+        "media_version_id",
+        "location",
+        "provider_or_store",
+        "status"
+      ]
+    },
+    "ActorAppearanceSnapshot": {
+      "type_id": "AF001.ActorAppearanceSnapshot",
+      "version": "1.0.0-candidate",
+      "domain": "AF-D",
+      "authority_profile_ref": "PRESENTATION_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY_REBUILDABLE_PROJECTION",
+      "fields": [
+        "actor_id",
+        "presentation_state_ref",
+        "world_event_cursor",
+        "schema_version",
+        "ruleset_version"
+      ]
+    },
+    "PlayerChronicle": {
+      "type_id": "AF001.PlayerChronicle",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_DERIVED_PROJECTION",
+      "fields": [
+        "player_id",
+        "world_instance_id",
+        "source_acquisition_refs",
+        "source_event_cursor",
+        "knowledge_refs",
+        "choice_or_promise_refs",
+        "schema_version"
+      ]
+    },
+    "PlayerSnapshot": {
+      "type_id": "AF001.PlayerSnapshot",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_REBUILDABLE_CACHE",
+      "fields": [
+        "player_id",
+        "chronicle_ref",
+        "world_cursor",
+        "snapshot_version",
+        "source_schema_versions"
+      ]
+    },
+    "IntentBelief": {
+      "type_id": "AF001.IntentBelief",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_PRIVATE_DERIVED_HYPOTHESIS",
+      "fields": [
+        "player_id",
+        "hypothesis",
+        "evidence_refs",
+        "confidence",
+        "context_scope",
+        "last_revision_cursor"
+      ]
+    },
+    "CharacterCore": {
+      "type_id": "AF001.CharacterCore",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "PLAYER_EXPLICIT_CHARACTER_CORE",
+      "implementation_state": "INTERFACE_ONLY_EXPLICIT_PLAYER_AUTHORED_PROFILE",
+      "fields": [
+        "player_id",
+        "actor_id",
+        "explicit_role_settings",
+        "voice_boundaries",
+        "stable_values_or_vows",
+        "auto_expression_policy_ref",
+        "version"
+      ]
+    },
+    "EnactedPersonaHypothesis": {
+      "type_id": "AF001.EnactedPersonaHypothesis",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "EVIDENCE_DERIVED_PERSONA_HYPOTHESIS",
+      "implementation_state": "INTERFACE_ONLY_PRIVATE_DERIVED_HYPOTHESIS",
+      "fields": [
+        "player_id",
+        "trait_hypotheses",
+        "evidence_refs",
+        "confidence",
+        "recency",
+        "context_scope",
+        "contradiction_count",
+        "explicit_override_ref"
+      ]
+    },
+    "NPCPerceptionEvent": {
+      "type_id": "AF001.NPCPerceptionEvent",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "R002_PROVENANCE_FOUNDATION_PLUS_INTERFACE",
+      "fields": [
+        "perception_id",
+        "npc_id",
+        "mode",
+        "source_event_ref",
+        "source_actor_ref_optional",
+        "scene_id",
+        "acquisition_provenance",
+        "ordering_cursor"
+      ]
+    },
+    "NPCPerceptionStream": {
+      "type_id": "AF001.NPCPerceptionStream",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_RECIPIENT_LOCAL_INDEX",
+      "fields": [
+        "npc_id",
+        "perception_event_refs",
+        "source_cursor",
+        "schema_version"
+      ]
+    },
+    "NPCEpisodicMemory": {
+      "type_id": "AF001.NPCEpisodicMemory",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_DERIVED_PROJECTION",
+      "fields": [
+        "memory_id",
+        "npc_id",
+        "source_perception_refs",
+        "source_world_event_refs",
+        "provenance_kind",
+        "confidence",
+        "salience",
+        "world_time",
+        "supersession_refs"
+      ]
+    },
+    "BeliefState": {
+      "type_id": "AF001.BeliefState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_DERIVED_PROJECTION",
+      "fields": [
+        "belief_id",
+        "npc_id",
+        "proposition_ref",
+        "confidence",
+        "supporting_refs",
+        "contradicting_refs",
+        "status",
+        "last_revision_cursor"
+      ]
+    },
+    "NPCPlayerRelationshipState": {
+      "type_id": "AF001.NPCPlayerRelationshipState",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_DERIVED_PROJECTION",
+      "fields": [
+        "npc_id",
+        "player_id",
+        "dimension_map",
+        "source_refs",
+        "last_revision_cursor"
+      ]
+    },
+    "NPCContextBundle": {
+      "type_id": "AF001.NPCContextBundle",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "KNOWLEDGE_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_RETRIEVAL_PROJECTION",
+      "fields": [
+        "npc_id",
+        "world_cursor",
+        "current_perception_refs",
+        "relationship_refs",
+        "episodic_memory_refs",
+        "belief_refs",
+        "forbidden_hidden_fact_refs",
+        "bundle_version"
+      ]
+    },
+    "StoryDNA": {
+      "type_id": "AF001.StoryDNA",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "story_id",
+        "primary_engine",
+        "secondary_engines",
+        "setting_envelope",
+        "tone_envelope",
+        "thematic_inquiries",
+        "interaction_structure",
+        "version"
+      ]
+    },
+    "StoryBible": {
+      "type_id": "AF001.StoryBible",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "story_id",
+        "canonical_authored_fact_refs",
+        "character_core_refs",
+        "world_rule_refs",
+        "forbidden_retcon_rules",
+        "version"
+      ]
+    },
+    "GenreEngine": {
+      "type_id": "AF001.GenreEngine",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "genre_engine_id",
+        "craft_constraints",
+        "eval_refs",
+        "version"
+      ]
+    },
+    "CharacterDramaticCore": {
+      "type_id": "AF001.CharacterDramaticCore",
+      "version": "1.1.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW",
+      "implementation_state": "INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_ARC_STATE",
+      "field_authority_profiles": {
+        "authored_definition": {
+          "profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+          "fields": [
+            "external_goal",
+            "internal_need_optional",
+            "fear",
+            "desire",
+            "value_conflicts",
+            "obligations",
+            "non_negotiable_boundaries"
+          ]
+        },
+        "derived_lifecycle": {
+          "profile_ref": "CHARACTER_ARC_STATE_LIFECYCLE",
+          "fields": [
+            "arc_state"
+          ],
+          "source_evidence_requirements": [
+            "RECORDED_HISTORY_CHOICES_EVENTS_OR_OTHER_PROVENANCE_BEARING_EVIDENCE"
+          ],
+          "rebuild_semantics": "DETERMINISTIC_REBUILD_FROM_BOUND_HISTORY_AND_EVIDENCE; NARRATIVE_DESIRE_ALONE_CANNOT_ADVANCE_CURRENT_ARC_STATE"
+        }
+      },
+      "fields": [
+        "actor_id",
+        "external_goal",
+        "internal_need_optional",
+        "fear",
+        "desire",
+        "value_conflicts",
+        "obligations",
+        "non_negotiable_boundaries",
+        "arc_state",
+        "version"
+      ]
+    },
+    "HardCausalAnchor": {
+      "type_id": "AF001.HardCausalAnchor",
+      "version": "1.1.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW",
+      "implementation_state": "INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_VALIDITY",
+      "field_authority_profiles": {
+        "authored_definition": {
+          "profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+          "fields": [
+            "cause_refs",
+            "planned_event_or_process",
+            "revalidation_predicates"
+          ]
+        },
+        "derived_lifecycle": {
+          "profile_ref": "CAUSAL_ANCHOR_VALIDITY_LIFECYCLE",
+          "fields": [
+            "status"
+          ],
+          "source_evidence_requirements": [
+            "cause_refs",
+            "CANONICAL_CAUSE_STATE_OR_EVENT_EVIDENCE",
+            "CANONICAL_EVENT_CURSOR_OR_EQUIVALENT_ORDERING_EVIDENCE"
+          ],
+          "rebuild_semantics": "DETERMINISTIC_REBUILD_FROM_CAUSE_REFS_PLUS_CANONICAL_EVENTS_OR_EVIDENCE; INVALID_DESTROYED_MISSING_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED",
+          "rehydration_semantics": "RECOMPUTE_DERIVED_STATUS_FROM_BOUND_CAUSES_AND_EVENT_EVIDENCE; NEVER_REHYDRATE_STATUS_FROM_AUTHORED_DESIRE_OR_STALE_CACHE",
+          "revalidation_transition_rule": "ONLY_LEGITIMATE_NEW_CAUSE_OR_EVENT_EVIDENCE_MAY_TRIGGER_REVALIDATION_AND_CHANGE_DERIVED_STATUS"
+        }
+      },
+      "fields": [
+        "anchor_id",
+        "cause_refs",
+        "planned_event_or_process",
+        "revalidation_predicates",
+        "status"
+      ]
+    },
+    "SoftDramaticAttractor": {
+      "type_id": "AF001.SoftDramaticAttractor",
+      "version": "1.1.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_MIXED_DEFINITION_DERIVED_VIEW",
+      "implementation_state": "INTERFACE_ONLY_COMPOSITE_AUTHORED_DEFINITION_PLUS_DERIVED_ELIGIBILITY_STATUS",
+      "field_authority_profiles": {
+        "authored_definition": {
+          "profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+          "fields": [
+            "dramatic_function",
+            "eligibility_predicates",
+            "expiry_policy"
+          ]
+        },
+        "derived_lifecycle": {
+          "profile_ref": "SOFT_ATTRACTOR_STATUS_LIFECYCLE",
+          "fields": [
+            "status"
+          ],
+          "source_evidence_requirements": [
+            "CANONICAL_WORLD_HISTORY_PLAYER_EVENT_EVIDENCE"
+          ],
+          "rebuild_semantics": "REBUILD_ELIGIBILITY_EXPIRY_INVALIDATION_STATUS_FROM_BOUND_EVIDENCE; AUTHORED_DESIRE_CANNOT_FORCE_ACTIVE_STATUS"
+        }
+      },
+      "fields": [
+        "attractor_id",
+        "dramatic_function",
+        "eligibility_predicates",
+        "expiry_policy",
+        "status"
+      ]
+    },
+    "Storylet": {
+      "type_id": "AF001.Storylet",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "storylet_id",
+        "preconditions",
+        "eligible_roles",
+        "knowledge_constraints",
+        "dramatic_purpose",
+        "forbidden_contradictions",
+        "consequence_templates",
+        "repeat_policy",
+        "version"
+      ]
+    },
+    "EventDeckEntry": {
+      "type_id": "AF001.EventDeckEntry",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "NARRATIVE_DESIGN_NON_CANONICAL",
+      "implementation_state": "ALIAS_INTERFACE_ONLY",
+      "alias_of": "Storylet",
+      "alias_semantics": "DECK_SELECTION_METADATA_MAY_WRAP_A_STORYLET_BUT_CANNOT_CREATE_SEPARATE_WORLD_TRUTH",
+      "fields": [
+        "storylet_ref",
+        "deck_ref",
+        "selection_metadata",
+        "cooldown_or_weight_metadata"
+      ]
+    },
+    "InformationPacket": {
+      "type_id": "AF001.InformationPacket",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "INFORMATION_PROVENANCE_LIFECYCLE",
+      "implementation_state": "INTERFACE_ONLY",
+      "lifecycle": "WORLD_EVENT_TO_SOURCE_WITNESS_TO_INFORMATION_PACKET_TO_CARRIER_CHANNEL_TO_PERCEPTION_COMMUNICATION_TO_PLAYER_NPC_KNOWLEDGE",
+      "source_authority_requirements": [
+        "source_fact_or_event_refs",
+        "source_refs",
+        "verification_state",
+        "confidence"
+      ],
+      "fields": [
+        "info_id",
+        "source_fact_or_event_refs",
+        "classification",
+        "source_refs",
+        "verification_state",
+        "confidence",
+        "distortion_policy",
+        "created_world_time",
+        "propagation_scope",
+        "expiry_policy"
+      ]
+    },
+    "NarrativePromise": {
+      "type_id": "AF001.NarrativePromise",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "EVIDENCE_DERIVED_PROMISE_LIFECYCLE",
+      "implementation_state": "INTERFACE_ONLY_DERIVED_LIFECYCLE",
+      "authored_creation_allowed": false,
+      "lifecycle": "EXPLICIT_SPEECH_OR_ACTION_SOURCE_EVENT_TO_PROMISE_LIFECYCLE_TO_CALLBACK_OR_PAYOFF_OPPORTUNITY",
+      "lifecycle_source_requirements": [
+        "source_refs"
+      ],
+      "fields": [
+        "promise_id",
+        "source_refs",
+        "promise_type",
+        "status",
+        "callback_eligibility",
+        "payoff_refs",
+        "invalidation_reason_optional"
+      ]
+    },
+    "NarrativeOpportunityBroker": {
+      "type_id": "AF001.NarrativeOpportunityBroker",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "NARRATIVE_OPPORTUNITY_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "broker_contract_version",
+        "input_refs",
+        "candidate_policy_ref",
+        "plausibility_gate_ref"
+      ]
+    },
+    "PlausibilityGate": {
+      "type_id": "AF001.PlausibilityGate",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "NARRATIVE_OPPORTUNITY_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "gate_version",
+        "spatial_checks",
+        "temporal_checks",
+        "identity_history_checks",
+        "motivation_checks",
+        "information_provenance_checks",
+        "density_checks",
+        "asset_availability_checks",
+        "anti_repeat_checks"
+      ]
+    },
+    "EncounterCandidate": {
+      "type_id": "AF001.EncounterCandidate",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "NARRATIVE_OPPORTUNITY_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "encounter_id",
+        "source_goal_refs",
+        "world_scope",
+        "time_window",
+        "actor_candidate_refs",
+        "motivation_refs",
+        "known_information_refs",
+        "affordance_refs",
+        "forbidden_inventions",
+        "eligibility_evidence",
+        "expiry_policy"
+      ]
+    },
+    "WorldEchoOpportunity": {
+      "type_id": "AF001.WorldEchoOpportunity",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "NARRATIVE_OPPORTUNITY_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "echo_id",
+        "source_event_or_delta_refs",
+        "speaker_candidate_refs",
+        "knowledge_attribution_refs",
+        "response_concept_refs",
+        "novelty_key",
+        "expiry_policy"
+      ]
+    },
+    "ResponseConcept": {
+      "type_id": "AF001.ResponseConcept",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "NARRATIVE_OPPORTUNITY_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "response_concept_id",
+        "speech_risk_class",
+        "required_fact_refs",
+        "forbidden_claim_classes",
+        "realization_constraints"
+      ]
+    },
+    "PlayerAutoExpressionPolicy": {
+      "type_id": "AF001.PlayerAutoExpressionPolicy",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "PLAYER_EXPLICIT_AUTO_EXPRESSION_POLICY",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "player_id",
+        "policy_version",
+        "private_commentary_enabled",
+        "authorized_low_risk_bark_enabled",
+        "allowed_risk_classes",
+        "explicit_override_ref"
+      ]
+    },
+    "PXRankingReceipt": {
+      "type_id": "AF001.PXRankingReceipt",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "PX_RANKING_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "candidate_refs",
+        "selected_refs",
+        "suppressed_refs",
+        "ranking_evidence",
+        "policy_version"
+      ]
+    },
+    "DIRECTOR-BEAT-PACKET": {
+      "type_id": "AF001.DIRECTOR-BEAT-PACKET",
+      "version": "1.0.0-candidate",
+      "domain": "AF-H",
+      "authority_profile_ref": "AWRSE_DIRECTOR_HANDOFF",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "beat_id",
+        "world_state_version",
+        "confirmed_event_refs",
+        "scene_view_asset_refs",
+        "player_visible_knowledge_refs",
+        "public_visible_knowledge_refs",
+        "private_forbidden_knowledge_refs",
+        "actor_presentation_requirements",
+        "presentation_goal",
+        "forbidden_inventions",
+        "contract_version"
+      ]
+    },
+    "ActorPresentationRequirements": {
+      "type_id": "AF001.ActorPresentationRequirements",
+      "version": "1.0.0-candidate",
+      "domain": "AF-H",
+      "authority_profile_ref": "AWRSE_PRESENTATION_REQUIREMENTS",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "actor_id",
+        "identity_refs",
+        "outfit_refs",
+        "dressing_refs",
+        "visible_condition_cues",
+        "visibility_policy",
+        "state_version"
+      ]
+    },
+    "PublicationProjection": {
+      "type_id": "AF001.PublicationProjection",
+      "version": "1.0.0-candidate",
+      "domain": "AF-H",
+      "authority_profile_ref": "PUBLICATION_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY",
+      "fields": [
+        "publication_id",
+        "audience_class",
+        "source_event_refs",
+        "allowed_information_refs",
+        "redacted_information_refs",
+        "presentation_refs",
+        "policy_version"
+      ]
+    },
+    "BranchQualityEvidence": {
+      "type_id": "AF001.BranchQualityEvidence",
+      "version": "1.0.0-candidate",
+      "domain": "AF-F",
+      "authority_profile_ref": "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW",
+      "implementation_state": "INTERFACE_ONLY_DERIVED_EVIDENCE_NOT_RUNTIME_IMPLEMENTED",
+      "portable_integrity_invariant": "ASSESSMENT_LEVEL_PORTABILITY_ONLY_NOT_BYTE_IDENTICAL_EVIDENCE_MATERIAL",
+      "fields": [
+        "evidence_id",
+        "evaluated_subject_ref",
+        "source_kind",
+        "source_package_sha256",
+        "source_i1_sha256",
+        "evidence_version",
+        "authority_class",
+        "causal_world_integrity",
+        "agency_legibility",
+        "knowledge_provenance_integrity",
+        "opportunity_scarcity_evidence",
+        "mechanism_evidence"
+      ]
+    }
   },
   "freeze_domains": {
-    "AF-A": {"name":"Identity / Event / Authority","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":[],"invariants":["DOWNSTREAM_CANNOT_REWRITE_UPSTREAM_TRUTH","EVENT_ID_IS_STABLE_AND_IMMUTABLE","PROJECTION_NEWNESS_DOES_NOT_OUTRANK_EVENT_EVIDENCE","BREAKING_EVENT_SEMANTICS_REQUIRE_MIGRATION"]},
-    "AF-B": {"name":"Actor / Object / Spatial State","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_R002_FOUNDATION","type_refs":["WorldInstance","WorldFrame","Scene","Zone","Portal","ActorAggregate","ObjectAggregate","PlayerIdentity"],"state_separations":["OWNERSHIP_NE_POSSESSION","POSSESSION_NE_INVENTORY_INDEX","POSSESSION_NE_WORN","SHARED_WORLD_TRUTH_NE_PLAYER_LOCAL_PROJECTION"],"open_decision_refs":["OD-CONCURRENCY-001"]},
-    "AF-C": {"name":"Capability / Injury","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["ActorBaseProfile","SkillLedger","DerivedCapability","ActionDemandProfile","ActionResolutionReceipt","InjuryState","FatigueState","StatusEffect","EquipmentModifier","EquipmentLoadout"],"invariants":["IMPOSSIBLE_ACTION_FAILS_BEFORE_PROBABILITY","SUCCESS_AND_INJURY_ARE_INDEPENDENT_AXES","EQUIPMENT_EFFECT_REQUIRES_CANONICAL_AVAILABILITY","RANDOMNESS_REQUIRES_DETERMINISTIC_REPLAY_PROVENANCE","PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED","UNKNOWN_OR_MISMATCHED_PROFILE_SCHEMA_FAILS_CLOSED","SKILL_LEDGER_REMAINS_SEPARATE_COMPETENCE_TRUTH","SKILL_LEDGER_ACTOR_SCHEMA_AND_PROVENANCE_REQUIRED","DUPLICATE_SKILL_ID_FAILS_CLOSED","VALIDATED_SKILL_VALUES_ARE_DERIVED_READ_ONLY_PROJECTION_NOT_SECOND_AUTHORITY","BASE_CAPABILITY_NE_CURRENT_EFFECTIVE_CAPABILITY","FUNCTIONAL_IMPAIRMENT_IS_FUNCTION_LOCAL","UNRELATED_FUNCTION_IMPAIRMENT_HAS_ZERO_EFFECT","FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT","NARRATIVE_RENDERER_CANNOT_AUTHOR_IMPAIRMENT","IMPAIRMENT_NUMERIC_EFFECTS_REQUIRE_EXPLICIT_VERSIONED_RULESET_BINDING"],"open_decision_refs":[],"resolved_decision_refs":["OD-CAPABILITY-ATTR-001","OD-CAPABILITY-MATH-001"]},
-    "AF-D": {"name":"Appearance / Asset","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["ActorPresentationState","OutfitState","DressingState","SurfaceState","CameraAnchor","View","MediaAsset","MediaVersion","Locator","ActorAppearanceSnapshot"],"invariants":["FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT","CAMERA_POSITION_NE_CAMERA_FACING","MEDIA_ASSET_IDENTITY_NE_MEDIA_VERSION_NE_LOCATOR","DYNAMIC_PRESENTATION_STATE_NE_ASSET_REGISTRY_TRUTH","LOCATOR_MIGRATION_NE_ASSET_OR_VERSION_IDENTITY_CHANGE","GENERATED_PIXELS_CANNOT_CREATE_CANONICAL_STATE","INVENTORY_OWNED_NE_WORN"]},
-    "AF-E": {"name":"Perception / Memory / Knowledge / Relationship","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_R002_PROVENANCE_FOUNDATION","type_refs":["PlayerChronicle","PlayerSnapshot","IntentBelief","CharacterCore","EnactedPersonaHypothesis","NPCPerceptionEvent","NPCPerceptionStream","NPCEpisodicMemory","BeliefState","NPCPlayerRelationshipState","NPCContextBundle"],"knowledge_modes":["SAW","HEARD","WAS_TOLD","DOCUMENTED","RUMORED","INFERRED","UNKNOWN"],"runtime_rule":"EACH_IMPLEMENTED_MODE_REQUIRES_EXECUTABLE_MODE_SPECIFIC_PROVENANCE_OR_FAILS_CLOSED","invariants":["PLAYER_KNOWLEDGE_NE_NPC_KNOWLEDGE","RECIPIENT_PROJECTION_CANNOT_CREATE_ACQUISITION_EVIDENCE","PRIVATE_PLAYER_PERSONA_NE_NPC_MODEL_OF_PLAYER","EXPLICIT_CHARACTER_CORE_NE_DERIVED_PERSONA_HYPOTHESIS","SUMMARY_REFLECTION_IS_DERIVED_CACHE"],"open_decision_refs":["OD-MEMORY-STORE-001","OD-MEMORY-DECAY-001","OD-RELATIONSHIP-MATH-001"]},
-    "AF-F": {"name":"Story / Information","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["StoryDNA","StoryBible","GenreEngine","CharacterDramaticCore","HardCausalAnchor","SoftDramaticAttractor","Storylet","EventDeckEntry","InformationPacket","NarrativePromise"],"invariants":["STORY_STRUCTURE_IS_NOT_WORLD_TRUTH","AUTHORED_NARRATIVE_NE_INFORMATION_PROVENANCE_LIFECYCLE","AUTHORED_NARRATIVE_NE_PROMISE_HISTORY","INFORMATION_PACKET_REQUIRES_SOURCE_AND_PROVENANCE_EVIDENCE","NARRATIVE_PROMISE_REQUIRES_SOURCE_EVENT_EVIDENCE","AUTHORED_HARD_CAUSAL_ANCHOR_DEFINITION_NE_DERIVED_VALIDITY_STATUS","HARD_CAUSAL_ANCHOR_STATUS_REBUILDS_FROM_CAUSE_EVENT_EVIDENCE","INVALID_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED","NARRATIVE_DESIRE_CANNOT_RESTORE_INVALID_CAUSAL_ANCHOR","AUTHORED_SOFT_ATTRACTOR_DEFINITION_NE_DERIVED_STATUS","AUTHORED_CHARACTER_DRAMATIC_CORE_NE_DERIVED_ARC_STATE","HARD_CAUSAL_ANCHOR_MUST_REVALIDATE_CAUSES","SOFT_DRAMATIC_ATTRACTOR_DOES_NOT_DEFINE_FACTS","IMPORTANT_INFORMATION_CANNOT_BYPASS_PROPAGATION","BRANCH_QUALITY_CANNOT_JUSTIFY_RETCON_OR_RESURRECTION"],"open_decision_refs":["OD-GENRE-REGISTRY-001","OD-CLUE-QUALITY-001"]},
-    "AF-G": {"name":"Opportunity / World Echo / PX","implementation_state":"FREEZE_INTERFACE_ONLY","type_refs":["NarrativeOpportunityBroker","PlausibilityGate","EncounterCandidate","WorldEchoOpportunity","ResponseConcept","PlayerAutoExpressionPolicy","PXRankingReceipt"],"invariants":["NO_VALID_OPPORTUNITY_IS_VALID","PX_MAY_RANK_ONLY_LEGAL_CANDIDATES","PX_CANNOT_INVENT_FACTS_OR_INJECT_KNOWLEDGE","NARRATIVE_CANNOT_SECRETLY_LOWER_CAPABILITY_DIFFICULTY","COMMENTARY_REQUIRES_PROVENANCE_AND_ANTI_REPEAT_POLICY"],"open_decision_refs":["OD-PX-SCORING-001","OD-COMMENTARY-BUDGET-001","OD-ENCOUNTER-DENSITY-001"]},
-    "AF-H": {"name":"AI Director / Renderer / Publication","implementation_state":"FREEZE_INTERFACE_ONLY_WITH_WORLD_RENDER_PACKET_FOUNDATION","type_refs":["DIRECTOR-BEAT-PACKET","ActorPresentationRequirements","PublicationProjection"],"invariants":["AWRSE_OWNS_PACKET_FACTS_KNOWLEDGE_VISIBILITY_AND_PRESENTATION_CONSTRAINTS","AI_DIRECTOR_OWNS_ONLY_STAGING_INSIDE_VALID_ENVELOPE","AI_DIRECTOR_IS_DOWNSTREAM_READ_ONLY","RENDERER_CANNOT_RESOLVE_WORLD_OUTCOMES","PUBLICATION_KNOWLEDGE_DOES_NOT_FLOW_BACK_INTO_PLAYER_OR_NPC_KNOWLEDGE","MATERIAL_RENDER_CONTRADICTION_IS_FAILURE_NOT_WORLD_MUTATION"],"open_decision_refs":["OD-PUBLICATION-POLICY-001","OD-DIRECTOR-ADAPTER-001"]}
+    "AF-A": {
+      "name": "Identity / Event / Authority",
+      "implementation_state": "FREEZE_INTERFACE_ONLY",
+      "type_refs": [],
+      "invariants": [
+        "DOWNSTREAM_CANNOT_REWRITE_UPSTREAM_TRUTH",
+        "EVENT_ID_IS_STABLE_AND_IMMUTABLE",
+        "PROJECTION_NEWNESS_DOES_NOT_OUTRANK_EVENT_EVIDENCE",
+        "BREAKING_EVENT_SEMANTICS_REQUIRE_MIGRATION"
+      ]
+    },
+    "AF-B": {
+      "name": "Actor / Object / Spatial State",
+      "implementation_state": "FREEZE_INTERFACE_ONLY_WITH_R002_FOUNDATION",
+      "type_refs": [
+        "WorldInstance",
+        "WorldFrame",
+        "Scene",
+        "Zone",
+        "Portal",
+        "ActorAggregate",
+        "ObjectAggregate",
+        "PlayerIdentity"
+      ],
+      "state_separations": [
+        "OWNERSHIP_NE_POSSESSION",
+        "POSSESSION_NE_INVENTORY_INDEX",
+        "POSSESSION_NE_WORN",
+        "SHARED_WORLD_TRUTH_NE_PLAYER_LOCAL_PROJECTION"
+      ],
+      "open_decision_refs": [
+        "OD-CONCURRENCY-001"
+      ]
+    },
+    "AF-C": {
+      "name": "Capability / Injury",
+      "implementation_state": "FREEZE_INTERFACE_ONLY",
+      "type_refs": [
+        "ActorBaseProfile",
+        "SkillLedger",
+        "DerivedCapability",
+        "ActionDemandProfile",
+        "ActionResolutionReceipt",
+        "InjuryState",
+        "FatigueState",
+        "StatusEffect",
+        "EquipmentModifier",
+        "EquipmentLoadout"
+      ],
+      "invariants": [
+        "IMPOSSIBLE_ACTION_FAILS_BEFORE_PROBABILITY",
+        "SUCCESS_AND_INJURY_ARE_INDEPENDENT_AXES",
+        "EQUIPMENT_EFFECT_REQUIRES_CANONICAL_AVAILABILITY",
+        "RANDOMNESS_REQUIRES_DETERMINISTIC_REPLAY_PROVENANCE",
+        "PROFILE_SCHEMA_AND_RULESET_FAMILY_REQUIRED",
+        "UNKNOWN_OR_MISMATCHED_PROFILE_SCHEMA_FAILS_CLOSED",
+        "SKILL_LEDGER_REMAINS_SEPARATE_COMPETENCE_TRUTH",
+        "SKILL_LEDGER_ACTOR_SCHEMA_AND_PROVENANCE_REQUIRED",
+        "DUPLICATE_SKILL_ID_FAILS_CLOSED",
+        "VALIDATED_SKILL_VALUES_ARE_DERIVED_READ_ONLY_PROJECTION_NOT_SECOND_AUTHORITY",
+        "BASE_CAPABILITY_NE_CURRENT_EFFECTIVE_CAPABILITY",
+        "FUNCTIONAL_IMPAIRMENT_IS_FUNCTION_LOCAL",
+        "UNRELATED_FUNCTION_IMPAIRMENT_HAS_ZERO_EFFECT",
+        "FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT",
+        "NARRATIVE_RENDERER_CANNOT_AUTHOR_IMPAIRMENT",
+        "IMPAIRMENT_NUMERIC_EFFECTS_REQUIRE_EXPLICIT_VERSIONED_RULESET_BINDING"
+      ],
+      "open_decision_refs": [],
+      "resolved_decision_refs": [
+        "OD-CAPABILITY-ATTR-001",
+        "OD-CAPABILITY-MATH-001"
+      ]
+    },
+    "AF-D": {
+      "name": "Appearance / Asset",
+      "implementation_state": "FREEZE_INTERFACE_ONLY",
+      "type_refs": [
+        "ActorPresentationState",
+        "OutfitState",
+        "DressingState",
+        "SurfaceState",
+        "CameraAnchor",
+        "View",
+        "MediaAsset",
+        "MediaVersion",
+        "Locator",
+        "ActorAppearanceSnapshot"
+      ],
+      "invariants": [
+        "FUNCTIONAL_INJURY_NE_VISIBLE_TREATMENT",
+        "CAMERA_POSITION_NE_CAMERA_FACING",
+        "MEDIA_ASSET_IDENTITY_NE_MEDIA_VERSION_NE_LOCATOR",
+        "DYNAMIC_PRESENTATION_STATE_NE_ASSET_REGISTRY_TRUTH",
+        "LOCATOR_MIGRATION_NE_ASSET_OR_VERSION_IDENTITY_CHANGE",
+        "GENERATED_PIXELS_CANNOT_CREATE_CANONICAL_STATE",
+        "INVENTORY_OWNED_NE_WORN"
+      ]
+    },
+    "AF-E": {
+      "name": "Perception / Memory / Knowledge / Relationship",
+      "implementation_state": "FREEZE_INTERFACE_ONLY_WITH_R002_PROVENANCE_FOUNDATION",
+      "type_refs": [
+        "PlayerChronicle",
+        "PlayerSnapshot",
+        "IntentBelief",
+        "CharacterCore",
+        "EnactedPersonaHypothesis",
+        "NPCPerceptionEvent",
+        "NPCPerceptionStream",
+        "NPCEpisodicMemory",
+        "BeliefState",
+        "NPCPlayerRelationshipState",
+        "NPCContextBundle"
+      ],
+      "knowledge_modes": [
+        "SAW",
+        "HEARD",
+        "WAS_TOLD",
+        "DOCUMENTED",
+        "RUMORED",
+        "INFERRED",
+        "UNKNOWN"
+      ],
+      "runtime_rule": "EACH_IMPLEMENTED_MODE_REQUIRES_EXECUTABLE_MODE_SPECIFIC_PROVENANCE_OR_FAILS_CLOSED",
+      "invariants": [
+        "PLAYER_KNOWLEDGE_NE_NPC_KNOWLEDGE",
+        "RECIPIENT_PROJECTION_CANNOT_CREATE_ACQUISITION_EVIDENCE",
+        "PRIVATE_PLAYER_PERSONA_NE_NPC_MODEL_OF_PLAYER",
+        "EXPLICIT_CHARACTER_CORE_NE_DERIVED_PERSONA_HYPOTHESIS",
+        "SUMMARY_REFLECTION_IS_DERIVED_CACHE"
+      ],
+      "open_decision_refs": [
+        "OD-MEMORY-STORE-001",
+        "OD-MEMORY-DECAY-001",
+        "OD-RELATIONSHIP-MATH-001"
+      ]
+    },
+    "AF-F": {
+      "name": "Story / Information",
+      "implementation_state": "FREEZE_INTERFACE_ONLY",
+      "type_refs": [
+        "StoryDNA",
+        "StoryBible",
+        "GenreEngine",
+        "CharacterDramaticCore",
+        "HardCausalAnchor",
+        "SoftDramaticAttractor",
+        "Storylet",
+        "EventDeckEntry",
+        "InformationPacket",
+        "NarrativePromise",
+        "BranchQualityEvidence"
+      ],
+      "invariants": [
+        "STORY_STRUCTURE_IS_NOT_WORLD_TRUTH",
+        "AUTHORED_NARRATIVE_NE_INFORMATION_PROVENANCE_LIFECYCLE",
+        "AUTHORED_NARRATIVE_NE_PROMISE_HISTORY",
+        "INFORMATION_PACKET_REQUIRES_SOURCE_AND_PROVENANCE_EVIDENCE",
+        "NARRATIVE_PROMISE_REQUIRES_SOURCE_EVENT_EVIDENCE",
+        "AUTHORED_HARD_CAUSAL_ANCHOR_DEFINITION_NE_DERIVED_VALIDITY_STATUS",
+        "HARD_CAUSAL_ANCHOR_STATUS_REBUILDS_FROM_CAUSE_EVENT_EVIDENCE",
+        "INVALID_OR_UNRESOLVED_REQUIRED_CAUSE_FAILS_CLOSED",
+        "NARRATIVE_DESIRE_CANNOT_RESTORE_INVALID_CAUSAL_ANCHOR",
+        "AUTHORED_SOFT_ATTRACTOR_DEFINITION_NE_DERIVED_STATUS",
+        "AUTHORED_CHARACTER_DRAMATIC_CORE_NE_DERIVED_ARC_STATE",
+        "HARD_CAUSAL_ANCHOR_MUST_REVALIDATE_CAUSES",
+        "SOFT_DRAMATIC_ATTRACTOR_DOES_NOT_DEFINE_FACTS",
+        "IMPORTANT_INFORMATION_CANNOT_BYPASS_PROPAGATION",
+        "BRANCH_QUALITY_CANNOT_JUSTIFY_RETCON_OR_RESURRECTION",
+        "BRANCH_QUALITY_EVIDENCE_REQUIRES_REPLAY_VALID_SOURCE_PROVENANCE",
+        "BRANCH_QUALITY_EVIDENCE_CANNOT_LEGALIZE_OR_MUTATE"
+      ],
+      "open_decision_refs": [
+        "OD-GENRE-REGISTRY-001",
+        "OD-CLUE-QUALITY-001"
+      ]
+    },
+    "AF-G": {
+      "name": "Opportunity / World Echo / PX",
+      "implementation_state": "FREEZE_INTERFACE_ONLY",
+      "type_refs": [
+        "NarrativeOpportunityBroker",
+        "PlausibilityGate",
+        "EncounterCandidate",
+        "WorldEchoOpportunity",
+        "ResponseConcept",
+        "PlayerAutoExpressionPolicy",
+        "PXRankingReceipt"
+      ],
+      "invariants": [
+        "NO_VALID_OPPORTUNITY_IS_VALID",
+        "PX_MAY_RANK_ONLY_LEGAL_CANDIDATES",
+        "PX_CANNOT_INVENT_FACTS_OR_INJECT_KNOWLEDGE",
+        "NARRATIVE_CANNOT_SECRETLY_LOWER_CAPABILITY_DIFFICULTY",
+        "COMMENTARY_REQUIRES_PROVENANCE_AND_ANTI_REPEAT_POLICY"
+      ],
+      "open_decision_refs": [
+        "OD-PX-SCORING-001",
+        "OD-COMMENTARY-BUDGET-001",
+        "OD-ENCOUNTER-DENSITY-001"
+      ]
+    },
+    "AF-H": {
+      "name": "AI Director / Renderer / Publication",
+      "implementation_state": "FREEZE_INTERFACE_ONLY_WITH_WORLD_RENDER_PACKET_FOUNDATION",
+      "type_refs": [
+        "DIRECTOR-BEAT-PACKET",
+        "ActorPresentationRequirements",
+        "PublicationProjection"
+      ],
+      "invariants": [
+        "AWRSE_OWNS_PACKET_FACTS_KNOWLEDGE_VISIBILITY_AND_PRESENTATION_CONSTRAINTS",
+        "AI_DIRECTOR_OWNS_ONLY_STAGING_INSIDE_VALID_ENVELOPE",
+        "AI_DIRECTOR_IS_DOWNSTREAM_READ_ONLY",
+        "RENDERER_CANNOT_RESOLVE_WORLD_OUTCOMES",
+        "PUBLICATION_KNOWLEDGE_DOES_NOT_FLOW_BACK_INTO_PLAYER_OR_NPC_KNOWLEDGE",
+        "MATERIAL_RENDER_CONTRADICTION_IS_FAILURE_NOT_WORLD_MUTATION"
+      ],
+      "open_decision_refs": [
+        "OD-PUBLICATION-POLICY-001",
+        "OD-DIRECTOR-ADAPTER-001"
+      ]
+    }
   },
   "versioning_and_migration": {
     "contract_version_required": true,
-    "authority_graph_discriminator": {"field":"authority_graph_version","current":"AF001-AUTHORITY-GRAPH-1.9-I2A008@1","pre_i2a008_state":"FIELD_ABSENT","authorization_tuple":["contract_id","contract_version","authority_graph_version"],"functional_impairment_authorization_rule":"EXACT_TRIPLE_MATCH_REQUIRED; PRE_I2A008_1_9_WITHOUT_AUTHORITY_GRAPH_DISCRIMINATOR_CANNOT_AUTHORIZE_FUNCTIONAL_IMPAIRMENT_EXTENSION"},
-    "capability_decision_receipt_authority_discriminator": {"field":"capability_decision_receipt_authority_epoch","current":"AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1","pre_i2a010_state":"FIELD_ABSENT","authorization_tuple":["contract_id","contract_version","authority_graph_version","capability_decision_receipt_authority_epoch"],"authorization_rule":"EXACT_QUADRUPLE_MATCH_REQUIRED; PRE_I2A010_PARENT_WITHOUT_RECEIPT_EPOCH_CANNOT_AUTHORIZE_CAPABILITY_DECISION_RECEIPT_EXTENSION; SCOPED_ONLY_TO_THIS_EXTENSION"},
-    "af_d_instance_admission_authority_discriminator": {"field":"af_d_instance_admission_authority_epoch","current":"AF001-AF-D-INSTANCE-ADMISSION-001@1","pre_af_d_instance_admission_state":"FIELD_ABSENT","authorization_tuple":["contract_id","contract_version","authority_graph_version","af_d_instance_admission_authority_epoch"],"manifest_anchor_required":true,"authorization_rule":"EXACT_SCOPED_TUPLE_PLUS_PARENT_REGISTERED_BINDING_AND_CANONICAL_MANIFEST_DIGEST_REQUIRED; PRE_AF_D_INSTANCE_ADMISSION_PARENT_WITHOUT_THIS_EPOCH_CANNOT_AUTHORIZE_THE_EXTENSION; EXISTING_I2_AUTHORITY_TUPLES_RETAIN_THEIR_PRIOR_MEANING"},
-    "breaking_change_classes": ["AUTHORITY_ORDER","IDENTITY_SEMANTICS","CANONICAL_EVENT_MEANING","CANONICAL_OWNERSHIP","REQUIRED_PROVENANCE","FAIL_CLOSED_BOUNDARY"],
-    "breaking_change_requirements": ["EXPLICIT_MIGRATION_SPEC","REPLAY_OR_REBUILD_IMPACT_ANALYSIS","UPDATED_GOLDEN_SCENARIO_RECEIPTS","INDEPENDENT_REVIEW"],
-    "contract_version_lineage": {"previous_contract_version":"1.8.0-candidate","semantic_delta":["ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION","ACTION_DEMAND_PROJECTION_EXTENSION_AUTHORITY_IS_PARENT_REGISTERED_AND_VERSION_BOUND","PRE_REGISTRATION_1_8_PARENT_VERSION_CANNOT_AUTHORIZE_NEW_EXTENSION"],"consumer_rule":"CONTRACT_ID_AND_CONTRACT_VERSION_MUST_BE_RECORDED_TO_DISTINGUISH_ACTION_DEMAND_EXTENSION_AUTHORITY_FROM_PRE_REGISTRATION_1_8_STATE"},
+    "authority_graph_discriminator": {
+      "field": "authority_graph_version",
+      "current": "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
+      "pre_i2a008_state": "FIELD_ABSENT",
+      "authorization_tuple": [
+        "contract_id",
+        "contract_version",
+        "authority_graph_version"
+      ],
+      "functional_impairment_authorization_rule": "EXACT_TRIPLE_MATCH_REQUIRED; PRE_I2A008_1_9_WITHOUT_AUTHORITY_GRAPH_DISCRIMINATOR_CANNOT_AUTHORIZE_FUNCTIONAL_IMPAIRMENT_EXTENSION"
+    },
+    "capability_decision_receipt_authority_discriminator": {
+      "field": "capability_decision_receipt_authority_epoch",
+      "current": "AF001-CAPABILITY-DECISION-RECEIPT-I2A010@1",
+      "pre_i2a010_state": "FIELD_ABSENT",
+      "authorization_tuple": [
+        "contract_id",
+        "contract_version",
+        "authority_graph_version",
+        "capability_decision_receipt_authority_epoch"
+      ],
+      "authorization_rule": "EXACT_QUADRUPLE_MATCH_REQUIRED; PRE_I2A010_PARENT_WITHOUT_RECEIPT_EPOCH_CANNOT_AUTHORIZE_CAPABILITY_DECISION_RECEIPT_EXTENSION; SCOPED_ONLY_TO_THIS_EXTENSION"
+    },
+    "af_d_instance_admission_authority_discriminator": {
+      "field": "af_d_instance_admission_authority_epoch",
+      "current": "AF001-AF-D-INSTANCE-ADMISSION-001@1",
+      "pre_af_d_instance_admission_state": "FIELD_ABSENT",
+      "authorization_tuple": [
+        "contract_id",
+        "contract_version",
+        "authority_graph_version",
+        "af_d_instance_admission_authority_epoch"
+      ],
+      "manifest_anchor_required": true,
+      "authorization_rule": "EXACT_SCOPED_TUPLE_PLUS_PARENT_REGISTERED_BINDING_AND_CANONICAL_MANIFEST_DIGEST_REQUIRED; PRE_AF_D_INSTANCE_ADMISSION_PARENT_WITHOUT_THIS_EPOCH_CANNOT_AUTHORIZE_THE_EXTENSION; EXISTING_I2_AUTHORITY_TUPLES_RETAIN_THEIR_PRIOR_MEANING"
+    },
+    "breaking_change_classes": [
+      "AUTHORITY_ORDER",
+      "IDENTITY_SEMANTICS",
+      "CANONICAL_EVENT_MEANING",
+      "CANONICAL_OWNERSHIP",
+      "REQUIRED_PROVENANCE",
+      "FAIL_CLOSED_BOUNDARY"
+    ],
+    "breaking_change_requirements": [
+      "EXPLICIT_MIGRATION_SPEC",
+      "REPLAY_OR_REBUILD_IMPACT_ANALYSIS",
+      "UPDATED_GOLDEN_SCENARIO_RECEIPTS",
+      "INDEPENDENT_REVIEW"
+    ],
+    "contract_version_lineage": {
+      "previous_contract_version": "1.9.0-candidate",
+      "previous_authority_graph_version": "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+      "semantic_delta": [
+        "ACTION_DEMAND_PROJECTION_BINDING_CANONICAL_EXTENSION_REGISTRATION",
+        "BRANCH_QUALITY_EVIDENCE_DERIVED_VIEW_CANONICAL_EXTENSION_REGISTRATION",
+        "BRANCH_QUALITY_EVIDENCE_AUTHORITY_PROFILE_ADDED_WITH_CANONICAL_DATA_AUTHORITY_NONE",
+        "EXISTING_REGISTERED_EXTENSIONS_REBOUND_TO_NEW_PARENT_REGISTRY_EPOCH_WITHOUT_GAMEPLAY_SEMANTIC_CHANGE",
+        "PRE_I8DB1_1_9_PARENT_AUTHORITY_GRAPH_AND_GOLDEN_TUPLE_CANNOT_AUTHORIZE_BRANCH_QUALITY_EXTENSION"
+      ],
+      "consumer_rule": "CONTRACT_ID_CONTRACT_VERSION_AND_AUTHORITY_GRAPH_VERSION_MUST_BE_RECORDED; BRANCH_QUALITY_EVIDENCE_REQUIRES_PARENT_AND_GOLDEN_INVERSE_REGISTRATION_AND_REPLAY_VALID_PROVENANCE"
+    },
     "legacy_event_profile": "LEGACY_R001_R002_EVENT_PROFILE",
     "vnext_event_profile": "AF001_VNEXT_EVENT_ENVELOPE",
     "vnext_activation_gate": "LATER_BOUNDED_RUNTIME_MIGRATION_TASK_PLUS_INDEPENDENT_REVIEW_PLUS_CONTROL_TOWER_RELEASE",
-    "actor_base_profile_migration": {"legacy_profile_contract_version":"1.0.0-candidate","legacy_profile_fields":["actor_id","profile_version","base_attribute_map","source_event_refs"],"legacy_replay_policy":"LEGACY_R001_R002_REPLAY_ONLY; LEGACY_PROFILE_MAY_NOT_BE_SILENTLY_REINTERPRETED_AS_AF_C_V1_1_RUNTIME_INPUT","vnext_profile_contract_version":"1.1.0-candidate","vnext_required_fields":["actor_id","profile_version","profile_schema_ref","ruleset_family_ref","base_attribute_map","source_event_refs"],"vnext_required_field_admission_rules":{"actor_id":"NONEMPTY_STRING","profile_version":"EXACT_VNEXT_PROFILE_CONTRACT_VERSION","profile_schema_ref":"NONEMPTY_STRING","ruleset_family_ref":"NONEMPTY_STRING","base_attribute_map":"NONEMPTY_MAP","source_event_refs":"NONEMPTY_EVENT_REF_LIST"},"profile_schema_ruleset_compatibility_registry":{"registry_version":"1.0.0-candidate","by_profile_schema_ref":{"PROFILE-SCHEMA-FAMILY-A@1":["RULESET-FAMILY-A@1"]}},"authorized_transformation_evidence_registry":{"E_PROFILE_MIGRATION_AUTHORIZED":{"event_type":"PROFILE_SCHEMA_RULESET_MIGRATION_AUTHORIZED","event_version":"1.0.0","from_profile_contract_version":"1.0.0-candidate","allowed_actor_ids":["ACTOR-FIGHTER-001"],"allowed_source_profile_event_refs":["E_PROFILE_LEGACY_CREATED"],"allowed_target_profile_schema_refs":["PROFILE-SCHEMA-FAMILY-A@1"],"allowed_target_ruleset_family_refs":["RULESET-FAMILY-A@1"]},"E_PROFILE_MIGRATION_WRONG_SOURCE_VERSION":{"event_type":"PROFILE_SCHEMA_RULESET_MIGRATION_AUTHORIZED","event_version":"1.0.0","from_profile_contract_version":"0.9.0-candidate","allowed_actor_ids":["ACTOR-FIGHTER-001"],"allowed_source_profile_event_refs":["E_PROFILE_LEGACY_CREATED"],"allowed_target_profile_schema_refs":["PROFILE-SCHEMA-FAMILY-A@1"],"allowed_target_ruleset_family_refs":["RULESET-FAMILY-A@1"]},"E_PROFILE_UNRELATED":{"event_type":"PROFILE_NOTE_RECORDED","event_version":"1.0.0","from_profile_contract_version":"1.0.0-candidate","allowed_actor_ids":[],"allowed_source_profile_event_refs":[],"allowed_target_profile_schema_refs":[],"allowed_target_ruleset_family_refs":[]}},"transformation_requirement":"EXPLICIT_COMPATIBILITY_OR_TRANSFORMATION_EVIDENCE_REQUIRED_IN_AUTHORIZED_SOURCE_EVENT_PROVENANCE_WITH_SOURCE_VERSION_AND_PROFILE_BINDING","failure_policy":"UNKNOWN_OR_MISMATCHED_OR_INCOMPLETE_PROFILE_SCHEMA_OR_RULESET_FAMILY_FAILS_CLOSED","replay_impact":"LEGACY_REPLAY_REMAINS_ON_LEGACY_PROFILE; V1_1_REPLAY_BINDS_COMPLETE_PROFILE_SHAPE_SCHEMA_AND_RULESET_FAMILY; SOURCE_EVENTS_ARE_NOT_REWRITTEN","runtime_activation":"NO_I2_USE_OF_LEGACY_PROFILE_UNTIL_BOUNDED_RUNTIME_MIGRATION_TASK_INDEPENDENT_REVIEW_AND_CONTROL_TOWER_RELEASE"},
-    "skill_ledger_admission": {"schema_version":"1.1.0-candidate","implementation_state":"CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED","required_fields":["actor_id","skill_entries","source_event_cursor","schema_version"],"required_field_admission_rules":{"actor_id":"NONEMPTY_STRING","skill_entries":"NONEMPTY_ORDERED_ENTRY_LIST","source_event_cursor":"NONEMPTY_STRING_CURSOR_REF","schema_version":"EXACT_SKILL_LEDGER_SCHEMA_VERSION"},"entry_required_fields":["skill_id","value","source_event_refs"],"entry_field_admission_rules":{"skill_id":"NONEMPTY_STRING_VERSION_BOUND_IDENTITY","value":"FINITE_NON_BOOLEAN_INT_OR_FLOAT_NO_RANGE_OR_SCALE_TUNING_DEFINED","source_event_refs":"NONEMPTY_ORDERED_EVENT_REF_LIST"},"duplicate_skill_identity_policy":"REJECT_FAIL_CLOSED_NO_LAST_WRITE_WINS_NO_AGGREGATION","actor_binding_rule":"STANDALONE_ADMISSION_REQUIRES_NONEMPTY_actor_id; WHEN_PAIRED_WITH_AN_ADMITTED_ActorBaseProfile_ledger.actor_id_MUST_EQUAL_profile.actor_id_EXACTLY_OR_FAIL_CLOSED","provenance_rule":"EACH_ENTRY_REQUIRES_SOURCE_EVENT_REFS_AND_LEDGER_REQUIRES_NONEMPTY_source_event_cursor; REFERENCES_OR_CURSOR_ARE_NOT_CLAIMED_TO_EXIST_UNLESS_CANONICAL_EVIDENCE_SUPPLIED_TO_A_FUTURE_VALIDATOR_PROVES_THEM","unknown_or_unsupported_schema_policy":"REJECT_FAIL_CLOSED","empty_or_malformed_policy":"REJECT_FAIL_CLOSED","validated_projection":{"output_field":"validated_skill_ledger_values","rule":"DETERMINISTIC_ONE_TO_ONE_MAP_OF_EVERY_ADMITTED_skill_id_TO_EXACT_ADMITTED_value","no_authority_gain":true,"no_weighting":true,"no_aggregation":true,"no_range_normalization":true,"no_skill_dropping":true,"resolver_consumption_boundary":"EXISTING_I2A_RESOLVER_MAY_CONSUME_ONLY_EXPLICITLY_REQUIRED_SKILL_IDS_FROM_THIS_VALIDATED_PROJECTION; UNRELATED_SKILLS_REMAIN_PRESENT_BUT_HAVE_ZERO_EFFECT_WHEN_UNREFERENCED"},"mutation_replay_rule":"ADMISSION_OR_PROJECTION_MUST_COPY_OR_IMMUTABLY_BIND_CANONICAL_INPUTS_SO_CALLER_MUTATION_CANNOT_SILENTLY_CHANGE_AN_ADMITTED_RECEIPT_OR_VALIDATED_PROJECTION; IDENTICAL_CANONICAL_INPUTS_PRODUCE_EQUAL_RECEIPTS_AND_VALIDATED_PROJECTIONS","deferred_policy_tracks":["SKILL_SCALE_AND_RANGE","XP_PRACTICE_AND_TRAINING_FORMULAS","PROGRESSION_THRESHOLDS","SKILL_DECAY","TRAINING_COEFFICIENTS","ACTION_DEMAND_SKILL_WEIGHTING","ABILITIES_AND_TECHNIQUES","GENRE_SPECIFIC_SKILL_NAMESPACES","PLAYER_FACING_BALANCE"],"runtime_activation":"LATER_BOUNDED_SKILL_LEDGER_ADMISSION_IMPLEMENTATION_PLUS_TARGETED_TESTS_PLUS_FULL_TESTS_PLUS_EXACT_HEAD_CI_PLUS_INDEPENDENT_REVIEW; THIS_CONTRACT_FREEZE_DOES_NOT_IMPLEMENT_RUNTIME_ADMISSION"},
-    "snapshot_cache_rules": ["SOURCE_CURSOR_REQUIRED","SCHEMA_AND_RULESET_VERSION_REQUIRED","INVALIDATION_OR_REBUILD_ALLOWED","SOURCE_EVENTS_MUST_NOT_BE_REWRITTEN_FOR_PROJECTION_MIGRATION"],
+    "actor_base_profile_migration": {
+      "legacy_profile_contract_version": "1.0.0-candidate",
+      "legacy_profile_fields": [
+        "actor_id",
+        "profile_version",
+        "base_attribute_map",
+        "source_event_refs"
+      ],
+      "legacy_replay_policy": "LEGACY_R001_R002_REPLAY_ONLY; LEGACY_PROFILE_MAY_NOT_BE_SILENTLY_REINTERPRETED_AS_AF_C_V1_1_RUNTIME_INPUT",
+      "vnext_profile_contract_version": "1.1.0-candidate",
+      "vnext_required_fields": [
+        "actor_id",
+        "profile_version",
+        "profile_schema_ref",
+        "ruleset_family_ref",
+        "base_attribute_map",
+        "source_event_refs"
+      ],
+      "vnext_required_field_admission_rules": {
+        "actor_id": "NONEMPTY_STRING",
+        "profile_version": "EXACT_VNEXT_PROFILE_CONTRACT_VERSION",
+        "profile_schema_ref": "NONEMPTY_STRING",
+        "ruleset_family_ref": "NONEMPTY_STRING",
+        "base_attribute_map": "NONEMPTY_MAP",
+        "source_event_refs": "NONEMPTY_EVENT_REF_LIST"
+      },
+      "profile_schema_ruleset_compatibility_registry": {
+        "registry_version": "1.0.0-candidate",
+        "by_profile_schema_ref": {
+          "PROFILE-SCHEMA-FAMILY-A@1": [
+            "RULESET-FAMILY-A@1"
+          ]
+        }
+      },
+      "authorized_transformation_evidence_registry": {
+        "E_PROFILE_MIGRATION_AUTHORIZED": {
+          "event_type": "PROFILE_SCHEMA_RULESET_MIGRATION_AUTHORIZED",
+          "event_version": "1.0.0",
+          "from_profile_contract_version": "1.0.0-candidate",
+          "allowed_actor_ids": [
+            "ACTOR-FIGHTER-001"
+          ],
+          "allowed_source_profile_event_refs": [
+            "E_PROFILE_LEGACY_CREATED"
+          ],
+          "allowed_target_profile_schema_refs": [
+            "PROFILE-SCHEMA-FAMILY-A@1"
+          ],
+          "allowed_target_ruleset_family_refs": [
+            "RULESET-FAMILY-A@1"
+          ]
+        },
+        "E_PROFILE_MIGRATION_WRONG_SOURCE_VERSION": {
+          "event_type": "PROFILE_SCHEMA_RULESET_MIGRATION_AUTHORIZED",
+          "event_version": "1.0.0",
+          "from_profile_contract_version": "0.9.0-candidate",
+          "allowed_actor_ids": [
+            "ACTOR-FIGHTER-001"
+          ],
+          "allowed_source_profile_event_refs": [
+            "E_PROFILE_LEGACY_CREATED"
+          ],
+          "allowed_target_profile_schema_refs": [
+            "PROFILE-SCHEMA-FAMILY-A@1"
+          ],
+          "allowed_target_ruleset_family_refs": [
+            "RULESET-FAMILY-A@1"
+          ]
+        },
+        "E_PROFILE_UNRELATED": {
+          "event_type": "PROFILE_NOTE_RECORDED",
+          "event_version": "1.0.0",
+          "from_profile_contract_version": "1.0.0-candidate",
+          "allowed_actor_ids": [],
+          "allowed_source_profile_event_refs": [],
+          "allowed_target_profile_schema_refs": [],
+          "allowed_target_ruleset_family_refs": []
+        }
+      },
+      "transformation_requirement": "EXPLICIT_COMPATIBILITY_OR_TRANSFORMATION_EVIDENCE_REQUIRED_IN_AUTHORIZED_SOURCE_EVENT_PROVENANCE_WITH_SOURCE_VERSION_AND_PROFILE_BINDING",
+      "failure_policy": "UNKNOWN_OR_MISMATCHED_OR_INCOMPLETE_PROFILE_SCHEMA_OR_RULESET_FAMILY_FAILS_CLOSED",
+      "replay_impact": "LEGACY_REPLAY_REMAINS_ON_LEGACY_PROFILE; V1_1_REPLAY_BINDS_COMPLETE_PROFILE_SHAPE_SCHEMA_AND_RULESET_FAMILY; SOURCE_EVENTS_ARE_NOT_REWRITTEN",
+      "runtime_activation": "NO_I2_USE_OF_LEGACY_PROFILE_UNTIL_BOUNDED_RUNTIME_MIGRATION_TASK_INDEPENDENT_REVIEW_AND_CONTROL_TOWER_RELEASE"
+    },
+    "skill_ledger_admission": {
+      "schema_version": "1.1.0-candidate",
+      "implementation_state": "CONTRACT_GATE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "required_fields": [
+        "actor_id",
+        "skill_entries",
+        "source_event_cursor",
+        "schema_version"
+      ],
+      "required_field_admission_rules": {
+        "actor_id": "NONEMPTY_STRING",
+        "skill_entries": "NONEMPTY_ORDERED_ENTRY_LIST",
+        "source_event_cursor": "NONEMPTY_STRING_CURSOR_REF",
+        "schema_version": "EXACT_SKILL_LEDGER_SCHEMA_VERSION"
+      },
+      "entry_required_fields": [
+        "skill_id",
+        "value",
+        "source_event_refs"
+      ],
+      "entry_field_admission_rules": {
+        "skill_id": "NONEMPTY_STRING_VERSION_BOUND_IDENTITY",
+        "value": "FINITE_NON_BOOLEAN_INT_OR_FLOAT_NO_RANGE_OR_SCALE_TUNING_DEFINED",
+        "source_event_refs": "NONEMPTY_ORDERED_EVENT_REF_LIST"
+      },
+      "duplicate_skill_identity_policy": "REJECT_FAIL_CLOSED_NO_LAST_WRITE_WINS_NO_AGGREGATION",
+      "actor_binding_rule": "STANDALONE_ADMISSION_REQUIRES_NONEMPTY_actor_id; WHEN_PAIRED_WITH_AN_ADMITTED_ActorBaseProfile_ledger.actor_id_MUST_EQUAL_profile.actor_id_EXACTLY_OR_FAIL_CLOSED",
+      "provenance_rule": "EACH_ENTRY_REQUIRES_SOURCE_EVENT_REFS_AND_LEDGER_REQUIRES_NONEMPTY_source_event_cursor; REFERENCES_OR_CURSOR_ARE_NOT_CLAIMED_TO_EXIST_UNLESS_CANONICAL_EVIDENCE_SUPPLIED_TO_A_FUTURE_VALIDATOR_PROVES_THEM",
+      "unknown_or_unsupported_schema_policy": "REJECT_FAIL_CLOSED",
+      "empty_or_malformed_policy": "REJECT_FAIL_CLOSED",
+      "validated_projection": {
+        "output_field": "validated_skill_ledger_values",
+        "rule": "DETERMINISTIC_ONE_TO_ONE_MAP_OF_EVERY_ADMITTED_skill_id_TO_EXACT_ADMITTED_value",
+        "no_authority_gain": true,
+        "no_weighting": true,
+        "no_aggregation": true,
+        "no_range_normalization": true,
+        "no_skill_dropping": true,
+        "resolver_consumption_boundary": "EXISTING_I2A_RESOLVER_MAY_CONSUME_ONLY_EXPLICITLY_REQUIRED_SKILL_IDS_FROM_THIS_VALIDATED_PROJECTION; UNRELATED_SKILLS_REMAIN_PRESENT_BUT_HAVE_ZERO_EFFECT_WHEN_UNREFERENCED"
+      },
+      "mutation_replay_rule": "ADMISSION_OR_PROJECTION_MUST_COPY_OR_IMMUTABLY_BIND_CANONICAL_INPUTS_SO_CALLER_MUTATION_CANNOT_SILENTLY_CHANGE_AN_ADMITTED_RECEIPT_OR_VALIDATED_PROJECTION; IDENTICAL_CANONICAL_INPUTS_PRODUCE_EQUAL_RECEIPTS_AND_VALIDATED_PROJECTIONS",
+      "deferred_policy_tracks": [
+        "SKILL_SCALE_AND_RANGE",
+        "XP_PRACTICE_AND_TRAINING_FORMULAS",
+        "PROGRESSION_THRESHOLDS",
+        "SKILL_DECAY",
+        "TRAINING_COEFFICIENTS",
+        "ACTION_DEMAND_SKILL_WEIGHTING",
+        "ABILITIES_AND_TECHNIQUES",
+        "GENRE_SPECIFIC_SKILL_NAMESPACES",
+        "PLAYER_FACING_BALANCE"
+      ],
+      "runtime_activation": "LATER_BOUNDED_SKILL_LEDGER_ADMISSION_IMPLEMENTATION_PLUS_TARGETED_TESTS_PLUS_FULL_TESTS_PLUS_EXACT_HEAD_CI_PLUS_INDEPENDENT_REVIEW; THIS_CONTRACT_FREEZE_DOES_NOT_IMPLEMENT_RUNTIME_ADMISSION"
+    },
+    "snapshot_cache_rules": [
+      "SOURCE_CURSOR_REQUIRED",
+      "SCHEMA_AND_RULESET_VERSION_REQUIRED",
+      "INVALIDATION_OR_REBUILD_ALLOWED",
+      "SOURCE_EVENTS_MUST_NOT_BE_REWRITTEN_FOR_PROJECTION_MIGRATION"
+    ],
     "storage_framework": "OPEN_DECISION"
   },
   "golden_scenario_registry": "evals/AF001-GOLDEN-SCENARIOS.json",

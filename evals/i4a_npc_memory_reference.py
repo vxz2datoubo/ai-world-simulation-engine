@@ -35,8 +35,8 @@ _ROOT = Path(__file__).resolve().parents[1]
 _CONTRACT_PATH = _ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
 _EXPECTED_PARENT = (
     "AWRSE-AF001-LIVING-STORY-CONTRACTS",
-    "1.9.0-candidate",
-    "AF001-AUTHORITY-GRAPH-1.9-I2A008@1",
+    "1.10.0-candidate",
+    "AF001-AUTHORITY-GRAPH-1.10-I8DB1@1",
 )
 _EXPECTED_TYPES = {
     "NPCPerceptionEvent": ("AF001.NPCPerceptionEvent", "1.0.0-candidate", "KNOWLEDGE_DERIVED_PROJECTION"),
