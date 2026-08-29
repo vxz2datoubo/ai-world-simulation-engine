@@ -21,9 +21,7 @@ from evals.i3a_presentation_reference import (
     build_presentation_reference,
     export_replay_package as export_i3a_package,
 )
-from evals.i8c_storylet_eligibility_reference import (
-    export_storylet_eligibility_package,
-)
+from evals.i8c_storylet_eligibility_reference import export_storylet_eligibility_package
 
 PLAYER = "ACTOR-I9A-PLAYER"
 NPC = "NPC-I9A-INNKEEPER"
@@ -46,6 +44,12 @@ I3A_ASSETS = {
     },
 }
 I3A_INVENTORY = ["OBJ-COAT", "MAT-LINEN"]
+ALLOWED_POLICY_TOKENS = {
+    "MUST_RENDER_IF_VISIBLE_IN_SHOT",
+    "MUST_NOT_CONTRADICT",
+    "HIDDEN_BY_CLOTHING",
+    "PRESENTATION_OPTIONAL",
+}
 
 
 def canonical_json(value):
@@ -202,7 +206,14 @@ def make_i8c_package(*, scene_id=SCENE, base_asset_refs=None, add_later=True):
     return package, world, definition, damage, speech, acquisition
 
 
-def make_i3a_package(*, actor_id=PLAYER, locator_id="LOC-DAY-WEST-A", view_id="VIEW-WEST"):
+def make_i3a_package(
+    *,
+    actor_id=PLAYER,
+    locator_id="LOC-DAY-WEST-A",
+    view_id="VIEW-WEST",
+    cover_dressing=False,
+    include_surface=True,
+):
     assets = copy.deepcopy(I3A_ASSETS)
     assets["OBJ-COAT"]["locator_id"] = locator_id
     events = [
@@ -228,19 +239,22 @@ def make_i3a_package(*, actor_id=PLAYER, locator_id="LOC-DAY-WEST-A", view_id="V
                 "wrap_style": "SPIRAL",
                 "stain": "LIGHT_BLOOD",
             },
-            "covered_by_refs": [],
-        },
-        {
-            "event_id": "E-I9A-PRES-003-MUD-COAT",
-            "cursor": 203,
-            "actor_id": actor_id,
-            "kind": "SET_SURFACE",
-            "surface_state_id": "SURF-I9A-COAT-MUD",
-            "target_ref": "OBJ-COAT",
-            "surface_type": "MUD",
-            "intensity": 0.4,
+            "covered_by_refs": ["OBJ-COAT"] if cover_dressing else [],
         },
     ]
+    if include_surface:
+        events.append(
+            {
+                "event_id": "E-I9A-PRES-003-MUD-COAT",
+                "cursor": 203,
+                "actor_id": actor_id,
+                "kind": "SET_SURFACE",
+                "surface_state_id": "SURF-I9A-COAT-MUD",
+                "target_ref": "OBJ-COAT",
+                "surface_type": "MUD",
+                "intensity": 0.4,
+            }
+        )
     reference = build_presentation_reference(
         actor_id=actor_id,
         events=events,
@@ -284,6 +298,14 @@ def good_mock_response(packet):
     }
 
 
+def actor_requirements(packet):
+    return [thaw_value(item) for item in packet.actor_presentation_requirements]
+
+
+def normalized_policy(requirement):
+    return tuple(tuple(item) for item in requirement["visibility_policy"])
+
+
 def test_scope_locks_keep_i9a_reference_non_authoritative_and_offline():
     assert i9a.I9A_BROAD_RUNTIME_AUTHORITY_NOT_GRANTED is True
     assert i9a.NO_PROVIDER_INTEGRATION is True
@@ -297,13 +319,14 @@ def test_scope_locks_keep_i9a_reference_non_authoritative_and_offline():
 
 
 def test_i9a_builds_packet_only_from_replayed_canonical_sources():
-    i8c_package, i3a_package, _, definition, damage, speech, acquisition = make_packages()
+    i8c_package, i3a_package, world, definition, damage, speech, acquisition = make_packages()
     packet = i9a.build_director_beat_packet_reference(
         i8c_replay_package=i8c_package,
         i3a_replay_package_json=i3a_package,
     )
     assert packet is not None
-    assert packet.world_state_version > 0
+    assert packet.world_state_version == world.world_state_version
+    assert packet.world_state_version == f"{world.baseline_version}:{world.state_version}"
     assert packet.confirmed_event_refs == (
         damage.event_id,
         speech.event_id,
@@ -324,6 +347,91 @@ def test_i9a_builds_packet_only_from_replayed_canonical_sources():
     assert "AF_H_NO_PRESENTATION_TRUTH_REWRITE" in packet.forbidden_inventions
 
 
+def test_frozen_actor_presentation_shape_is_refs_only_plural_and_uses_existing_policy_tokens():
+    i8c_package, i3a_package, *_ = make_packages()
+    packet = i9a.build_director_beat_packet_reference(
+        i8c_replay_package=i8c_package,
+        i3a_replay_package_json=i3a_package,
+    )
+    assert isinstance(packet.actor_presentation_requirements, tuple)
+    requirements = actor_requirements(packet)
+    assert len(requirements) == 1
+    actor = requirements[0]
+    assert set(actor) == {
+        "actor_id",
+        "identity_refs",
+        "outfit_refs",
+        "dressing_refs",
+        "visible_condition_cues",
+        "visibility_policy",
+        "state_version",
+    }
+    assert actor["actor_id"] == PLAYER
+    assert tuple(actor["identity_refs"]) == ()
+    assert tuple(actor["outfit_refs"]) == ("OBJ-COAT",)
+    assert tuple(actor["dressing_refs"]) == ("DRESS-I9A-RF-1",)
+    assert tuple(actor["visible_condition_cues"]) == ()
+    policy = normalized_policy(actor)
+    assert ("OBJ-COAT", "MUST_NOT_CONTRADICT") in policy
+    assert ("DRESS-I9A-RF-1", "MUST_RENDER_IF_VISIBLE_IN_SHOT") in policy
+    assert {token for _, token in policy} <= ALLOWED_POLICY_TOKENS
+    assert "MUST_RENDER_IF_VISIBLE_AND_MUST_NOT_CONTRADICT" not in {token for _, token in policy}
+
+
+def test_scene_view_admission_evidence_cannot_mint_actor_visual_identity_refs():
+    i8c_package, i3a_package, *_ = make_packages()
+    packet = i9a.build_director_beat_packet_reference(
+        i8c_replay_package=i8c_package,
+        i3a_replay_package_json=i3a_package,
+    )
+    scene = thaw_value(packet.scene_view_asset_refs)
+    assert scene["view_id"] == "VIEW-WEST"
+    assert scene["af_d_manifest_id"]
+    assert scene["af_d_admission_receipt_sha256"]
+    actor = actor_requirements(packet)[0]
+    assert tuple(actor["identity_refs"]) == ()
+    assert "MISSING_CANONICAL_VISIBLE_IDENTITY_REF" in packet.coverage_gaps
+    encoded_actor = canonical_json(actor)
+    assert "AF_D_MANIFEST:" not in encoded_actor
+    assert "AF_D_ADMISSION:" not in encoded_actor
+    assert "VIEW:VIEW-WEST" not in encoded_actor
+
+
+def test_surface_state_is_replay_validated_but_not_smuggled_into_visible_condition_cues_or_policy():
+    i8c_package, *_ = make_i8c_package()
+    packet = i9a.build_director_beat_packet_reference(
+        i8c_replay_package=i8c_package,
+        i3a_replay_package_json=make_i3a_package(include_surface=True),
+    )
+    actor = actor_requirements(packet)[0]
+    assert tuple(actor["visible_condition_cues"]) == ()
+    encoded_actor = canonical_json(actor)
+    assert "SURF-I9A-COAT-MUD" not in encoded_actor
+    assert '"MUD"' not in encoded_actor
+    assert "SURFACE_STATE_PRESENT_UPSTREAM_BUT_NOT_EXPRESSIBLE_IN_FROZEN_PACKET_V0" in packet.coverage_gaps
+
+
+def test_no_surface_gap_claim_when_upstream_reference_has_no_surface_state():
+    i8c_package, *_ = make_i8c_package()
+    packet = i9a.build_director_beat_packet_reference(
+        i8c_replay_package=i8c_package,
+        i3a_replay_package_json=make_i3a_package(include_surface=False),
+    )
+    assert "SURFACE_STATE_PRESENT_UPSTREAM_BUT_NOT_EXPRESSIBLE_IN_FROZEN_PACKET_V0" not in packet.coverage_gaps
+    assert tuple(actor_requirements(packet)[0]["visible_condition_cues"]) == ()
+
+
+def test_hidden_dressing_reuses_existing_hidden_by_clothing_token_only():
+    i8c_package, *_ = make_i8c_package()
+    packet = i9a.build_director_beat_packet_reference(
+        i8c_replay_package=i8c_package,
+        i3a_replay_package_json=make_i3a_package(cover_dressing=True),
+    )
+    policy = normalized_policy(actor_requirements(packet)[0])
+    assert ("DRESS-I9A-RF-1", "HIDDEN_BY_CLOTHING") in policy
+    assert {token for _, token in policy} <= ALLOWED_POLICY_TOKENS
+
+
 def test_scene_view_and_actor_presentation_are_replay_and_manifest_bound():
     i8c_package, i3a_package, *_ = make_packages()
     packet = i9a.build_director_beat_packet_reference(
@@ -342,22 +450,6 @@ def test_scene_view_and_actor_presentation_are_replay_and_manifest_bound():
     ]
     assert len(scene["af_d_manifest_sha256"]) == 64
     assert len(scene["af_d_admission_receipt_sha256"]) == 64
-
-    actor = thaw_value(packet.actor_presentation_requirements)
-    assert set(actor) == {
-        "actor_id",
-        "identity_refs",
-        "outfit_refs",
-        "dressing_refs",
-        "visible_condition_cues",
-        "visibility_policy",
-        "state_version",
-    }
-    assert actor["actor_id"] == PLAYER
-    assert actor["outfit_refs"] == [{"slot": "torso_outer", "object_ref": "OBJ-COAT"}]
-    assert actor["dressing_refs"][0]["side"] == "RIGHT"
-    assert actor["dressing_refs"][0]["body_region"] == "FOREARM"
-    assert actor["visible_condition_cues"][0]["surface_type"] == "MUD"
 
 
 def test_replay_restart_is_deterministic_and_byte_equivalent_inputs_produce_same_packet():
@@ -495,6 +587,7 @@ def test_mock_consumer_accepts_only_staging_and_emits_zero_side_effect_receipt()
     )
     assert receipt.status == "MOCK_AI_FILM_STAGING_ACCEPTED"
     assert receipt.beat_id == packet.beat_id
+    assert receipt.world_state_version == packet.world_state_version
     assert receipt.world_mutation_count == 0
     assert receipt.provider_call_count == 0
     assert receipt.authority_class == "NON_CANONICAL_MOCK_AI_FILM_STAGING_EVIDENCE_ONLY"
@@ -573,7 +666,7 @@ def test_mock_consumer_has_no_caller_packet_or_prevalidated_evidence_parameter()
     assert build_params == {"i8c_replay_package", "i3a_replay_package_json"}
 
 
-def test_locator_migration_is_valid_but_changes_source_binding_and_beat_identity():
+def test_locator_migration_is_valid_but_changes_source_binding_and_beat_identity_not_presentation_refs():
     i8c_package, *_ = make_i8c_package()
     packet_a = i9a.build_director_beat_packet_reference(
         i8c_replay_package=i8c_package,
@@ -585,9 +678,11 @@ def test_locator_migration_is_valid_but_changes_source_binding_and_beat_identity
     )
     assert packet_a.source_i3a_sha256 != packet_b.source_i3a_sha256
     assert packet_a.beat_id != packet_b.beat_id
-    assert thaw_value(packet_a.actor_presentation_requirements)["outfit_refs"] == thaw_value(
-        packet_b.actor_presentation_requirements
-    )["outfit_refs"]
+    actor_a = actor_requirements(packet_a)[0]
+    actor_b = actor_requirements(packet_b)[0]
+    assert actor_a["identity_refs"] == actor_b["identity_refs"] == []
+    assert actor_a["outfit_refs"] == actor_b["outfit_refs"]
+    assert actor_a["dressing_refs"] == actor_b["dressing_refs"]
 
 
 def test_post_pr96_parent_version_drift_fails_closed(tmp_path, monkeypatch):
@@ -663,6 +758,19 @@ def test_duplicate_key_i3a_transport_is_rejected_before_replay_ambiguity():
             i8c_replay_package=i8c_package,
             i3a_replay_package_json=duplicate,
         )
+
+
+def test_reference_metadata_reports_gaps_without_extending_frozen_packet_fields():
+    i8c_package, i3a_package, *_ = make_packages()
+    packet = i9a.build_director_beat_packet_reference(
+        i8c_replay_package=i8c_package,
+        i3a_replay_package_json=i3a_package,
+    )
+    frozen = i9a._frozen_packet_material(packet)
+    assert set(frozen) == i9a._EXPECTED_PACKET_FIELDS
+    assert "coverage_gaps" not in frozen
+    assert "MISSING_CANONICAL_VISIBLE_IDENTITY_REF" in packet.coverage_gaps
+    assert "NO_FUNCTIONAL_TO_VISIBLE_CONDITION_CUE_ASSEMBLER_IN_I9A_V0" in packet.coverage_gaps
 
 
 def test_module_contains_no_network_provider_or_subprocess_execution_path():
