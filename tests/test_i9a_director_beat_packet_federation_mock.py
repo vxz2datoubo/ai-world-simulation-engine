@@ -31,23 +31,25 @@ NPC = "NPC-I9A-INNKEEPER"
 DOOR = "OBJ-I9A-DOOR"
 CRATE = "OBJ-I9A-CRATE"
 CRATE_ALT = "OBJ-I9A-BARREL"
+COAT = "OBJ-COAT"
+LINEN = "MAT-LINEN"
 SCENE = "SCN-PLAZA"
 PRINCIPAL = "principal://i9a/player"
 BASELINE_VERSION = "I9A-BASELINE-v1"
 
 I3A_ASSETS = {
-    "OBJ-COAT": {
+    COAT: {
         "media_asset_id": "AST-DAY-WEST",
         "media_version_id": "VER-DAY-WEST-1",
         "locator_id": "LOC-DAY-WEST-A",
     },
-    "MAT-LINEN": {
+    LINEN: {
         "media_asset_id": "AST-DAY-EAST",
         "media_version_id": "VER-DAY-EAST-1",
         "locator_id": "LOC-DAY-EAST",
     },
 }
-I3A_INVENTORY = ["OBJ-COAT", "MAT-LINEN"]
+I3A_INVENTORY = [COAT, LINEN]
 ALLOWED_POLICY_TOKENS = {
     "MUST_RENDER_IF_VISIBLE_IN_SHOT",
     "MUST_NOT_CONTRADICT",
@@ -96,11 +98,63 @@ def make_world(
     base_asset_refs=None,
     add_later=True,
     later_target=CRATE,
+    include_coat=True,
+    include_linen=True,
 ):
     reset_legacy_allocators()
     base_asset_refs = (
         ["AST-DAY-WEST"] if base_asset_refs is None else list(base_asset_refs)
     )
+    objects = {
+        DOOR: ObjectState(
+            DOOR,
+            "木门",
+            scene_id,
+            mass=25.0,
+            graspable=False,
+            fragility=0.5,
+        ),
+        CRATE: ObjectState(
+            CRATE,
+            "木箱",
+            scene_id,
+            mass=10.0,
+            graspable=True,
+            fragility=0.8,
+        ),
+        CRATE_ALT: ObjectState(
+            CRATE_ALT,
+            "木桶",
+            scene_id,
+            mass=10.0,
+            graspable=True,
+            fragility=0.8,
+        ),
+    }
+    player_inventory = []
+    if include_coat:
+        objects[COAT] = ObjectState(
+            COAT,
+            "外套",
+            scene_id,
+            mass=1.0,
+            graspable=True,
+            fragility=0.6,
+            owner_actor_id=PLAYER,
+        )
+        player_inventory.append(COAT)
+    if include_linen:
+        objects[LINEN] = ObjectState(
+            LINEN,
+            "亚麻敷料",
+            scene_id,
+            mass=0.2,
+            graspable=True,
+            fragility=0.5,
+            owner_actor_id=PLAYER,
+        )
+        player_inventory.append(LINEN)
+
     world = WorldState(
         world_id=f"WORLD-I9A-{scene_id}",
         active_scene_id=scene_id,
@@ -112,6 +166,7 @@ def make_world(
                 "旅人",
                 scene_id,
                 strength=1.0,
+                inventory_refs=player_inventory,
                 capabilities={"HIT", "SPEAK"},
             ),
             NPC: ActorState(
@@ -122,47 +177,18 @@ def make_world(
                 capabilities={"SPEAK"},
             ),
         },
-        objects={
-            DOOR: ObjectState(
-                DOOR,
-                "木门",
-                scene_id,
-                mass=25.0,
-                graspable=False,
-                fragility=0.5,
-            ),
-            CRATE: ObjectState(
-                CRATE,
-                "木箱",
-                scene_id,
-                mass=10.0,
-                graspable=True,
-                fragility=0.8,
-            ),
-            CRATE_ALT: ObjectState(
-                CRATE_ALT,
-                "木桶",
-                scene_id,
-                mass=10.0,
-                graspable=True,
-                fragility=0.8,
-            ),
-        },
+        objects=objects,
         npc_minds={NPC: NPCMindState(NPC, "INNKEEPER")},
         scenes={
             scene_id: SceneState(
                 scene_id,
                 base_asset_refs,
-                [DOOR, CRATE, CRATE_ALT],
+                list(objects),
                 [PLAYER, NPC],
             )
         },
         principal_actor_bindings={PRINCIPAL: {PLAYER}},
-        reachable_pairs={
-            (PLAYER, DOOR),
-            (PLAYER, CRATE),
-            (PLAYER, CRATE_ALT),
-        },
+        reachable_pairs={(PLAYER, ref) for ref in objects},
         audible_pairs={(PLAYER, NPC)},
     )
     baseline = capture_pristine_baseline(world)
@@ -259,12 +285,16 @@ def make_i8c_package(
     add_later=True,
     later_target=CRATE,
     storylet_mutator=None,
+    include_coat=True,
+    include_linen=True,
 ):
     baseline, world, damage, speech, acquisition = make_world(
         scene_id=scene_id,
         base_asset_refs=base_asset_refs,
         add_later=add_later,
         later_target=later_target,
+        include_coat=include_coat,
+        include_linen=include_linen,
     )
     definition = storylet(damage, speech, acquisition)
     if storylet_mutator is not None:
@@ -288,10 +318,12 @@ def make_i3a_package(
     locator_id="LOC-DAY-WEST-A",
     view_id="VIEW-WEST",
     cover_dressing=False,
+    covered_by_ref=COAT,
     include_surface=True,
+    surface_target_ref=COAT,
 ):
     assets = copy.deepcopy(I3A_ASSETS)
-    assets["OBJ-COAT"]["locator_id"] = locator_id
+    assets[COAT]["locator_id"] = locator_id
     events = [
         {
             "event_id": "E-I9A-PRES-001-WEAR-COAT",
@@ -299,7 +331,7 @@ def make_i3a_package(
             "actor_id": actor_id,
             "kind": "WEAR_SLOT",
             "slot": "torso_outer",
-            "object_ref": "OBJ-COAT",
+            "object_ref": COAT,
         },
         {
             "event_id": "E-I9A-PRES-002-DRESS-RIGHT-FOREARM",
@@ -309,13 +341,13 @@ def make_i3a_package(
             "dressing_id": "DRESS-I9A-RF-1",
             "body_region": "FOREARM",
             "side": "RIGHT",
-            "material_ref": "MAT-LINEN",
+            "material_ref": LINEN,
             "appearance_state": {
                 "color": "WHITE",
                 "wrap_style": "SPIRAL",
                 "stain": "LIGHT_BLOOD",
             },
-            "covered_by_refs": ["OBJ-COAT"] if cover_dressing else [],
+            "covered_by_refs": [covered_by_ref] if cover_dressing else [],
         },
     ]
     if include_surface:
@@ -326,7 +358,7 @@ def make_i3a_package(
                 "actor_id": actor_id,
                 "kind": "SET_SURFACE",
                 "surface_state_id": "SURF-I9A-COAT-MUD",
-                "target_ref": "OBJ-COAT",
+                "target_ref": surface_target_ref,
                 "surface_type": "MUD",
                 "intensity": 0.4,
             }
@@ -476,11 +508,11 @@ def test_frozen_actor_presentation_shape_is_refs_only_plural_and_safe():
     }
     assert actor["actor_id"] == PLAYER
     assert tuple(actor["identity_refs"]) == ()
-    assert tuple(actor["outfit_refs"]) == ("OBJ-COAT",)
+    assert tuple(actor["outfit_refs"]) == (COAT,)
     assert tuple(actor["dressing_refs"]) == ("DRESS-I9A-RF-1",)
     assert tuple(actor["visible_condition_cues"]) == ()
     policy = normalized_policy(actor)
-    assert ("OBJ-COAT", "MUST_NOT_CONTRADICT") in policy
+    assert (COAT, "MUST_NOT_CONTRADICT") in policy
     assert (
         "DRESS-I9A-RF-1",
         "MUST_RENDER_IF_VISIBLE_IN_SHOT",
@@ -702,6 +734,59 @@ def test_presentation_actor_must_exist_in_replayed_world():
         )
 
 
+def test_worn_object_must_exist_in_same_replayed_world():
+    i8c_package, *_ = make_i8c_package(include_coat=False)
+    with pytest.raises(
+        ValueError,
+        match="I9A_PRESENTATION_OUTFIT_OBJECT_ABSENT_FROM_SOURCE_WORLD",
+    ):
+        i9a.build_director_beat_packet_reference(
+            i8c_replay_package=i8c_package,
+            i3a_replay_package_json=make_i3a_package(),
+        )
+
+
+def test_dressing_material_must_exist_in_same_replayed_world():
+    i8c_package, *_ = make_i8c_package(include_linen=False)
+    with pytest.raises(
+        ValueError,
+        match="I9A_PRESENTATION_DRESSING_MATERIAL_ABSENT_FROM_SOURCE_WORLD",
+    ):
+        i9a.build_director_beat_packet_reference(
+            i8c_replay_package=i8c_package,
+            i3a_replay_package_json=make_i3a_package(),
+        )
+
+
+def test_dressing_cover_object_must_exist_in_same_replayed_world():
+    i8c_package, *_ = make_i8c_package()
+    with pytest.raises(
+        ValueError,
+        match="I9A_PRESENTATION_COVER_OBJECT_ABSENT_FROM_SOURCE_WORLD",
+    ):
+        i9a.build_director_beat_packet_reference(
+            i8c_replay_package=i8c_package,
+            i3a_replay_package_json=make_i3a_package(
+                cover_dressing=True,
+                covered_by_ref="OBJ-COVER-NOT-IN-WORLD",
+            ),
+        )
+
+
+def test_surface_target_must_exist_in_same_replayed_world():
+    i8c_package, *_ = make_i8c_package()
+    with pytest.raises(
+        ValueError,
+        match="I9A_PRESENTATION_SURFACE_TARGET_ABSENT_FROM_SOURCE_WORLD",
+    ):
+        i9a.build_director_beat_packet_reference(
+            i8c_replay_package=i8c_package,
+            i3a_replay_package_json=make_i3a_package(
+                surface_target_ref="OBJ-SURFACE-NOT-IN-WORLD"
+            ),
+        )
+
+
 def test_outer_i8c_tamper_fails_closed():
     i8c_package, *_ = make_i8c_package()
     envelope = json.loads(i8c_package.decode("utf-8"))
@@ -753,10 +838,10 @@ def test_i3a_payload_tampering_fails_closed():
 
 def test_forged_asset_version_locator_relationship_fails_in_i3a_readmission():
     package = json.loads(make_i3a_package())
-    package["payload"]["inputs"]["asset_registry"]["OBJ-COAT"][
+    package["payload"]["inputs"]["asset_registry"][COAT][
         "media_version_id"
     ] = "VER-NIGHT-WEST-1"
-    package["payload"]["inputs"]["asset_registry"]["OBJ-COAT"][
+    package["payload"]["inputs"]["asset_registry"][COAT][
         "locator_id"
     ] = "LOC-NIGHT-WEST"
     refresh_envelope_digest(package)
