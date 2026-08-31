@@ -100,6 +100,7 @@ def make_world(
     later_target=CRATE,
     include_coat=True,
     include_linen=True,
+    carry_linen=True,
 ):
     reset_legacy_allocators()
     base_asset_refs = (
@@ -151,9 +152,10 @@ def make_world(
             mass=0.2,
             graspable=True,
             fragility=0.5,
-            owner_actor_id=PLAYER,
+            owner_actor_id=PLAYER if carry_linen else None,
         )
-        player_inventory.append(LINEN)
+        if carry_linen:
+            player_inventory.append(LINEN)
 
     world = WorldState(
         world_id=f"WORLD-I9A-{scene_id}",
@@ -287,6 +289,7 @@ def make_i8c_package(
     storylet_mutator=None,
     include_coat=True,
     include_linen=True,
+    carry_linen=True,
 ):
     baseline, world, damage, speech, acquisition = make_world(
         scene_id=scene_id,
@@ -295,6 +298,7 @@ def make_i8c_package(
         later_target=later_target,
         include_coat=include_coat,
         include_linen=include_linen,
+        carry_linen=carry_linen,
     )
     definition = storylet(damage, speech, acquisition)
     if storylet_mutator is not None:
@@ -756,6 +760,20 @@ def test_dressing_material_must_exist_in_same_replayed_world():
             i8c_replay_package=i8c_package,
             i3a_replay_package_json=make_i3a_package(),
         )
+
+
+def test_dressing_material_need_not_remain_currently_carried_after_treatment():
+    i8c_package, world, *_ = make_i8c_package(carry_linen=False)
+    assert LINEN in world.objects
+    assert LINEN not in world.actors[PLAYER].inventory_refs
+    assert world.objects[LINEN].owner_actor_id is None
+
+    packet = i9a.build_director_beat_packet_reference(
+        i8c_replay_package=i8c_package,
+        i3a_replay_package_json=make_i3a_package(),
+    )
+    actor = actor_requirements(packet)[0]
+    assert tuple(actor["dressing_refs"]) == ("DRESS-I9A-RF-1",)
 
 
 def test_dressing_cover_object_must_exist_in_same_replayed_world():
