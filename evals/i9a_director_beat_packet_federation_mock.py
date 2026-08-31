@@ -563,7 +563,7 @@ def _presentation_requirements(
             object_ref=material_ref,
             actor_id=presentation.actor_id,
             missing_code="I9A_PRESENTATION_DRESSING_MATERIAL_ABSENT_FROM_SOURCE_WORLD",
-            require_actor_possession=True,
+            require_actor_possession=False,
         )
         covered_raw = row.get("covered_by_refs", ())
         if isinstance(covered_raw, (str, bytes, bytearray)) or not isinstance(
