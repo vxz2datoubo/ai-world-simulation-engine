@@ -482,7 +482,51 @@ def _scene_view_material(
     )
 
 
-def _presentation_requirements(presentation: Any) -> tuple[Mapping[str, Any], ...]:
+def _require_presentation_world_object(
+    *,
+    world: Any,
+    object_ref: Any,
+    actor_id: str,
+    missing_code: str,
+    require_actor_possession: bool,
+) -> str:
+    ref = _require_string(object_ref, missing_code)
+    obj = world.objects.get(ref)
+    if obj is None:
+        raise ValueError(f"{missing_code}:{ref}")
+    if obj.scene_id != world.active_scene_id:
+        raise ValueError(f"I9A_PRESENTATION_WORLD_OBJECT_SCENE_MISMATCH:{ref}")
+    if require_actor_possession:
+        actor = world.actors.get(actor_id)
+        if actor is None:
+            raise ValueError("I9A_PRESENTATION_ACTOR_ABSENT_FROM_SOURCE_WORLD")
+        if ref not in set(actor.inventory_refs):
+            raise ValueError(f"I9A_PRESENTATION_OBJECT_NOT_IN_ACTOR_INVENTORY:{ref}")
+        if obj.owner_actor_id != actor_id:
+            raise ValueError(f"I9A_PRESENTATION_OBJECT_OWNER_MISMATCH:{ref}")
+    return ref
+
+
+def _require_surface_target_in_world(*, world: Any, target_ref: Any) -> str:
+    ref = _require_string(
+        target_ref, "I9A_PRESENTATION_SURFACE_TARGET_ABSENT_FROM_SOURCE_WORLD"
+    )
+    obj = world.objects.get(ref)
+    if obj is not None:
+        if obj.scene_id != world.active_scene_id:
+            raise ValueError(f"I9A_PRESENTATION_SURFACE_TARGET_SCENE_MISMATCH:{ref}")
+        return ref
+    actor = world.actors.get(ref)
+    if actor is not None:
+        if actor.scene_id != world.active_scene_id:
+            raise ValueError(f"I9A_PRESENTATION_SURFACE_TARGET_SCENE_MISMATCH:{ref}")
+        return ref
+    raise ValueError(f"I9A_PRESENTATION_SURFACE_TARGET_ABSENT_FROM_SOURCE_WORLD:{ref}")
+
+
+def _presentation_requirements(
+    *, world: Any, presentation: Any
+) -> tuple[Mapping[str, Any], ...]:
     outfit = thaw_value(presentation.outfit_state)
     slots = outfit.get("slot_bindings", {}) if isinstance(outfit, Mapping) else {}
     if not isinstance(slots, Mapping):
@@ -495,12 +539,45 @@ def _presentation_requirements(presentation: Any) -> tuple[Mapping[str, Any], ..
             }
         )
     )
+    for ref in outfit_refs:
+        _require_presentation_world_object(
+            world=world,
+            object_ref=ref,
+            actor_id=presentation.actor_id,
+            missing_code="I9A_PRESENTATION_OUTFIT_OBJECT_ABSENT_FROM_SOURCE_WORLD",
+            require_actor_possession=True,
+        )
 
     dressing_rows: list[Mapping[str, Any]] = []
     for raw in presentation.dressing_states:
         row = thaw_value(raw)
         if not isinstance(row, Mapping):
             raise ValueError("I9A_DRESSING_STATE_INVALID")
+        if row.get("actor_id") != presentation.actor_id:
+            raise ValueError("I9A_DRESSING_ACTOR_MISMATCH")
+        material_ref = _require_string(
+            row.get("material_ref"), "I9A_DRESSING_MATERIAL_REF_INVALID"
+        )
+        _require_presentation_world_object(
+            world=world,
+            object_ref=material_ref,
+            actor_id=presentation.actor_id,
+            missing_code="I9A_PRESENTATION_DRESSING_MATERIAL_ABSENT_FROM_SOURCE_WORLD",
+            require_actor_possession=True,
+        )
+        covered_raw = row.get("covered_by_refs", ())
+        if isinstance(covered_raw, (str, bytes, bytearray)) or not isinstance(
+            covered_raw, Sequence
+        ):
+            raise ValueError("I9A_DRESSING_COVER_REFS_INVALID")
+        for covered_ref in covered_raw:
+            _require_presentation_world_object(
+                world=world,
+                object_ref=covered_ref,
+                actor_id=presentation.actor_id,
+                missing_code="I9A_PRESENTATION_COVER_OBJECT_ABSENT_FROM_SOURCE_WORLD",
+                require_actor_possession=False,
+            )
         dressing_rows.append(row)
     dressing_rows.sort(
         key=lambda row: _require_string(
@@ -508,6 +585,15 @@ def _presentation_requirements(presentation: Any) -> tuple[Mapping[str, Any], ..
         )
     )
     dressing_refs = tuple(row["dressing_id"] for row in dressing_rows)
+
+    for raw in presentation.surface_states:
+        row = thaw_value(raw)
+        if not isinstance(row, Mapping):
+            raise ValueError("I9A_SURFACE_STATE_INVALID")
+        _require_surface_target_in_world(
+            world=world,
+            target_ref=row.get("target_ref"),
+        )
 
     policies: list[tuple[str, str]] = []
     worn = set(outfit_refs)
@@ -623,7 +709,9 @@ def build_director_beat_packet_reference(
         presentation=presentation,
         manifest=manifest,
     )
-    actor_requirements = _presentation_requirements(presentation)
+    actor_requirements = _presentation_requirements(
+        world=world, presentation=presentation
+    )
 
     authored_forbidden = tuple(
         _require_string(value, "I9A_FORBIDDEN_INVENTION_INVALID")
