@@ -12,7 +12,6 @@ from evals.player_acquisition_evidence_reference import (
 from runtime.awrse import (
     ActionCompiler,
     ActorState,
-    Event,
     NPCMindState,
     ObjectState,
     SceneState,
@@ -22,7 +21,7 @@ from runtime.awrse import (
     export_solo_replay_package,
     rehydrate_solo_replay_package,
 )
-from runtime.awrse.model import ResolutionStatus
+from runtime.awrse.model import Event, ResolutionStatus
 
 
 def _world() -> WorldState:
