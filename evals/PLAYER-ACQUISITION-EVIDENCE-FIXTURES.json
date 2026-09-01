@@ -1,0 +1,28 @@
+{
+  "schema": "PLAYER_ACQUISITION_EVIDENCE_FIXTURES/v1",
+  "status": "NON_CANONICAL_ARCHITECTURE_EVAL",
+  "candidate_option": "B_TYPED_DIRECT_PARTICIPATION_ACQUISITION_RECEIPT",
+  "positive": {
+    "player_id": "P1",
+    "actor_id": "A",
+    "literal_input": "拿起钥匙",
+    "expected_mode": "DIRECT_PARTICIPATION",
+    "expected_claims": [
+      "EVENT_OCCURRED",
+      "DIRECT_ACTOR:A",
+      "EXPLICIT_ACTION_TARGET:O"
+    ]
+  },
+  "attacks": [
+    "UNCOMMITTED_EVENT",
+    "UNBOUND_PLAYER_ACTOR",
+    "EVENT_ACTOR_MISMATCH",
+    "ACTION_CAUSE_MISMATCH",
+    "REJECTED_ACTION",
+    "ARBITRARY_ACQUISITION_MODE",
+    "UNSUPPORTED_HIDDEN_FACT_CLAIM",
+    "RAW_LITERAL_TEXT_PERSISTENCE",
+    "REPLAY_RECEIPT_ID_DRIFT",
+    "AUTHORITY_FLAG_ESCALATION"
+  ]
+}
