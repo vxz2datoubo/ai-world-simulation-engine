@@ -96,11 +96,27 @@ def test_direct_participation_receipt_is_derived_evidence_not_authority():
     assert not validate_supported_claim(receipt, "NPC_B_SECRET_MOTIVE:STEAL_KEY")
     assert not validate_supported_claim(receipt, "OBJECT_IS_LEGALLY_OWNED_BY:A")
 
-    # Derivation is read-only and does not persist raw user text into the receipt.
     encoded = json.dumps(receipt.to_dict(), ensure_ascii=False, sort_keys=True)
     assert "拿起钥匙" not in encoded
     assert tuple(item.event_id for item in world.event_log) == before_event_ids
     assert world.objects["O"].owner_actor_id == before_owner == "A"
+
+
+def test_secondary_witness_event_cannot_be_laundered_as_player_direct_participation():
+    _, world, action, _ = _committed_pick()
+    witness_event = next(
+        event for event in world.event_log if event.event_type == "NPC_KNOWLEDGE_ACQUIRED"
+    )
+    assert witness_event.caused_by_action_id == action.action_id
+    assert witness_event.payload["npc_id"] == "B"
+
+    with pytest.raises(
+        PlayerAcquisitionEvidenceError,
+        match="SOURCE_EVENT_NOT_PRIMARY_DIRECT_PARTICIPATION_RESULT",
+    ):
+        derive_direct_participation_evidence(
+            world=world, player_id="P1", action=action, event=witness_event
+        )
 
 
 def test_uncommitted_or_wrongly_bound_evidence_fails_closed():
