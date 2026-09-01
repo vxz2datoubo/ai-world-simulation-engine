@@ -1,6 +1,6 @@
 {
   "schema": "MIDS_WORLD_DESIGN_DISCOVERY_REPLAY_CASES/v1",
-  "hidden_answer_policy": "expected_discoveries_are_scoring_metadata_only_and_must_not_be_exposed_to_discovery_input",
+  "hidden_answer_policy": "expected_discoveries_are_scoring_metadata_only_and_must_not_be_exposed_to_discovery_generation",
   "cases": [
     {
       "case_id": "R1-CAPABILITY",
@@ -12,8 +12,8 @@
         {"question_id":"Q-R1-COSMETIC","prompt":"Should injury UI use red or orange?","decision_impact":1,"uncertainty_reduction":1,"dependency_centrality":1,"world_consistency_risk":0,"implementation_cost":1,"novelty_potential":0,"cognitive_load":1}
       ],
       "options": [
-        {"option_id":"O-R1-LOCAL","text":"Function-local impairment preserves unaffected skills.","origin":"AI","material_key":"function_local"},
-        {"option_id":"O-R1-GLOBAL","text":"Global penalty degrades most combat output.","origin":"AI","material_key":"global_penalty"}
+        {"option_id":"O-R1-LOCAL","text":"Function-local impairment preserves unaffected skills.","origin":"AI","material_key":"function_local","decision_dimensions":["impairment_scope"],"material_effects":["local impairment affects damaged functions", "unaffected skill remains available"]},
+        {"option_id":"O-R1-GLOBAL","text":"Global penalty degrades most combat output.","origin":"AI","material_key":"global_penalty","decision_dimensions":["impairment_scope"],"material_effects":["global penalty affects most combat functions", "unaffected skill is degraded"]}
       ],
       "expected_discoveries": ["function-local impairment may be required", "skill truth must remain separate from derived capability truth", "hard feasibility should be separated from graded or random outcome", "success and hazard can be separate axes"],
       "open_decision_refs": ["OD-CAPABILITY-ATTR-001", "OD-CAPABILITY-MATH-001"],
@@ -28,8 +28,8 @@
         {"question_id":"Q-R2-PROVENANCE","prompt":"How should important news enter player knowledge?","scenario_translation":"A rebellion begins in a distant city. If the player has met nobody, read no message, and heard no broadcast, is it acceptable for the player to remain unaware even if the plot would be more dramatic if they knew?","decision_impact":5,"uncertainty_reduction":5,"dependency_centrality":5,"world_consistency_risk":5,"irreversibility":4,"implementation_cost":3,"novelty_potential":4,"cognitive_load":2,"technical_jargon":true}
       ],
       "options": [
-        {"option_id":"O-R2-CHANNEL","text":"Require a real source/channel/carrier/perception path.","origin":"AI","material_key":"provenance_channel"},
-        {"option_id":"O-R2-INJECT","text":"Allow direct narrative injection for important events.","origin":"AI","material_key":"narrative_injection"}
+        {"option_id":"O-R2-CHANNEL","text":"Require a real source/channel/carrier/perception path.","origin":"AI","material_key":"provenance_channel","decision_dimensions":["knowledge_acquisition_authority"],"material_effects":["knowledge requires source channel carrier perception provenance", "player may remain uninformed without acquisition"]},
+        {"option_id":"O-R2-INJECT","text":"Allow direct narrative injection for important events.","origin":"AI","material_key":"narrative_injection","decision_dimensions":["knowledge_acquisition_authority"],"material_effects":["narrative importance directly injects player knowledge", "acquisition provenance may be absent"]}
       ],
       "expected_discoveries": ["important narrative information cannot be injected directly into player knowledge", "acquisition needs source channel carrier and perception provenance", "player may legitimately remain uninformed", "NO_VALID_OPPORTUNITY can be correct"],
       "open_decision_refs": ["WILDERNESS_NEWS_TRAP"],
@@ -44,8 +44,8 @@
         {"question_id":"Q-R3-CONFLICT","prompt":"Which persistence layer wins on conflict?","scenario_translation":"After restart, the recorded event history says a bridge was destroyed, but a newer summary says it still exists. Which should the world trust?","decision_impact":5,"uncertainty_reduction":5,"dependency_centrality":5,"world_consistency_risk":5,"irreversibility":5,"implementation_cost":4,"novelty_potential":3,"cognitive_load":1,"technical_jargon":true}
       ],
       "options": [
-        {"option_id":"O-R3-EVENT","text":"Canonical event evidence outranks summaries and projections.","origin":"AI","material_key":"event_truth"},
-        {"option_id":"O-R3-SUMMARY","text":"Newest materialized summary wins.","origin":"AI","material_key":"summary_truth"}
+        {"option_id":"O-R3-EVENT","text":"Canonical event evidence outranks summaries and projections.","origin":"AI","material_key":"event_truth","decision_dimensions":["persistence_conflict_authority"],"material_effects":["canonical event evidence outranks summary projection", "projection remains rebuildable"]},
+        {"option_id":"O-R3-SUMMARY","text":"Newest materialized summary wins.","origin":"AI","material_key":"summary_truth","decision_dimensions":["persistence_conflict_authority"],"material_effects":["newest summary outranks historical event evidence", "projection can replace source interpretation"]}
       ],
       "expected_discoveries": ["canonical event evidence must be separated from materialized projection snapshot or summary", "newer projections must not rewrite source history", "replay needs version and provenance binding", "conflicting cache or summary must not outrank source evidence"],
       "open_decision_refs": ["R003-I1A", "R003-I1B"],
@@ -60,8 +60,8 @@
         {"question_id":"Q-R4-RECONVERGE","prompt":"May narrative force reconvergence?","scenario_translation":"The player kills the only messenger who was supposed to trigger the planned plot. Should the system resurrect or replace that cause to keep the scene, or accept the loss and search only for new opportunities that are still causally legal?","decision_impact":5,"uncertainty_reduction":5,"dependency_centrality":5,"world_consistency_risk":5,"irreversibility":5,"implementation_cost":4,"novelty_potential":5,"cognitive_load":2,"technical_jargon":true}
       ],
       "options": [
-        {"option_id":"O-R4-LEGAL","text":"Accept causal loss and seek only legal alternatives or no opportunity.","origin":"AI","material_key":"legal_alternative"},
-        {"option_id":"O-R4-FORCE","text":"Force dramatic reconvergence by replacing the lost cause.","origin":"AI","material_key":"forced_reconvergence"}
+        {"option_id":"O-R4-LEGAL","text":"Accept causal loss and seek only legal alternatives or no opportunity.","origin":"AI","material_key":"legal_alternative","decision_dimensions":["narrative_reconvergence_authority"],"material_effects":["causal loss remains committed", "only causally legal opportunities remain eligible"]},
+        {"option_id":"O-R4-FORCE","text":"Force dramatic reconvergence by replacing the lost cause.","origin":"AI","material_key":"forced_reconvergence","decision_dimensions":["narrative_reconvergence_authority"],"material_effects":["lost cause may be replaced for drama", "planned narrative route may override causal loss"]}
       ],
       "expected_discoveries": ["no resurrection retcon or fake reconvergence", "hard causal anchors require real cause revalidation", "storylet or attractor eligibility is noncanonical", "player-valid actions remain valid when dramatically inconvenient", "NO_VALID_OPPORTUNITY must remain acceptable"],
       "open_decision_refs": ["HOSTILE_PLAYER_BREAKS_PLOT"],
@@ -76,8 +76,8 @@
         {"question_id":"Q-R5-MISMATCH","prompt":"How should possession mismatch be resolved?","scenario_translation":"An inventory list says Alice has the key, but the key object itself says Bob physically possesses it. Should the system guess which record is right, reconcile from the possession source of truth, or fail closed until the mismatch is resolved?","decision_impact":5,"uncertainty_reduction":5,"dependency_centrality":5,"world_consistency_risk":5,"irreversibility":4,"implementation_cost":3,"novelty_potential":2,"cognitive_load":1,"technical_jargon":true}
       ],
       "options": [
-        {"option_id":"O-R5-OBJECT","text":"Treat object possession as canonical and inventory as rebuildable index.","origin":"AI","material_key":"object_possession_truth"},
-        {"option_id":"O-R5-DUAL","text":"Let inventory and object both independently assert possession.","origin":"AI","material_key":"dual_authority"}
+        {"option_id":"O-R5-OBJECT","text":"Treat object possession as canonical and inventory as rebuildable index.","origin":"AI","material_key":"object_possession_truth","decision_dimensions":["possession_authority"],"material_effects":["object possession is canonical", "inventory is rebuildable index", "legal ownership remains separate"]},
+        {"option_id":"O-R5-DUAL","text":"Let inventory and object both independently assert possession.","origin":"AI","material_key":"dual_authority","decision_dimensions":["possession_authority"],"material_effects":["inventory independently asserts possession", "object independently asserts possession"]}
       ],
       "expected_discoveries": ["legal ownership and physical possession are different concepts", "object possession is canonical while inventory is a rebuildable index", "one object cannot have two independent possession authorities", "mismatch must not be silently guessed into truth"],
       "open_decision_refs": ["AF-B"],
@@ -92,8 +92,8 @@
         {"question_id":"Q-R6-BINDING","prompt":"What binds presentation to world state?","scenario_translation":"The director wants to show a character wearing a red cloak, but the replayed world state says the cloak belongs to someone else. May the director render it anyway for visual continuity, or must visible identity and possession references resolve against the same replayed scene state?","decision_impact":5,"uncertainty_reduction":5,"dependency_centrality":5,"world_consistency_risk":5,"irreversibility":4,"implementation_cost":4,"novelty_potential":3,"cognitive_load":2,"technical_jargon":true}
       ],
       "options": [
-        {"option_id":"O-R6-BIND","text":"Bind presentation refs to the same replayed world/scene state.","origin":"AI","material_key":"cross_plane_binding"},
-        {"option_id":"O-R6-DIRECTOR","text":"Allow director-visible assets to override possession when useful.","origin":"AI","material_key":"director_override"}
+        {"option_id":"O-R6-BIND","text":"Bind presentation refs to the same replayed world/scene state.","origin":"AI","material_key":"cross_plane_binding","decision_dimensions":["presentation_world_binding"],"material_effects":["presentation references resolve against replayed scene state", "director remains downstream of possession truth"]},
+        {"option_id":"O-R6-DIRECTOR","text":"Allow director-visible assets to override possession when useful.","origin":"AI","material_key":"director_override","decision_dimensions":["presentation_world_binding"],"material_effects":["director visible assets may override possession", "presentation can diverge from replayed object state"]}
       ],
       "expected_discoveries": ["actor id is not visible identity asset authority", "presentation refs must bind to the same replayed world or scene where required", "generated media output cannot mint world-object existence", "worn current-possession semantics differ from already-applied treatment material semantics", "renderer and director remain downstream"],
       "open_decision_refs": ["Issue#99"],
