@@ -18,6 +18,16 @@ _ALLOWED_RESOLUTION_STATUSES = {
     ResolutionStatus.RESOLVED_SUCCESS,
     ResolutionStatus.RESOLVED_PARTIAL,
 }
+_PRIMARY_EVENT_TYPES_BY_VERB = {
+    "SPEAK": frozenset({"SPEECH_UTTERED"}),
+    "HIT": frozenset({"OBJECT_DAMAGED", "ACTOR_STRUCK"}),
+    "PICK": frozenset({"OBJECT_PICKED_UP"}),
+    "DROP": frozenset({"OBJECT_DROPPED"}),
+    "THROW": frozenset({"OBJECT_THROWN"}),
+    "OPEN": frozenset({"OBJECT_OPENED"}),
+    "CLOSE": frozenset({"OBJECT_CLOSED"}),
+    "WALK": frozenset({"ACTOR_MOVED"}),
+}
 
 
 class PlayerAcquisitionEvidenceError(ValueError):
@@ -66,6 +76,12 @@ def _receipt_id(payload: Mapping[str, Any]) -> str:
     return "PAE-" + hashlib.sha256(encoded).hexdigest()[:24]
 
 
+def _validate_primary_action_event(action: Action, event: Event) -> None:
+    allowed = _PRIMARY_EVENT_TYPES_BY_VERB.get(action.verb)
+    if not allowed or event.event_type not in allowed:
+        raise _fail("SOURCE_EVENT_NOT_PRIMARY_DIRECT_PARTICIPATION_RESULT")
+
+
 def derive_direct_participation_evidence(
     *,
     world: WorldState,
@@ -74,11 +90,11 @@ def derive_direct_participation_evidence(
     event: Event,
     acquisition_mode: str = DIRECT_PARTICIPATION,
 ) -> PlayerAcquisitionEvidence:
-    """Derive noncanonical recipient-local evidence from already committed action/event evidence.
+    """Derive noncanonical recipient-local evidence from a committed primary action result.
 
-    This function intentionally emits no arbitrary proposition text and no payload-derived hidden facts.
-    The receipt proves only direct participation in the source event and the explicit target identities
-    already present in the player's own action declaration.
+    The receipt proves only direct participation in the primary world result of the player's own
+    accepted action. Secondary witness, relationship, propagation, narrative, or other recipient-local
+    events are intentionally ineligible even when they share the same causing action ID.
     """
     if acquisition_mode != DIRECT_PARTICIPATION:
         raise _fail("DIRECT_PARTICIPATION_MODE_ONLY")
@@ -100,12 +116,13 @@ def derive_direct_participation_evidence(
     committed = world.event_log[cursor - 1]
     if committed != event:
         raise _fail("SOURCE_EVENT_OBJECT_MISMATCH")
-    if event.actor_id != action.actor_id:
-        raise _fail("SOURCE_EVENT_ACTOR_MISMATCH")
     if event.caused_by_action_id != action.action_id:
         raise _fail("SOURCE_EVENT_ACTION_CAUSE_MISMATCH")
+    if event.actor_id != action.actor_id:
+        raise _fail("SOURCE_EVENT_ACTOR_MISMATCH")
     if event.baseline_version != world.baseline_version:
         raise _fail("SOURCE_EVENT_BASELINE_MISMATCH")
+    _validate_primary_action_event(action, event)
 
     supported_claim_refs = (
         f"EVENT_OCCURRED:{event.event_id}:{event.event_type}",
@@ -150,8 +167,5 @@ def derive_direct_participation_evidence(
 
 
 def validate_supported_claim(receipt: PlayerAcquisitionEvidence, claim_ref: str) -> bool:
-    """Return True only for mechanically enumerated direct-participation claims.
-
-    This is deliberately not a free-text proposition evaluator and cannot broaden the receipt.
-    """
+    """Return True only for mechanically enumerated direct-participation claims."""
     return claim_ref in receipt.supported_claim_refs
