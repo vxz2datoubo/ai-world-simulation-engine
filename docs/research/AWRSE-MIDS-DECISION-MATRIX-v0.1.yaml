@@ -1,0 +1,153 @@
+schema: AWRSE_MIDS_DECISION_MATRIX/v1
+status: NON_CANONICAL_USER_CONFIRMED_DESIGN_EVIDENCE
+canonical_base_at_compilation: bc9bee8c6402d70dbb5c36ca4416905f4ca54ee4
+principles:
+- id: P001
+  state: USER_EXPLICIT_CONFIRMED
+  area: product
+  decision: 'Breadth-first minimal living world: all major systems get a minimal connected skeleton in the first small world.'
+- id: P002
+  state: USER_EXPLICIT_CONFIRMED
+  area: authority
+  decision: Multiple domain AIs/authorities evolve independently; a high-level Orchestrator coordinates and aggregates but does not own domain truth.
+- id: P003
+  state: USER_EXPLICIT_CONFIRMED
+  area: causality
+  decision: Cross-domain changes propagate dynamically to relevant systems and can form feedback loops over canonical world time.
+- id: P004
+  state: USER_EXPLICIT_CONFIRMED
+  area: truth
+  decision: World Truth is single; character knowledge, belief, audience knowledge and presentation are separate.
+- id: P005
+  state: USER_EXPLICIT_CONFIRMED
+  area: narrative
+  decision: Narrative may bias legal possibilities within bounded/audited policy but may not manufacture impossibility or rewrite truth.
+- id: P006
+  state: USER_EXPLICIT_CONFIRMED
+  area: presentation
+  decision: AWRSE determines causal/dramatic presentation intent; the separate AI Director decides concrete shots/edit/performance.
+- id: P007
+  state: USER_EXPLICIT_CONFIRMED
+  area: presentation
+  decision: Game mode withholds off-character events; film mode may show audience-only events without updating character knowledge.
+- id: P008
+  state: USER_EXPLICIT_CONFIRMED
+  area: agency
+  decision: Player has final control over the currently controlled actor; personality affects expression, not veto. Other NPCs cannot be directly controlled.
+- id: P009
+  state: USER_EXPLICIT_CONFIRMED
+  area: intent
+  decision: Open natural-language goals are resolved through world rules, character capability, resources, time and consequences rather than pre-authored action menus.
+- id: P010
+  state: USER_EXPLICIT_CONFIRMED
+  area: character_ai
+  decision: AI model intelligence must not leak into character intelligence when filling unspecified plans.
+- id: P011
+  state: USER_EXPLICIT_CONFIRMED
+  area: simulation
+  decision: Use adaptive simulation fidelity; established history is not deleted when entities leave player view.
+- id: P012
+  state: USER_EXPLICIT_CONFIRMED
+  area: concretization
+  decision: Deferred concretization may select among legal unresolved versions using world state/player experience/narrative value, but cannot contradict locked history.
+- id: P013
+  state: USER_EXPLICIT_CONFIRMED
+  area: unknown
+  decision: UNKNOWN is a legal world state; resolved historical evidence cannot be re-rolled.
+- id: P014
+  state: USER_EXPLICIT_CONFIRMED
+  area: time
+  decision: Single canonical world timeline; first target is single-player; domains may update at different granularities.
+- id: P015
+  state: USER_EXPLICIT_CONFIRMED
+  area: time
+  decision: Long repetitive activity really consumes world time; presentation can compress it and important decisions interrupt compression.
+- id: P016
+  state: USER_EXPLICIT_CONFIRMED
+  area: offline
+  decision: Single-player default close/reopen freezes world; long absence may optionally advance time. Exact threshold/algorithm remains policy.
+- id: P017
+  state: USER_EXPLICIT_CONFIRMED
+  area: death
+  decision: Player character can permanently die; continuity preferably shifts to heir/partner/companion, otherwise another character in the same world.
+- id: P018
+  state: USER_EXPLICIT_CONFIRMED
+  area: world_generation
+  decision: 'World creation is hybrid: broad script/world direction plus generated constrained detail and later concretization.'
+- id: P019
+  state: USER_EXPLICIT_CONFIRMED
+  area: authorial_future
+  decision: Desired future events are guided/attractor-like rather than guaranteed; changing causal conditions may prevent them.
+- id: P020
+  state: USER_EXPLICIT_CONFIRMED
+  area: modules
+  decision: Common core plus optional world modules; disabled modules cannot adjudicate; all modules obey common meta-authority laws.
+- id: P021
+  state: USER_EXPLICIT_CONFIRMED
+  area: institutions
+  decision: Institutions are real stateful actors with resources/goals/factions/policies and can fail, dissolve or emerge.
+- id: P022
+  state: USER_EXPLICIT_CONFIRMED
+  area: resources
+  decision: Major entities/events require credible resource sources; low fidelity does not mean source-free.
+- id: P023
+  state: USER_EXPLICIT_CONFIRMED
+  area: law
+  decision: World fact, evidence, investigator belief, legal action/judgment and social belief are distinct; legal actors may misjudge.
+- id: P024
+  state: USER_EXPLICIT_CONFIRMED
+  area: evidence
+  decision: Evidence is world-grounded, may be hidden/destroyed/forged, differently discovered, and cannot be fabricated by AI for plot convenience.
+- id: P025
+  state: USER_EXPLICIT_CONFIRMED
+  area: entities
+  decision: Independent physical items have persistent unique identities; same appearance does not imply same entity.
+- id: P026
+  state: USER_EXPLICIT_CONFIRMED
+  area: entities
+  decision: Possession, ownership, permission, worn/equipped state and location are separate.
+- id: P027
+  state: USER_EXPLICIT_CONFIRMED
+  area: entities
+  decision: Destroyed entity identity remains historical and is not reused; split/composed new objects get new IDs.
+- id: P028
+  state: USER_EXPLICIT_CONFIRMED
+  area: space
+  decision: Places and environment retain history; settlements/land use/social identity can emerge and change over time.
+- id: P029
+  state: USER_EXPLICIT_CONFIRMED
+  area: history
+  decision: Important canonical history remains explainable long-term; small details may be compressed only without destroying important causal evidence.
+- id: P030
+  state: USER_EXPLICIT_CONFIRMED
+  area: ordinary_life
+  decision: A peaceful/ordinary life is a valid world outcome; narrative should not force catastrophe to prove activity.
+deferred:
+- traditional_save_load_first_release
+- hardcore_mode
+- multiplayer_internet_runtime
+- exact_narrative_probability_weights
+- exact_long_absence_advance_algorithm
+- memory_backend_and_decay_math
+- relationship_math
+- canonical_concurrency_arbitration_algorithm
+- detailed_courtroom_procedure
+- atom_level_or_full_parent_child_material_provenance
+candidate_mechanism_names:
+- HighLevelOrchestrator
+- CausalSelectivePropagation
+- AdaptiveSimulationFidelity
+- DeferredConcretization
+- NarrativeProbabilityBudget
+- NarrativeInfluenceLedger
+- PlayerNarrativeExposurePreference
+- DramaticPresentationIntent
+- CausalForeshadowing
+- CausalPayoffCandidate
+- TemporalCompressionWithDecisionInterrupts
+- PersistentEntityID
+- ModularLivingWorldKernel
+- ConservationWithResolutionScaling
+- CharacterEpistemicStyle
+- ContestedInteraction
+authority_note: Candidate mechanism names are AI-derived labels. They are not canonical types unless separately resolved through architecture governance.
