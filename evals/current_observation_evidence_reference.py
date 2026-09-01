@@ -10,7 +10,7 @@ from runtime.awrse.model import WorldState
 
 OBSERVATION_POLICY_VERSION = "AWRSE-CURRENT-VISUAL-OBSERVATION-POLICY/v1"
 OBSERVATION_POLICY_DIGEST = hashlib.sha256(
-    b"VISUAL|EXPLICIT_OBSERVATION_SAMPLE|WORLDSTATE_CAN_SEE|NO_KNOWLEDGE_WRITE|NO_HIDDEN_CAUSE"
+    b"VISUAL_OBJECT_ONLY|EXPLICIT_OBSERVATION_SAMPLE|WORLDSTATE_CAN_SEE|NO_KNOWLEDGE_WRITE|NO_HIDDEN_CAUSE"
 ).hexdigest()
 
 
@@ -54,23 +54,17 @@ def _receipt_id(payload: dict[str, Any]) -> str:
 
 
 def _observable_state_refs(world: WorldState, entity_id: str) -> tuple[str, ...]:
-    if entity_id in world.objects:
-        obj = world.objects[entity_id]
-        refs = [
-            f"OBJECT_PRESENT:{entity_id}",
-            f"OBJECT_DAMAGE_STATE:{entity_id}:{obj.damage_state}",
-            f"OBJECT_OPEN_STATE:{entity_id}:{'OPEN' if obj.is_open else 'CLOSED'}",
-        ]
-        # Possessor identity is omitted from generic visual evidence. It may be visually
-        # obvious in some situations but requires a separately governed observation rule.
-        return tuple(refs)
-    if entity_id in world.actors:
-        actor = world.actors[entity_id]
-        return (
-            f"ACTOR_PRESENT:{entity_id}",
-            f"ACTOR_INJURY_VALUE:{entity_id}:{actor.injury}",
-        )
-    raise _fail("OBSERVED_ENTITY_NOT_SUPPORTED")
+    obj = world.objects.get(entity_id)
+    if obj is None:
+        raise _fail("V1_VISUAL_OBSERVATION_SUPPORTS_OBJECTS_ONLY")
+    # Deliberately expose only state that the v1 visual policy declares observable.
+    # Possessor identity, ownership, hidden causes, NPC internals and exact capability/
+    # injury values are omitted until separately governed observation rules exist.
+    return (
+        f"OBJECT_PRESENT:{entity_id}",
+        f"OBJECT_DAMAGE_STATE:{entity_id}:{obj.damage_state}",
+        f"OBJECT_OPEN_STATE:{entity_id}:{'OPEN' if obj.is_open else 'CLOSED'}",
+    )
 
 
 def capture_current_visual_observation(
@@ -80,12 +74,11 @@ def capture_current_visual_observation(
     entity_id: str,
     observation_policy_version: str = OBSERVATION_POLICY_VERSION,
 ) -> CurrentObservationEvidence:
-    """Capture one explicit, read-only visual observation sample.
+    """Capture one explicit, read-only visual object-observation sample.
 
     Calling this function is the discrete observation moment. `WorldState.can_see()` is
-    only the eligibility predicate. The receipt itself is a noncanonical evidence object
-    bound to the exact world version/event cursor and cannot write knowledge or authorize
-    narrative realization.
+    only the eligibility predicate. The receipt is noncanonical evidence bound to the
+    exact world version/event cursor and cannot write knowledge or authorize narrative.
     """
     if observation_policy_version != OBSERVATION_POLICY_VERSION:
         raise _fail("OBSERVATION_POLICY_VERSION_MISMATCH")
@@ -94,21 +87,12 @@ def capture_current_visual_observation(
     observer = world.actors.get(observer_actor_id)
     if observer is None:
         raise _fail("OBSERVER_ACTOR_NOT_FOUND")
-    if entity_id == observer_actor_id:
-        raise _fail("SELF_OBSERVATION_NOT_SUPPORTED_BY_V1")
-    if not world.entity_exists(entity_id):
-        raise _fail("OBSERVED_ENTITY_NOT_FOUND")
+    obj = world.objects.get(entity_id)
+    if obj is None:
+        raise _fail("V1_VISUAL_OBSERVATION_SUPPORTS_OBJECTS_ONLY")
     if not world.can_see(entity_id, observer_actor_id):
         raise _fail("VISUAL_ELIGIBILITY_NOT_PROVEN")
-
-    if entity_id in world.objects:
-        entity = world.objects[entity_id]
-    elif entity_id in world.actors:
-        entity = world.actors[entity_id]
-    else:
-        raise _fail("OBSERVED_ENTITY_NOT_SUPPORTED")
-
-    if observer.scene_id != entity.scene_id:
+    if observer.scene_id != obj.scene_id:
         raise _fail("OBSERVATION_SCENE_MISMATCH")
 
     source_event_cursor = len(world.event_log)
@@ -125,7 +109,7 @@ def capture_current_visual_observation(
         "entity_id": entity_id,
         "scene_id": observer.scene_id,
         "observer_zone_id": observer.zone_id,
-        "entity_zone_id": entity.zone_id,
+        "entity_zone_id": obj.zone_id,
         "observable_state_refs": list(state_refs),
         "observation_policy_version": OBSERVATION_POLICY_VERSION,
         "observation_policy_digest": OBSERVATION_POLICY_DIGEST,
@@ -143,7 +127,7 @@ def capture_current_visual_observation(
         entity_id=entity_id,
         scene_id=observer.scene_id,
         observer_zone_id=observer.zone_id,
-        entity_zone_id=entity.zone_id,
+        entity_zone_id=obj.zone_id,
         observable_state_refs=state_refs,
         observation_policy_version=OBSERVATION_POLICY_VERSION,
         observation_policy_digest=OBSERVATION_POLICY_DIGEST,
@@ -153,11 +137,7 @@ def capture_current_visual_observation(
     )
 
 
-def validate_current_observation(
-    *,
-    world: WorldState,
-    receipt: CurrentObservationEvidence,
-) -> None:
+def validate_current_observation(*, world: WorldState, receipt: CurrentObservationEvidence) -> None:
     """Fail closed if a receipt is stale, forged, or no longer matches current state."""
     if receipt.schema != "AWRSE.CurrentObservationEvidence.Reference/v1":
         raise _fail("OBSERVATION_SCHEMA_MISMATCH")
