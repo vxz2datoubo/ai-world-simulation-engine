@@ -21,6 +21,28 @@ class OrchestrationViolation(ValueError):
 _KNOWN_AUTHORITY_SCOPES = frozenset({"AF-A", "AF-B", "AF-C", "AF-D", "AF-E", "AF-F", "AF-G", "AF-H"})
 
 
+@dataclass(frozen=True)
+class Stage1Provenance:
+    """Immutable identity required by the legacy runtime-tree exception."""
+
+    task_id: str
+    snapshot_id: str
+    baseline_sha: str
+
+
+_REQUIRED_STAGE1_PROVENANCE = Stage1Provenance(
+    task_id="LW-STAGE1-ORCH-001",
+    snapshot_id="AWRSE-LW-STAGE1-ORCH-001-SNAPSHOT-001",
+    baseline_sha="10bfe21fb85dceaf00e784f6e637ae104dac92f6",
+)
+STAGE1_PROVENANCE = _REQUIRED_STAGE1_PROVENANCE
+
+
+def _stage1_provenance_matches(provenance: Stage1Provenance) -> bool:
+    """Return true only for the immutable, snapshot-bound Stage 1 identity."""
+    return provenance == _REQUIRED_STAGE1_PROVENANCE
+
+
 def _canonical_digest(value: object) -> str:
     encoded = json.dumps(
         value,
