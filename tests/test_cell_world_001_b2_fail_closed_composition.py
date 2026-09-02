@@ -1,5 +1,3 @@
-from dataclasses import replace
-
 import pytest
 
 from evals.current_observation_evidence_reference import (
@@ -21,6 +19,23 @@ from runtime.awrse import (
     rehydrate_solo_replay_package,
 )
 from runtime.awrse.model import ResolutionStatus
+
+
+class _CurrentVisibilityView:
+    """Read-only current-eligibility view over a sealed canonical world."""
+
+    def __init__(self, world: WorldState, *, visible_entity_id: str, observer_actor_id: str):
+        self._world = world
+        self._visible_entity_id = visible_entity_id
+        self._observer_actor_id = observer_actor_id
+
+    def __getattr__(self, name):
+        return getattr(self._world, name)
+
+    def can_see(self, entity_id: str, observer_actor_id: str) -> bool:
+        if entity_id == self._visible_entity_id and observer_actor_id == self._observer_actor_id:
+            return True
+        return self._world.can_see(entity_id, observer_actor_id)
 
 
 def _world() -> WorldState:
@@ -86,15 +101,6 @@ def _compose(world: WorldState, source_event_id: str, observer_actor_id: str = "
     return echo, gap
 
 
-def _current_visible_nonwitness_world(world: WorldState) -> WorldState:
-    current = replace(
-        world,
-        visible_pairs=set(world.visible_pairs) | {("DOOR", "C")},
-    )
-    current.seal_live()
-    return current
-
-
 def test_historical_object_witness_plus_current_visibility_stays_blocked_without_observation_trigger():
     _, world, source_event = _damaged_world()
     assert world.can_see("DOOR", "B") is True
@@ -113,20 +119,32 @@ def test_historical_object_witness_plus_current_visibility_stays_blocked_without
 
 
 def test_nonwitness_plus_current_visibility_cannot_be_laundered_into_historical_knowledge_or_echo():
-    _, event_time_world, source_event = _damaged_world()
-    assert source_event.event_id not in event_time_world.npc_minds["C"].knowledge_boundary_refs
-    assert event_time_world.can_see("DOOR", "C") is False
-    current_world = _current_visible_nonwitness_world(event_time_world)
-    assert current_world.is_live is True
-    assert current_world.can_see("DOOR", "C") is True
-    assert source_event.event_id not in current_world.npc_minds["C"].knowledge_boundary_refs
-    assert current_world.npc_minds["C"].memories == event_time_world.npc_minds["C"].memories
-    assert tuple(current_world.event_log) == tuple(event_time_world.event_log)
-    assert current_world.world_state_version == event_time_world.world_state_version
-    echo, gap = _compose(current_world, source_event.event_id, observer_actor_id="C")
+    _, world, source_event = _damaged_world()
+    assert source_event.event_id not in world.npc_minds["C"].knowledge_boundary_refs
+    assert world.can_see("DOOR", "C") is False
+
+    echo = derive_world_echo_opportunity(
+        world=world,
+        speaker_npc_id="C",
+        entity_id="DOOR",
+        source_event_id=source_event.event_id,
+    )
     assert echo.status == "NO_VALID_OPPORTUNITY"
     assert echo.reason == "NO_PROVEN_ACQUISITION_OR_CURRENT_PERCEPTION"
     assert echo.opportunity is None
+
+    current_view = _CurrentVisibilityView(world, visible_entity_id="DOOR", observer_actor_id="C")
+    assert current_view.is_live is True
+    assert current_view.can_see("DOOR", "C") is True
+    assert source_event.event_id not in current_view.npc_minds["C"].knowledge_boundary_refs
+    assert tuple(current_view.event_log) == tuple(world.event_log)
+    assert current_view.world_state_version == world.world_state_version
+
+    gap = assess_current_visual_observation_gap(
+        world=current_view,
+        observer_actor_id="C",
+        entity_id="DOOR",
+    )
     assert gap.status == "NO_TRUSTED_OBSERVATION_TRIGGER"
     assert gap.visibility_eligible is True
     assert gap.trusted_discrete_trigger_available is False
@@ -134,7 +152,14 @@ def test_nonwitness_plus_current_visibility_cannot_be_laundered_into_historical_
     assert gap.knowledge_write_authority is False
     assert gap.narrative_realization_authority is False
     with pytest.raises(CurrentObservationEvidenceError, match="NO_TRUSTED_OBSERVATION_TRIGGER"):
-        capture_current_visual_observation(world=current_world, observer_actor_id="C", entity_id="DOOR")
+        capture_current_visual_observation(world=current_view, observer_actor_id="C", entity_id="DOOR")
+
+    assert derive_world_echo_opportunity(
+        world=world,
+        speaker_npc_id="C",
+        entity_id="DOOR",
+        source_event_id=source_event.event_id,
+    ) == echo
 
 
 def test_simulator_knows_actor_but_composition_cannot_launder_it_into_speaker_culprit():
