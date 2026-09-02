@@ -8,7 +8,7 @@ from typing import Any
 from runtime.awrse.model import Event, WorldState
 
 
-WORLD_ECHO_REFERENCE_VERSION = "AWRSE-WORLD-ECHO-OPPORTUNITY-REFERENCE/v1"
+WORLD_ECHO_REFERENCE_VERSION = "AWRSE-WORLD-ECHO-OPPORTUNITY-REFERENCE/v2"
 NON_CANONICAL_AUTHORITY = "NARRATIVE_OPPORTUNITY_NON_CANONICAL"
 
 
@@ -88,6 +88,13 @@ def _matching_acquisitions(world: WorldState, speaker_npc_id: str, source_event_
     return tuple(matches)
 
 
+def _event_position(world: WorldState, event: Event) -> int:
+    return next(
+        index for index, candidate in enumerate(world.event_log, start=1)
+        if candidate.event_id == event.event_id
+    )
+
+
 def _opportunity_id(payload: dict[str, Any]) -> str:
     material = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return "WEO-" + hashlib.sha256(material).hexdigest()[:24]
@@ -100,12 +107,14 @@ def derive_world_echo_opportunity(
     entity_id: str,
     source_event_id: str,
 ) -> WorldEchoDecision:
-    """Derive a noncanonical echo candidate from canonical event + NPC acquisition evidence.
+    """Derive only attribution claims mechanically supported by recipient-local evidence.
 
-    This reference deliberately does not infer a new current perception from simulator
-    omniscience, scene co-location, or caller strings. Even a valid historical witness
-    candidate remains blocked from realization until a future current-perception evidence
-    gate is satisfied by a separately governed interface.
+    Canonical R002 visual acquisition for an object event proves that the object/event was
+    acquired by the NPC. It does not prove that the causal actor was visible, recognized,
+    or linked to the damage by that NPC. Therefore this v2 reference deliberately keeps
+    the causal actor UNKNOWN unless a separately governed causal-actor acquisition proof
+    exists. Current R002 has no such proof, so source_event.actor_id remains simulator-only
+    internal provenance and never enters speaker-visible attribution.
     """
     if not world.is_live:
         raise _fail("LIVE_SEALED_WORLD_REQUIRED")
@@ -140,19 +149,17 @@ def derive_world_echo_opportunity(
             reason="NO_PROVEN_ACQUISITION_OR_CURRENT_PERCEPTION",
         )
 
-    witnessed = [event for event in acquisitions if str(event.payload.get("mode", "")) == "SAW"]
-    if not witnessed:
+    visual_object_acquisitions = [
+        event for event in acquisitions if str(event.payload.get("mode", "")) == "SAW"
+    ]
+    if not visual_object_acquisitions:
         return WorldEchoDecision(
             status="NO_VALID_OPPORTUNITY",
-            reason="ACQUISITION_MODE_NOT_SUPPORTED_BY_V1_ATTRIBUTION_POLICY",
+            reason="ACQUISITION_MODE_NOT_SUPPORTED_BY_V2_OBJECT_ECHO_POLICY",
         )
-    acquisition = min(
-        witnessed,
-        key=lambda event: next(
-            index for index, candidate in enumerate(world.event_log, start=1) if candidate.event_id == event.event_id
-        ),
-    )
 
+    acquisition = min(visual_object_acquisitions, key=lambda event: _event_position(world, event))
+    attribution_state = "OBJECT_STATE_WITNESSED_CAUSE_UNPROVEN"
     identity_payload = {
         "schema": WORLD_ECHO_REFERENCE_VERSION,
         "world_id": world.world_id,
@@ -163,7 +170,8 @@ def derive_world_echo_opportunity(
         "source_event_cursor": source_cursor,
         "acquisition_event_id": acquisition.event_id,
         "damage_state": source_damage_state,
-        "attribution_state": "WITNESSED_CAUSE",
+        "attribution_state": attribution_state,
+        "culprit_actor_ref": None,
     }
     opportunity = WorldEchoOpportunityCandidate(
         schema=WORLD_ECHO_REFERENCE_VERSION,
@@ -175,9 +183,9 @@ def derive_world_echo_opportunity(
         entity_id=entity_id,
         source_event_or_delta_refs=(source_event_id, persistent_delta_ref),
         knowledge_attribution_refs=(acquisition.event_id,),
-        attribution_state="WITNESSED_CAUSE",
-        culprit_actor_ref=source_event.actor_id,
-        response_concept="REMARK_WITNESSED_OBJECT_DAMAGE",
+        attribution_state=attribution_state,
+        culprit_actor_ref=None,
+        response_concept="REMARK_OBSERVED_DAMAGE_CAUSE_UNKNOWN",
         realization_gate="CURRENT_PERCEPTION_EVIDENCE_REQUIRED",
         realization_authorized=False,
         canonical_world_authority=False,
@@ -186,6 +194,6 @@ def derive_world_echo_opportunity(
     )
     return WorldEchoDecision(
         status="CANDIDATE_BLOCKED_PENDING_CURRENT_PERCEPTION",
-        reason="HISTORICAL_ATTRIBUTION_VALID_CURRENT_PERCEPTION_NOT_YET_PROVEN",
+        reason="OBJECT_DAMAGE_ACQUIRED_CAUSAL_ACTOR_NOT_PROVEN",
         opportunity=opportunity,
     )
