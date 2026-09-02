@@ -1,0 +1,115 @@
+schema: INDEPENDENT_REVIEW_DISPATCH_PROTOCOL/v1
+status: CANONICAL_CONTROL_PLANE
+repository_scope: vxz2datoubo/ai-world-simulation-engine
+queue_model: GITHUB_REVIEW_REQUEST_PLUS_PR_HANDOFF
+
+purpose:
+  - separate GitHub review-ticket publication from cross-window delivery and final review-result recording
+  - keep complete review facts in GitHub while keeping cross-window dispatch minimal
+  - prevent queue comments, PR comments, or send API acknowledgements from being misreported as completed dispatch
+
+authority_split:
+  github_coordinator:
+    responsibilities:
+      - fresh reconcile the review target before ticket publication
+      - publish or maintain REVIEW_REQUEST/v1 in the canonical independent-review queue
+      - publish the matching PR handoff
+      - keep full review scope, exact head, risks, evidence locators, and reproduction commands only in GitHub REVIEW_REQUEST/v1 and the PR handoff
+      - record formal lifecycle state only when its evidence gate is satisfied
+    prohibited:
+      - cross_window_delivery
+      - independent_review_execution
+      - treating ticket publication or API acknowledgement as dispatch confirmation
+
+  codex_scheduler:
+    responsibilities:
+      - dynamically discover the dedicated independent-review window at dispatch time
+      - accept window titles matching the current review-window naming convention, including 验算NN or 算NN
+      - never hardcode a specific review-window number or thread
+      - deliver only the exact minimal dispatch message template defined below
+      - read back the target window after delivery and provide dispatch-confirmation evidence
+    prohibited:
+      - embedding exact head, review scope, risks, reproduction commands, implementation details, credentials, or review instructions beyond the fixed message template
+      - claiming dispatch confirmation from send API success alone
+
+  independent_reviewer:
+    responsibilities:
+      - read the latest pending exact-head ticket from GitHub
+      - perform the independent review under the queue protocol
+      - write exact-head PR review evidence
+      - append the matching REVIEW_RESULT/v1 to the canonical queue
+    prohibited:
+      - implementation or remediation on the reviewed head
+      - merge or canonicalization authority by virtue of review
+
+cross_window_dispatch:
+  target_discovery: DYNAMIC_ONLY
+  accepted_title_patterns:
+    - 验算NN
+    - 算NN
+  hardcoded_window_number: forbidden
+  message_template: "验算：请读取 GitHub 中 <repo>/<queue> 最新 pending exact-head ticket 并完成独立验算。"
+  message_mutation: forbidden_except_repo_and_queue_placeholder_substitution
+  credentials: forbidden
+  implementation_content: forbidden
+  attack_instructions: forbidden
+
+lifecycle:
+  allowed_states:
+    - TICKET_PUBLISHED
+    - DISPATCH_CONFIRMED
+    - REVIEW_RESULT_RECORDED
+
+  TICKET_PUBLISHED:
+    requires:
+      - canonical REVIEW_REQUEST/v1 exists for the pending exact head
+      - matching PR handoff exists
+    does_not_prove:
+      - cross_window_delivery
+      - reviewer_started
+      - review_completed
+
+  DISPATCH_CONFIRMED:
+    requires_any_target_window_evidence:
+      - new_user_message_present_in_target_review_window
+      - target_review_window_status_active
+      - explicit_review_start_acknowledgement
+    insufficient_evidence:
+      - REVIEW_REQUEST/v1_exists
+      - PR_handoff_exists
+      - GitHub_comment_exists
+      - message_send_API_returned_success
+      - scheduler_requested_delivery_without_readback
+    invariant: state_must_not_advance_without_target_window_readback_evidence
+
+  REVIEW_RESULT_RECORDED:
+    requires:
+      - exact_head_PR_review_evidence_exists
+      - matching_REVIEW_RESULT_v1_exists_in_canonical_queue
+      - reviewed_head_matches_pending_ticket_exact_head
+    does_not_grant:
+      - merge_authority
+      - implementation_authority
+
+state_machine:
+  order: TICKET_PUBLISHED -> DISPATCH_CONFIRMED -> REVIEW_RESULT_RECORDED
+  skipping_states: forbidden
+  regression_on_head_change: new_exact_head_requires_new_pending_ticket_and_new_dispatch_confirmation
+
+source_of_truth:
+  full_review_payload:
+    - REVIEW_REQUEST/v1
+    - matching_PR_handoff
+  dispatch_confirmation:
+    - Codex_scheduler_target_window_readback_evidence
+  final_review_result:
+    - exact_head_PR_review
+    - REVIEW_RESULT/v1
+
+safety_and_scope:
+  no_credentials: true
+  no_implementation_content_in_dispatch_message: true
+  no_attack_instructions_in_dispatch_message: true
+  no_review_window_number_hardcoding: true
+  no_merge_authority: true
+  no_candidate_branch_mutation_authority: true
