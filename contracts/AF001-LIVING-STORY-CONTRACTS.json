@@ -1924,18 +1924,290 @@
         "opportunity_scarcity_evidence",
         "mechanism_evidence"
       ]
+    },
+    "WorldOrchestrationPlan": {
+      "type_id": "AF001.WorldOrchestrationPlan",
+      "version": "1.0.0-candidate",
+      "domain": "AF-A",
+      "authority_profile_ref": "COORDINATION_ONLY_NO_CANONICAL_DATA_AUTHORITY",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "orchestration_id",
+        "world_instance_id",
+        "world_cursor",
+        "requested_domain_steps",
+        "dependency_refs",
+        "correlation_ref",
+        "policy_version"
+      ]
+    },
+    "DomainChangeNotice": {
+      "type_id": "AF001.DomainChangeNotice",
+      "version": "1.0.0-candidate",
+      "domain": "AF-A",
+      "authority_profile_ref": "DERIVED_COORDINATION_NOTICE_NO_OUTCOME_AUTHORITY",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "notice_id",
+        "world_instance_id",
+        "source_event_refs",
+        "world_cursor",
+        "origin_authority_scope_ref",
+        "affected_domain_hints",
+        "causal_relevance_refs",
+        "correlation_ref"
+      ]
+    },
+    "SimulationFidelityPolicy": {
+      "type_id": "AF001.SimulationFidelityPolicy",
+      "version": "1.0.0-candidate",
+      "domain": "AF-A",
+      "authority_profile_ref": "COMPUTATION_GRANULARITY_POLICY_NO_TRUTH_AUTHORITY",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "policy_id",
+        "policy_version",
+        "domain_scope_ref",
+        "fidelity_class",
+        "update_granularity",
+        "causal_risk_constraints",
+        "resource_conservation_constraints"
+      ]
+    },
+    "DeferredConcretizationReceipt": {
+      "type_id": "AF001.DeferredConcretizationReceipt",
+      "version": "1.0.0-candidate",
+      "domain": "AF-A",
+      "authority_profile_ref": "CONSTRAINT_BOUND_SELECTION_NO_DIRECT_COMMIT_AUTHORITY",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "receipt_id",
+        "world_instance_id",
+        "world_cursor",
+        "unresolved_slot_ref",
+        "locked_constraint_refs",
+        "candidate_set_digest",
+        "selected_candidate_ref",
+        "selection_policy_ref",
+        "result_event_ref"
+      ]
+    },
+    "TemporalCompressionPlan": {
+      "type_id": "AF001.TemporalCompressionPlan",
+      "version": "1.0.0-candidate",
+      "domain": "AF-A",
+      "authority_profile_ref": "PRESENTATION_SCHEDULING_NO_TIME_AUTHORITY",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "plan_id",
+        "world_instance_id",
+        "start_world_cursor",
+        "end_world_cursor",
+        "activity_event_refs",
+        "interrupt_predicates",
+        "decision_boundary_refs",
+        "presentation_policy_ref"
+      ]
+    },
+    "DomainModuleManifest": {
+      "type_id": "AF001.DomainModuleManifest",
+      "version": "1.0.0-candidate",
+      "domain": "AF-A",
+      "authority_profile_ref": "MODULE_LIFECYCLE_AND_SCOPE_DECLARATION",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "module_id",
+        "module_version",
+        "authority_scope_ref",
+        "dependency_module_refs",
+        "accepted_input_event_classes",
+        "output_request_or_receipt_classes",
+        "update_granularity",
+        "lifecycle_state"
+      ]
+    },
+    "InstitutionAggregate": {
+      "type_id": "AF001.InstitutionAggregate",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_CANONICAL_STATE",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "institution_id",
+        "world_id",
+        "institution_class",
+        "goal_refs",
+        "resource_refs",
+        "faction_refs",
+        "policy_refs",
+        "authorized_actor_role_refs",
+        "lifecycle_state",
+        "state_version"
+      ]
+    },
+    "EntityLifecycleReceipt": {
+      "type_id": "AF001.EntityLifecycleReceipt",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "WORLD_ENTITY_LIFECYCLE_EVIDENCE",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "receipt_id",
+        "operation_class",
+        "source_entity_refs",
+        "result_entity_refs",
+        "source_event_refs",
+        "resource_or_material_provenance_refs",
+        "world_cursor",
+        "ruleset_version"
+      ]
+    },
+    "PlaceHistoryProjection": {
+      "type_id": "AF001.PlaceHistoryProjection",
+      "version": "1.0.0-candidate",
+      "domain": "AF-B",
+      "authority_profile_ref": "REBUILDABLE_SPATIAL_HISTORY_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "place_ref",
+        "world_cursor",
+        "source_event_refs",
+        "settlement_state_refs",
+        "land_use_refs",
+        "social_identity_refs",
+        "projection_version"
+      ]
+    },
+    "LegalProcessProjection": {
+      "type_id": "AF001.LegalProcessProjection",
+      "version": "1.0.0-candidate",
+      "domain": "AF-E",
+      "authority_profile_ref": "LEGAL_INTERPRETATION_DERIVED_PROJECTION",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "legal_process_id",
+        "world_fact_refs",
+        "evidence_refs",
+        "investigator_belief_refs",
+        "legal_action_refs",
+        "judgment_refs",
+        "social_belief_refs",
+        "source_event_refs",
+        "projection_version"
+      ]
+    },
+    "NarrativeInfluenceReceipt": {
+      "type_id": "AF001.NarrativeInfluenceReceipt",
+      "version": "1.0.0-candidate",
+      "domain": "AF-G",
+      "authority_profile_ref": "NARRATIVE_RANKING_NON_CANONICAL",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "receipt_id",
+        "world_cursor",
+        "legal_candidate_set_digest",
+        "selected_candidate_refs",
+        "rejected_candidate_refs",
+        "influence_dimension_receipts",
+        "budget_policy_ref",
+        "budget_consumption",
+        "policy_version"
+      ]
+    },
+    "DramaticPresentationIntent": {
+      "type_id": "AF001.DramaticPresentationIntent",
+      "version": "1.0.0-candidate",
+      "domain": "AF-H",
+      "authority_profile_ref": "AWRSE_DIRECTOR_HANDOFF_EXTENSION",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "intent_id",
+        "confirmed_event_refs",
+        "causal_emphasis_refs",
+        "emotional_objective",
+        "reveal_timing_bounds",
+        "continuity_refs",
+        "allowed_information_refs",
+        "forbidden_inventions",
+        "policy_version"
+      ]
+    },
+    "AudienceExposurePolicy": {
+      "type_id": "AF001.AudienceExposurePolicy",
+      "version": "1.0.0-candidate",
+      "domain": "AF-H",
+      "authority_profile_ref": "PUBLICATION_POLICY_NO_KNOWLEDGE_ACQUISITION_AUTHORITY",
+      "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+      "fields": [
+        "policy_id",
+        "policy_version",
+        "experience_mode",
+        "audience_class",
+        "allowed_information_classes",
+        "redaction_rules",
+        "flowback_forbidden"
+      ]
     }
+  },
+  "mids_vnext_architecture_candidate": {
+    "candidate_id": "MIDS-ARCH-001",
+    "candidate_version": "1.0.0-candidate",
+    "effective_spec_snapshot": "MIDS-ARCH-001-SPEC-2026-09-02-R1",
+    "design_evidence_exact_head": "f20c097de5d91ba580b807a2bf86e10b0fe5439d",
+    "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
+    "classification_registry": "docs/research/AWRSE-MIDS-TO-AF-VNEXT-MAPPING-v0.1.md",
+    "authority_reuse": {
+      "world_truth": "AF-A_CANONICAL_EVENTS_PLUS_AF-B_WorldInstance",
+      "capability_truth": "AF-C",
+      "knowledge_and_belief": "AF-E",
+      "narrative": "AF-F_AND_AF-G",
+      "director_handoff": "AF-H_DIRECTOR-BEAT-PACKET",
+      "orchestration": "COORDINATION_ONLY_NO_CANONICAL_DATA_AUTHORITY"
+    },
+    "hard_invariants": [
+      "ONE_WORLD_TRUTH_SCOPE",
+      "ONE_CANONICAL_EVENT_EVIDENCE_PATH",
+      "ORCHESTRATOR_CANNOT_COMMIT_DOMAIN_TRUTH",
+      "RECEIVING_DOMAIN_REVALIDATES_PROPAGATED_CONSEQUENCE",
+      "FIDELITY_CHANGES_COMPUTATION_NOT_EXISTENCE_OR_HISTORY",
+      "DEFERRED_CONCRETIZATION_BINDS_LOCKED_CONSTRAINTS_AND_FAILS_CLOSED",
+      "NARRATIVE_INFLUENCE_RANKS_ONLY_ALREADY_LEGAL_CANDIDATES",
+      "AUDIENCE_EXPOSURE_NE_CHARACTER_KNOWLEDGE_ACQUISITION",
+      "LEGAL_JUDGMENT_NE_OBJECTIVE_WORLD_FACT",
+      "TIME_COMPRESSION_NE_WORLD_TIME_ERASURE",
+      "DISABLED_MODULE_HAS_NO_ADJUDICATION_AUTHORITY",
+      "DIRECTOR_HANDOFF_EXTENSION_CANNOT_OWN_CONCRETE_FILMING_OR_WORLD_TRUTH"
+    ],
+    "runtime_activation": "FORBIDDEN_PENDING_SEPARATE_BOUNDED_RELEASE"
   },
   "freeze_domains": {
     "AF-A": {
       "name": "Identity / Event / Authority",
       "implementation_state": "FREEZE_INTERFACE_ONLY",
-      "type_refs": [],
+      "type_refs": [
+        "WorldOrchestrationPlan",
+        "DomainChangeNotice",
+        "SimulationFidelityPolicy",
+        "DeferredConcretizationReceipt",
+        "TemporalCompressionPlan",
+        "DomainModuleManifest"
+      ],
       "invariants": [
         "DOWNSTREAM_CANNOT_REWRITE_UPSTREAM_TRUTH",
         "EVENT_ID_IS_STABLE_AND_IMMUTABLE",
         "PROJECTION_NEWNESS_DOES_NOT_OUTRANK_EVENT_EVIDENCE",
-        "BREAKING_EVENT_SEMANTICS_REQUIRE_MIGRATION"
+        "BREAKING_EVENT_SEMANTICS_REQUIRE_MIGRATION",
+        "ORCHESTRATOR_COORDINATES_BUT_CANNOT_OWN_OR_COMMIT_DOMAIN_TRUTH",
+        "CROSS_DOMAIN_NOTICE_NE_DOWNSTREAM_OUTCOME",
+        "DEFERRED_CONCRETIZATION_CANNOT_RETCON_LOCKED_EVIDENCE",
+        "FIDELITY_CHANGE_CANNOT_DELETE_ESTABLISHED_EXISTENCE_OR_HISTORY",
+        "DISABLED_MODULE_CANNOT_ADJUDICATE",
+        "PRESENTATION_TIME_COMPRESSION_CANNOT_ERASE_WORLD_TIME"
+      ],
+      "open_decision_refs": [
+        "OD-CONCURRENCY-001",
+        "OD-FIDELITY-POLICY-001",
+        "OD-LONG-ABSENCE-001"
       ]
     },
     "AF-B": {
@@ -1949,16 +2221,24 @@
         "Portal",
         "ActorAggregate",
         "ObjectAggregate",
-        "PlayerIdentity"
+        "PlayerIdentity",
+        "InstitutionAggregate",
+        "EntityLifecycleReceipt",
+        "PlaceHistoryProjection"
       ],
       "state_separations": [
         "OWNERSHIP_NE_POSSESSION",
         "POSSESSION_NE_INVENTORY_INDEX",
         "POSSESSION_NE_WORN",
-        "SHARED_WORLD_TRUTH_NE_PLAYER_LOCAL_PROJECTION"
+        "SHARED_WORLD_TRUTH_NE_PLAYER_LOCAL_PROJECTION",
+        "DESTROYED_ENTITY_ID_IS_NEVER_REUSED",
+        "SPLIT_OR_COMPOSED_ENTITY_GETS_NEW_ID_WITH_PROVENANCE",
+        "RESOURCE_CONSERVATION_SURVIVES_FIDELITY_SCALING",
+        "PLACE_HISTORY_IS_REBUILDABLE_FROM_EVENTS"
       ],
       "open_decision_refs": [
-        "OD-CONCURRENCY-001"
+        "OD-CONCURRENCY-001",
+        "OD-ENTITY-PROVENANCE-001"
       ]
     },
     "AF-C": {
@@ -2039,7 +2319,8 @@
         "NPCEpisodicMemory",
         "BeliefState",
         "NPCPlayerRelationshipState",
-        "NPCContextBundle"
+        "NPCContextBundle",
+        "LegalProcessProjection"
       ],
       "knowledge_modes": [
         "SAW",
@@ -2056,7 +2337,9 @@
         "RECIPIENT_PROJECTION_CANNOT_CREATE_ACQUISITION_EVIDENCE",
         "PRIVATE_PLAYER_PERSONA_NE_NPC_MODEL_OF_PLAYER",
         "EXPLICIT_CHARACTER_CORE_NE_DERIVED_PERSONA_HYPOTHESIS",
-        "SUMMARY_REFLECTION_IS_DERIVED_CACHE"
+        "SUMMARY_REFLECTION_IS_DERIVED_CACHE",
+        "WORLD_FACT_NE_EVIDENCE_NE_INVESTIGATOR_BELIEF_NE_LEGAL_JUDGMENT_NE_SOCIAL_BELIEF",
+        "MODEL_INTELLIGENCE_CANNOT_CREATE_CHARACTER_INTELLIGENCE_OR_KNOWLEDGE"
       ],
       "open_decision_refs": [
         "OD-MEMORY-STORE-001",
@@ -2114,19 +2397,24 @@
         "WorldEchoOpportunity",
         "ResponseConcept",
         "PlayerAutoExpressionPolicy",
-        "PXRankingReceipt"
+        "PXRankingReceipt",
+        "NarrativeInfluenceReceipt"
       ],
       "invariants": [
         "NO_VALID_OPPORTUNITY_IS_VALID",
         "PX_MAY_RANK_ONLY_LEGAL_CANDIDATES",
         "PX_CANNOT_INVENT_FACTS_OR_INJECT_KNOWLEDGE",
         "NARRATIVE_CANNOT_SECRETLY_LOWER_CAPABILITY_DIFFICULTY",
-        "COMMENTARY_REQUIRES_PROVENANCE_AND_ANTI_REPEAT_POLICY"
+        "COMMENTARY_REQUIRES_PROVENANCE_AND_ANTI_REPEAT_POLICY",
+        "NARRATIVE_INFLUENCE_REQUIRES_AUDITABLE_BUDGET_RECEIPT",
+        "NARRATIVE_INFLUENCE_CANNOT_CHANGE_FEASIBILITY_OR_OUTCOME_PROBABILITY",
+        "ORDINARY_PEACEFUL_CONTINUATION_IS_VALID"
       ],
       "open_decision_refs": [
         "OD-PX-SCORING-001",
         "OD-COMMENTARY-BUDGET-001",
-        "OD-ENCOUNTER-DENSITY-001"
+        "OD-ENCOUNTER-DENSITY-001",
+        "OD-NARRATIVE-INFLUENCE-POLICY-001"
       ]
     },
     "AF-H": {
@@ -2135,7 +2423,9 @@
       "type_refs": [
         "DIRECTOR-BEAT-PACKET",
         "ActorPresentationRequirements",
-        "PublicationProjection"
+        "PublicationProjection",
+        "DramaticPresentationIntent",
+        "AudienceExposurePolicy"
       ],
       "invariants": [
         "AWRSE_OWNS_PACKET_FACTS_KNOWLEDGE_VISIBILITY_AND_PRESENTATION_CONSTRAINTS",
@@ -2143,7 +2433,9 @@
         "AI_DIRECTOR_IS_DOWNSTREAM_READ_ONLY",
         "RENDERER_CANNOT_RESOLVE_WORLD_OUTCOMES",
         "PUBLICATION_KNOWLEDGE_DOES_NOT_FLOW_BACK_INTO_PLAYER_OR_NPC_KNOWLEDGE",
-        "MATERIAL_RENDER_CONTRADICTION_IS_FAILURE_NOT_WORLD_MUTATION"
+        "MATERIAL_RENDER_CONTRADICTION_IS_FAILURE_NOT_WORLD_MUTATION",
+        "DRAMATIC_INTENT_NE_CONCRETE_FILMING_AUTHORITY",
+        "AUDIENCE_EXPOSURE_NE_CHARACTER_KNOWLEDGE_ACQUISITION"
       ],
       "open_decision_refs": [
         "OD-PUBLICATION-POLICY-001",
