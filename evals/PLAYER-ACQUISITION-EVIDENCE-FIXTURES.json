@@ -1,33 +1,46 @@
 {
-  "schema": "PLAYER_ACQUISITION_EVIDENCE_FIXTURES/v2",
-  "status": "NON_CANONICAL_ARCHITECTURE_EVAL",
+  "schema": "PLAYER_ACQUISITION_EVIDENCE_FIXTURES/v3",
+  "status": "NON_CANONICAL_ARCHITECTURE_EVAL_NEGATIVE_GAP_PROOF",
   "candidate_option": "B_TYPED_DIRECT_PARTICIPATION_ACQUISITION_RECEIPT",
-  "derivation_basis": "COMMITTED_PRIMARY_EVENT_PLUS_REPLAYED_PLAYER_ACTOR_BINDING",
-  "eligibility_policy_version": "AWRSE-DIRECT-PARTICIPATION-EVENT-POLICY/v1",
-  "positive": {
-    "player_id": "P1",
-    "actor_id": "A",
-    "source_event_type": "OBJECT_PICKED_UP",
-    "expected_mode": "DIRECT_PARTICIPATION",
-    "expected_claims": [
-      "EVENT_OCCURRED",
-      "DIRECT_ACTOR:A",
-      "EVENT_SUPPORTED_TARGET:O"
-    ]
-  },
+  "evaluation_result": "BLOCKED_MISSING_REPLAY_PLAYER_ACTION_PROVENANCE",
+  "derivation_basis_proven": [
+    "EXACT_COMMITTED_PRIMARY_EVENT",
+    "REPLAYED_PLAYER_ACTOR_BINDING",
+    "VERSIONED_PRIMARY_EVENT_ELIGIBILITY_POLICY"
+  ],
+  "missing_required_basis": [
+    "REPLAY_AVAILABLE_ELIGIBLE_PLAYER_SOURCE_CHANNEL",
+    "REPLAY_AVAILABLE_EXPLICIT_INPUT_PRESENCE",
+    "TRUSTED_ACTION_TO_COMMIT_BINDING"
+  ],
+  "eligibility_policy_version": "AWRSE-DIRECT-PARTICIPATION-EVENT-POLICY/v2-GAP-PROOF",
+  "required_future_provenance_fields": [
+    "provenance_receipt_id",
+    "player_or_principal_id",
+    "actor_id",
+    "action_id",
+    "eligible_source_channel",
+    "explicit_input_presence_without_raw_text",
+    "accepted_resolution_or_commit_ref",
+    "baseline_version",
+    "world_or_event_cursor",
+    "policy_version",
+    "integrity_digest"
+  ],
+  "positive_receipt_available_today": false,
   "attacks": [
-    "CALLER_ACTION_OBJECT_REMOVED_FROM_DERIVATION_API",
+    "COMMITTED_EVENT_PLUS_PLAYER_BINDING_MUST_NOT_IMPLY_EXPLICIT_PLAYER_ACTION",
+    "PRE_RESTART_ACTION_OBJECT_MUST_NOT_BE_REQUIRED",
+    "SYSTEM_OR_NARRATIVE_ACTION_FOR_PLAYER_AVATAR_MUST_NOT_LAUNDER_TO_DIRECT_PARTICIPATION",
+    "SECONDARY_WITNESS_EVENT_LAUNDERING",
     "SAME_EVENT_ID_MUTATED_TARGET",
     "SAME_EVENT_ID_MUTATED_ACTION_CAUSE",
     "UNCOMMITTED_EVENT",
     "UNBOUND_PLAYER_ACTOR",
-    "SECONDARY_WITNESS_EVENT_LAUNDERING",
     "ARBITRARY_ACQUISITION_MODE",
-    "UNSUPPORTED_HIDDEN_FACT_CLAIM",
-    "RAW_LITERAL_TEXT_PERSISTENCE",
-    "PRE_RESTART_ACTION_OBJECT_DEPENDENCY",
     "OLD_ELIGIBILITY_POLICY_REINTERPRETATION",
-    "REPLAY_RECEIPT_ID_DRIFT",
+    "CALLER_CONSTRUCTED_RECEIPT_AUTHORITY",
+    "RAW_LITERAL_TEXT_PERSISTENCE",
     "AUTHORITY_FLAG_ESCALATION"
   ]
 }
