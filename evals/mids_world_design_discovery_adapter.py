@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from dataclasses import asdict, dataclass, field
 from enum import Enum
@@ -21,9 +23,27 @@ class OriginClass(str, Enum):
     CANONICAL_EVIDENCE = "CANONICAL_EVIDENCE"
 
 
-BOUND_CANONICAL_CONTEXT_ID = "bc9bee8c6402d70dbb5c36ca4416905f4ca54ee4"
-BOUND_SPEC_SNAPSHOT_ID = "MIDS-001-SPEC-2026-08-31-R1"
-TRUSTED_USER_EVIDENCE_LEDGER_ID = "MIDS-UPSTREAM-USER-EVIDENCE-FIXTURE/v1"
+class MaterialDistinctnessState(str, Enum):
+    DISTINCT = "DISTINCT"
+    NOT_DISTINCT = "NOT_DISTINCT"
+    UNKNOWN = "UNKNOWN"
+
+
+def _normalize_semantic_text(value: str) -> str:
+    lowered = value.strip().lower()
+    lowered = re.sub(r"\b(very|really|strict|strictly|highly|more)\b", " ", lowered)
+    lowered = re.sub(r"[^a-z0-9_\-]+", " ", lowered)
+    return " ".join(lowered.split())
+
+
+def _text_digest(value: str) -> str:
+    return hashlib.sha256(_normalize_semantic_text(value).encode("utf-8")).hexdigest()
+
+
+BOUND_CANONICAL_CONTEXT_ID = "d62fc4b2fbaffd4984f7e292690a9013714a8e3e"
+BOUND_SPEC_SNAPSHOT_ID = "MIDS-WORLD-DESIGN-REM-002"
+TRUSTED_USER_EVIDENCE_LEDGER_ID = "MIDS-UPSTREAM-USER-EVIDENCE-FIXTURE/v2"
+TRUSTED_MATERIAL_SEMANTIC_LEDGER_ID = "MIDS-UPSTREAM-MATERIAL-SEMANTICS-FIXTURE/v1"
 
 
 @dataclass(frozen=True)
@@ -34,24 +54,45 @@ class UserEvidenceReceipt:
     subject_ref: str
     question_ref: str
     canonical_context_id: str
+    statement_digest: str = ""
     issuer: str = "UPSTREAM_USER_INTERACTION_AUTHORITY"
 
 
-# Shadow/replay-only stand-in for a future upstream interaction authority.  The adapter
-# may RESOLVE these receipts, but it has no API that mints arbitrary new receipts.
+_CLASSIFY_STATEMENT = "The user explicitly confirms the bounded classification example."
+
+
 _TRUSTED_USER_EVIDENCE = MappingProxyType(
     {
         "UE-ACCEPT-O1": UserEvidenceReceipt(
-            "UE-ACCEPT-O1", "USER_MESSAGE:turn-10", "ACCEPT_AI_OPTION", "O1", "AI_OPTION_ACCEPTANCE", BOUND_CANONICAL_CONTEXT_ID
+            "UE-ACCEPT-O1",
+            "USER_MESSAGE:turn-10",
+            "ACCEPT_AI_OPTION",
+            "O1",
+            "AI_OPTION_ACCEPTANCE",
+            BOUND_CANONICAL_CONTEXT_ID,
         ),
         "UE-TACIT-TACIT-1": UserEvidenceReceipt(
-            "UE-TACIT-TACIT-1", "USER_MESSAGE:turn-9", "CONFIRM_TACIT_CANDIDATE", "TACIT-1", "TACIT_CONFIRMATION", BOUND_CANONICAL_CONTEXT_ID
+            "UE-TACIT-TACIT-1",
+            "USER_MESSAGE:turn-9",
+            "CONFIRM_TACIT_CANDIDATE",
+            "TACIT-1",
+            "TACIT_CONFIRMATION",
+            BOUND_CANONICAL_CONTEXT_ID,
         ),
         "UE-QOC-A": UserEvidenceReceipt(
             "UE-QOC-A", "USER_MESSAGE:turn-1", "QOC_DECISION", "A", "Q", BOUND_CANONICAL_CONTEXT_ID
         ),
         "UE-QOC-B": UserEvidenceReceipt(
             "UE-QOC-B", "USER_MESSAGE:turn-2", "QOC_DECISION", "B", "Q", BOUND_CANONICAL_CONTEXT_ID
+        ),
+        "UE-CLASSIFY-EXAMPLE": UserEvidenceReceipt(
+            "UE-CLASSIFY-EXAMPLE",
+            "USER_MESSAGE:turn-classify",
+            "CLASSIFY_USER_EXPLICIT",
+            "CLASSIFY-EXAMPLE",
+            "Q-CLASSIFY-EXAMPLE",
+            BOUND_CANONICAL_CONTEXT_ID,
+            _text_digest(_CLASSIFY_STATEMENT),
         ),
     }
 )
@@ -63,6 +104,7 @@ def _require_user_evidence(
     action_type: str,
     subject_ref: str,
     question_ref: str,
+    statement: Optional[str] = None,
 ) -> UserEvidenceReceipt:
     receipt = _TRUSTED_USER_EVIDENCE.get(receipt_id)
     if receipt is None:
@@ -77,6 +119,69 @@ def _require_user_evidence(
         raise ValueError("USER_EVIDENCE_SUBJECT_MISMATCH")
     if receipt.question_ref != question_ref:
         raise ValueError("USER_EVIDENCE_QUESTION_MISMATCH")
+    if receipt.statement_digest:
+        if statement is None:
+            raise ValueError("USER_EVIDENCE_STATEMENT_REQUIRED")
+        if _text_digest(statement) != receipt.statement_digest:
+            raise ValueError("USER_EVIDENCE_STATEMENT_MISMATCH")
+    return receipt
+
+
+@dataclass(frozen=True)
+class MaterialSemanticReceipt:
+    receipt_id: str
+    source_ref: str
+    option_id: str
+    comparison_scope_ref: str
+    option_text_digest: str
+    semantic_class_ref: str
+    canonical_context_id: str
+    issuer: str = "UPSTREAM_DESIGN_SEMANTIC_AUTHORITY"
+
+
+def _semantic_receipt(option_id: str, text: str, scope: str, semantic_class: str) -> MaterialSemanticReceipt:
+    return MaterialSemanticReceipt(
+        receipt_id=f"MSR-{option_id}",
+        source_ref=f"REPLAY_FIXTURE:{scope}:{option_id}",
+        option_id=option_id,
+        comparison_scope_ref=scope,
+        option_text_digest=_text_digest(text),
+        semantic_class_ref=semantic_class,
+        canonical_context_id=BOUND_CANONICAL_CONTEXT_ID,
+    )
+
+
+_TRUSTED_MATERIAL_SEMANTICS = MappingProxyType(
+    {
+        r.option_id: r
+        for r in (
+            _semantic_receipt("O-R1-LOCAL", "Function-local impairment preserves unaffected skills.", "R1-CAPABILITY", "FUNCTION_LOCAL"),
+            _semantic_receipt("O-R1-GLOBAL", "Global penalty degrades most combat output.", "R1-CAPABILITY", "GLOBAL_PENALTY"),
+            _semantic_receipt("O-R2-CHANNEL", "Require a real source/channel/carrier/perception path.", "R2-KNOWLEDGE", "PROVENANCE_CHANNEL"),
+            _semantic_receipt("O-R2-INJECT", "Allow direct narrative injection for important events.", "R2-KNOWLEDGE", "NARRATIVE_INJECTION"),
+            _semantic_receipt("O-R3-EVENT", "Canonical event evidence outranks summaries and projections.", "R3-PERSISTENCE", "EVENT_EVIDENCE_AUTHORITY"),
+            _semantic_receipt("O-R3-SUMMARY", "Newest materialized summary wins.", "R3-PERSISTENCE", "SUMMARY_AUTHORITY"),
+            _semantic_receipt("O-R4-LEGAL", "Accept causal loss and seek only legal alternatives or no opportunity.", "R4-HOSTILE-PLAYER", "LEGAL_ALTERNATIVE_ONLY"),
+            _semantic_receipt("O-R4-FORCE", "Force dramatic reconvergence by replacing the lost cause.", "R4-HOSTILE-PLAYER", "FORCED_RECONVERGENCE"),
+            _semantic_receipt("O-R5-OBJECT", "Treat object possession as canonical and inventory as rebuildable index.", "R5-POSSESSION", "OBJECT_POSSESSION_AUTHORITY"),
+            _semantic_receipt("O-R5-DUAL", "Let inventory and object both independently assert possession.", "R5-POSSESSION", "DUAL_POSSESSION_AUTHORITY"),
+            _semantic_receipt("O-R6-BIND", "Bind presentation refs to the same replayed world/scene state.", "R6-PRESENTATION", "CROSS_PLANE_BINDING"),
+            _semantic_receipt("O-R6-DIRECTOR", "Allow director-visible assets to override possession when useful.", "R6-PRESENTATION", "DIRECTOR_OVERRIDE"),
+        )
+    }
+)
+
+
+def _resolve_material_semantic(option: "DesignOption") -> Optional[MaterialSemanticReceipt]:
+    receipt = _TRUSTED_MATERIAL_SEMANTICS.get(option.option_id)
+    if receipt is None:
+        return None
+    if receipt.canonical_context_id != BOUND_CANONICAL_CONTEXT_ID:
+        return None
+    if receipt.issuer != "UPSTREAM_DESIGN_SEMANTIC_AUTHORITY":
+        return None
+    if receipt.option_text_digest != _text_digest(option.text):
+        return None
     return receipt
 
 
@@ -127,12 +232,12 @@ class DesignOption:
     material_effects: Tuple[str, ...] = ()
     status: str = "CANDIDATE"
 
-    def material_signature(self) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
-        dimensions = tuple(sorted({_normalize_material_text(value) for value in self.decision_dimensions if value.strip()}))
-        effects = tuple(sorted({_normalize_material_text(value) for value in self.material_effects if value.strip()}))
-        if not dimensions or not effects:
-            raise ValueError("MATERIAL_OPTION_REQUIRES_DECISION_DIMENSIONS_AND_EFFECTS")
-        return dimensions, effects
+    def declared_material_metadata(self) -> Dict[str, Tuple[str, ...]]:
+        """Caller-authored metadata retained for audit only; never semantic authority."""
+        return {
+            "decision_dimensions": tuple(self.decision_dimensions),
+            "material_effects": tuple(self.material_effects),
+        }
 
 
 @dataclass(frozen=True)
@@ -243,13 +348,6 @@ class ReconciliationRequired(RuntimeError):
     pass
 
 
-def _normalize_material_text(value: str) -> str:
-    lowered = value.strip().lower()
-    lowered = re.sub(r"\b(very|really|strict|strictly|highly|more)\b", " ", lowered)
-    lowered = re.sub(r"[^a-z0-9_\-]+", " ", lowered)
-    return " ".join(lowered.split())
-
-
 _STOPWORDS = {
     "about", "after", "again", "allow", "because", "before", "being", "cannot", "could", "direct", "from",
     "have", "into", "must", "only", "remain", "should", "that", "their", "this", "through", "when", "where",
@@ -266,7 +364,7 @@ def _semantic_tokens(value: str) -> set[str]:
 
 
 def _reference_discovery_generator(discovery_input: DiscoveryInput) -> List[str]:
-    """Deterministic shadow generator that has no field/path to hidden expected answers."""
+    """Deterministic shadow generator with no hidden-answer or caller-semantic authority."""
     generated: List[str] = [f"USER_GOAL: {discovery_input.user_input}"]
     selected = sorted(
         (q for q in discovery_input.questions if q.material and not q.canonical_known),
@@ -278,10 +376,13 @@ def _reference_discovery_generator(discovery_input: DiscoveryInput) -> List[str]
     for option in discovery_input.options:
         if option.status != "CANDIDATE":
             continue
-        dimensions, effects = option.material_signature()
-        generated.append(
-            "MATERIAL_OPTION: " + "; ".join([*(f"dimension={d}" for d in dimensions), *(f"effect={e}" for e in effects)])
-        )
+        receipt = _resolve_material_semantic(option)
+        if receipt is None:
+            generated.append(f"MATERIAL_OPTION_UNRESOLVED: {option.option_id}")
+        else:
+            generated.append(
+                f"MATERIAL_OPTION: scope={receipt.comparison_scope_ref}; semantic_class={receipt.semantic_class_ref}; option={option.option_id}"
+            )
     for key, value in sorted(discovery_input.allowed_context.items()):
         generated.append(f"BOUND_CONTEXT: {key}={value}")
     return generated
@@ -326,8 +427,25 @@ class MIDSWorldDesignDiscoveryAdapter:
         if self.canonical_snapshot_id != BOUND_CANONICAL_CONTEXT_ID:
             raise ReconciliationRequired("BOUND_CANONICAL_CONTEXT_DRIFT")
 
-    def classify_epistemic_state(self, origin: OriginClass, user_evidence_receipt_id: Optional[str] = None) -> EpistemicState:
-        if origin == OriginClass.USER and user_evidence_receipt_id in _TRUSTED_USER_EVIDENCE:
+    def classify_epistemic_state(
+        self,
+        origin: OriginClass,
+        user_evidence_receipt_id: Optional[str] = None,
+        *,
+        subject_ref: Optional[str] = None,
+        question_ref: Optional[str] = None,
+        statement: Optional[str] = None,
+    ) -> EpistemicState:
+        if origin == OriginClass.USER:
+            if not user_evidence_receipt_id or not subject_ref or not question_ref or statement is None:
+                raise ValueError("USER_EXPLICIT_CLASSIFICATION_REQUIRES_BOUND_EVIDENCE_CONTEXT")
+            _require_user_evidence(
+                user_evidence_receipt_id,
+                action_type="CLASSIFY_USER_EXPLICIT",
+                subject_ref=subject_ref,
+                question_ref=question_ref,
+                statement=statement,
+            )
             return EpistemicState.USER_EXPLICIT_CONFIRMED
         if origin == OriginClass.USER_INFERRED:
             return EpistemicState.USER_TACIT_CANDIDATE
@@ -347,13 +465,27 @@ class MIDSWorldDesignDiscoveryAdapter:
         return eligible[: self.question_budget]
 
     @staticmethod
+    def material_distinctness_state(options: Sequence[DesignOption]) -> MaterialDistinctnessState:
+        candidates = [option for option in options if option.status == "CANDIDATE"]
+        if len(candidates) < 2:
+            return MaterialDistinctnessState.NOT_DISTINCT
+        receipts: List[MaterialSemanticReceipt] = []
+        for option in candidates:
+            receipt = _resolve_material_semantic(option)
+            if receipt is None:
+                return MaterialDistinctnessState.UNKNOWN
+            receipts.append(receipt)
+        scopes = {receipt.comparison_scope_ref for receipt in receipts}
+        if len(scopes) != 1:
+            return MaterialDistinctnessState.UNKNOWN
+        classes = {receipt.semantic_class_ref for receipt in receipts}
+        if len(classes) < 2:
+            return MaterialDistinctnessState.NOT_DISTINCT
+        return MaterialDistinctnessState.DISTINCT
+
+    @staticmethod
     def materially_distinct_options(options: Sequence[DesignOption]) -> bool:
-        signatures = {
-            option.material_signature()
-            for option in options
-            if option.status == "CANDIDATE"
-        }
-        return len(signatures) >= 2
+        return MIDSWorldDesignDiscoveryAdapter.material_distinctness_state(options) is MaterialDistinctnessState.DISTINCT
 
     @staticmethod
     def accept_ai_option(option: DesignOption, user_evidence_receipt_id: str) -> DiscoveryDecision:
@@ -441,7 +573,11 @@ class MIDSWorldDesignDiscoveryAdapter:
             related_open_decision_refs=list(case.open_decision_refs),
             architecture_contradictions=list(contradictions),
             unresolved_unknowns=list(unresolved_unknowns),
-            provenance_refs=[f"REPLAY:{case.case_id}", f"CANONICAL_SNAPSHOT:{BOUND_CANONICAL_CONTEXT_ID}"],
+            provenance_refs=[
+                f"REPLAY:{case.case_id}",
+                f"CANONICAL_SNAPSHOT:{BOUND_CANONICAL_CONTEXT_ID}",
+                f"SPEC_SNAPSHOT:{BOUND_SPEC_SNAPSHOT_ID}",
+            ],
         )
 
     def evaluate_replay_case(
@@ -456,14 +592,10 @@ class MIDSWorldDesignDiscoveryAdapter:
         if any(not isinstance(item, str) for item in discovered):
             raise ValueError("DISCOVERY_GENERATOR_OUTPUT_MUST_BE_STRINGS")
 
-        # Hidden expected answers are first touched only here, after generation completed.
         score = _score_expected_discoveries(case.expected_discoveries, discovered)
         selected = self.select_questions(discovery_input.questions)
-        useful_option_count = (
-            len(discovery_input.options)
-            if discovery_input.options and self.materially_distinct_options(discovery_input.options)
-            else 0
-        )
+        distinctness = self.material_distinctness_state(discovery_input.options)
+        useful_option_count = len(discovery_input.options) if distinctness is MaterialDistinctnessState.DISTINCT else 0
         packet = self.compile_candidate_packet(case, discovered, [], [])
         if packet.authority != self.AUTHORITY_MARKER:
             self.false_canonicalization_count += 1
@@ -480,6 +612,7 @@ class MIDSWorldDesignDiscoveryAdapter:
             "unnecessary_technical_question_rate": (
                 sum(1 for q in selected if q.technical_jargon and not q.scenario_translation) / max(1, len(selected))
             ),
+            "material_distinctness_state": distinctness.value,
             "useful_ai_design_alternative_count": useful_option_count,
             "architecture_contradiction_rate": 0.0,
             "open_decision_traceability_rate": 1.0 if case.open_decision_refs else 0.0,
