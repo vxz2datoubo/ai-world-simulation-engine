@@ -334,6 +334,21 @@
         "ordered_architecture_assertions": ["LEGAL_CANDIDATE_SET_PRECEDES_NARRATIVE_RANKING", "PEACEFUL_CONTINUATION_MAY_PRECEDE_PRESENTATION"],
         "forbidden_outcomes": ["NARRATIVE_FORCES_CATASTROPHE", "DRAMATIC_INTENT_CREATES_WORLD_EVENT", "EMPTY_CANDIDATE_SET_REPLACED_WITH_ILLEGAL_EVENT"],
         "expected_disposition": "ORDINARY_LIFE_IS_A_VALID_NONFAILURE_BRANCH"
+      },
+      "DIRECTOR_INTENT_PARENT_CONTEXT_BINDING": {
+        "required_contracts": ["AF-A", "AF-H"],
+        "required_type_refs": ["DIRECTOR-BEAT-PACKET", "DramaticPresentationIntent", "AudienceExposurePolicy"],
+        "ordered_architecture_assertions": ["CONFIRMED_EVENTS_AND_VISIBILITY_ENVELOPE_PRECEDE_PARENT_PACKET", "PARENT_PACKET_PRECEDES_BOUND_DRAMATIC_INTENT", "BOUND_PACKET_AND_INTENT_PRECEDE_EXTERNAL_DIRECTOR_STAGING"],
+        "admission_cases": [
+          {"case_id": "DPI-B1-VALID-EXACT-PARENT-CONTEXT", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "ACCEPT_BOUND_EXTENSION"},
+          {"case_id": "DPI-B2-ORPHAN", "parent_ref_match": false, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_ORPHAN"},
+          {"case_id": "DPI-B3-WRONG-WORLD", "parent_ref_match": true, "world_instance_id_match": false, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_WORLD_INSTANCE_MISMATCH"},
+          {"case_id": "DPI-B4-STALE-CURSOR", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": false, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_WORLD_STATE_MISMATCH"},
+          {"case_id": "DPI-B5-EVENT-MISMATCH", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": false, "confirmed_event_set_digest_match": false, "causal_emphasis_subset": false, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_EVENT_CONTEXT_MISMATCH"},
+          {"case_id": "DPI-B6-INFORMATION-SUPERSET", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": false, "expected": "REJECT_FAIL_CLOSED_INFORMATION_ENVELOPE_EXPANSION"}
+        ],
+        "forbidden_outcomes": ["ORPHAN_INTENT_USED_AS_DIRECTOR_HANDOFF", "INTENT_BINDS_DIFFERENT_WORLD_OR_EVENTS_THAN_PARENT", "INTENT_EXPANDS_PARENT_KNOWLEDGE_VISIBILITY", "INTENT_GAINS_WORLD_EVENT_DIRECTOR_OR_RENDER_AUTHORITY"],
+        "expected_disposition": "ONLY_EXACT_PARENT_CONTEXT_BOUND_INTENT_IS_ADMISSIBLE"
       }
     },
     "acceptance": ["ALL_REQUIRED_TYPE_REFS_RESOLVE_IN_PARENT_CONTRACT", "ALL_REQUIRED_CONTRACTS_RESOLVE_TO_AF_A_THROUGH_AF_H", "NO_CHECK_CLAIMS_RUNTIME_IMPLEMENTATION", "NO_SECOND_AUTHORITY_PLANE", "EVERY_CHECK_HAS_ORDERED_ASSERTIONS_FORBIDDEN_OUTCOMES_AND_EXPECTED_DISPOSITION"]

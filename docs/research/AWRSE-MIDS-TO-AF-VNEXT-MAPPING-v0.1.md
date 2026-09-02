@@ -36,7 +36,7 @@ Design evidence: exact commit `f20c097de5d91ba580b807a2bf86e10b0fe5439d` on `con
 | P015 | ARCHITECTURE_EXTENSION_CANDIDATE | AF-A/H | `TemporalCompressionPlan` is presentation scheduling over real elapsed world time and has decision/interrupt boundaries. |
 | P016 | RULESET_OR_PRODUCT_POLICY | AF-A/B | Default reopen freezes elapsed world time; optional absence advancement needs a later versioned policy and remains open. |
 | P017 | CANONICAL_CLARIFICATION | AF-B/E | Actor death is permanent evidence; player continuity may rebind to another eligible actor in the same `WorldInstance`. |
-| P018 | ARCHITECTURE_EXTENSION_CANDIDATE | AF-B/F | World bootstrap combines approved authored constraints with evidence-bound unresolved slots; later detail uses deferred concretization. |
+| P018 | ARCHITECTURE_EXTENSION_CANDIDATE | AF-B/F | World bootstrap intentionally composes existing `StoryBible`/world constraints with evidence-bound unresolved slots and `DeferredConcretizationReceipt`; no separate bootstrap truth authority or dedicated bootstrap type is required. |
 | P019 | ALREADY_CANONICAL | AF-F/G | Soft attractors and storylets are possibilities, never promised future facts. |
 | P020 | ARCHITECTURE_EXTENSION_CANDIDATE | AF-A | `DomainModuleManifest` declares authority scope, dependencies and lifecycle; disabled modules cannot adjudicate or emit canonical events. |
 | P021 | ARCHITECTURE_EXTENSION_CANDIDATE | AF-B/C/E | `InstitutionAggregate` is a world actor with stable identity and referenced resources/goals/factions/policy; detailed mechanics are later rulesets. |

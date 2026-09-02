@@ -1859,6 +1859,7 @@
       "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
       "fields": [
         "beat_id",
+        "world_instance_id",
         "world_state_version",
         "confirmed_event_refs",
         "scene_view_asset_refs",
@@ -1866,6 +1867,7 @@
         "public_visible_knowledge_refs",
         "private_forbidden_knowledge_refs",
         "actor_presentation_requirements",
+        "dramatic_presentation_intent_ref",
         "presentation_goal",
         "forbidden_inventions",
         "contract_version"
@@ -2122,14 +2124,19 @@
       "implementation_state": "INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED",
       "fields": [
         "intent_id",
+        "parent_director_beat_packet_ref",
+        "world_instance_id",
+        "world_state_version",
         "confirmed_event_refs",
+        "confirmed_event_set_digest",
         "causal_emphasis_refs",
         "emotional_objective",
         "reveal_timing_bounds",
         "continuity_refs",
         "allowed_information_refs",
         "forbidden_inventions",
-        "policy_version"
+        "policy_version",
+        "contract_version"
       ]
     },
     "AudienceExposurePolicy": {
@@ -2164,6 +2171,26 @@
       "director_handoff": "AF-H_DIRECTOR-BEAT-PACKET",
       "orchestration": "COORDINATION_ONLY_NO_CANONICAL_DATA_AUTHORITY"
     },
+    "director_handoff_extension_binding": {
+      "binding_id": "AF001-MIDS-DPI-TO-DIRECTOR-BEAT-PACKET-001",
+      "binding_version": "1.0.0-candidate",
+      "parent_type_ref": "DIRECTOR-BEAT-PACKET",
+      "extension_type_ref": "DramaticPresentationIntent",
+      "parent_reference_field": "DIRECTOR-BEAT-PACKET.dramatic_presentation_intent_ref",
+      "extension_back_reference_field": "DramaticPresentationIntent.parent_director_beat_packet_ref",
+      "correlation_rules": [
+        "PARENT_REFERENCE_AND_EXTENSION_BACK_REFERENCE_MUST_BE_BIDIRECTIONALLY_EQUAL",
+        "DramaticPresentationIntent.world_instance_id_MUST_EQUAL_DIRECTOR-BEAT-PACKET.world_instance_id",
+        "DramaticPresentationIntent.world_state_version_MUST_EQUAL_DIRECTOR-BEAT-PACKET.world_state_version",
+        "DramaticPresentationIntent.confirmed_event_refs_MUST_EQUAL_DIRECTOR-BEAT-PACKET.confirmed_event_refs_AS_AN_ORDERED_SET",
+        "DramaticPresentationIntent.confirmed_event_set_digest_MUST_BIND_THE_EXACT_CONFIRMED_EVENT_REFS",
+        "CAUSAL_EMPHASIS_REFS_MUST_BE_A_SUBSET_OF_CONFIRMED_EVENT_REFS",
+        "ALLOWED_INFORMATION_REFS_MUST_NOT_EXCEED_PARENT_PLAYER_OR_PUBLIC_VISIBLE_KNOWLEDGE_REFS",
+        "ORPHAN_DUPLICATE_WORLD_MISMATCH_STALE_CURSOR_EVENT_MISMATCH_OR_INFORMATION_SUPERSET_FAILS_CLOSED"
+      ],
+      "authority_rule": "EXTENSION_REFINES_PRESENTATION_INTENT_ONLY; PARENT_REMAINS_THE_SINGLE_AWRSE_DIRECTOR_HANDOFF_BOUNDARY; EXTENSION_HAS_NO_WORLD_EVENT_KNOWLEDGE_DIRECTOR_OR_RENDER_AUTHORITY",
+      "runtime_implementation_authorized": false
+    },
     "hard_invariants": [
       "ONE_WORLD_TRUTH_SCOPE",
       "ONE_CANONICAL_EVENT_EVIDENCE_PATH",
@@ -2177,6 +2204,7 @@
       "TIME_COMPRESSION_NE_WORLD_TIME_ERASURE",
       "DISABLED_MODULE_HAS_NO_ADJUDICATION_AUTHORITY",
       "DIRECTOR_HANDOFF_EXTENSION_CANNOT_OWN_CONCRETE_FILMING_OR_WORLD_TRUTH"
+      ,"DRAMATIC_PRESENTATION_INTENT_REQUIRES_EXACT_PARENT_WORLD_CURSOR_EVENT_AND_INFORMATION_BINDING"
     ],
     "runtime_activation": "FORBIDDEN_PENDING_SEPARATE_BOUNDED_RELEASE"
   },

@@ -495,7 +495,9 @@ Causally material history and provenance remain explainable. Compaction may repl
 
 ### 17.7 AWRSE-to-Director boundary and audience modes
 
-AWRSE may add `DramaticPresentationIntent` to the existing `DIRECTOR-BEAT-PACKET`: causal emphasis, emotional objective, reveal timing bounds, continuity refs, permitted audience information and forbidden inventions. It does not specify or compete for concrete shot, lens, edit, performance or sound authority; those remain with the separate AI Director inside the validated envelope.
+AWRSE may add `DramaticPresentationIntent` only as a mechanically bound extension of the existing `DIRECTOR-BEAT-PACKET`: causal emphasis, emotional objective, reveal timing bounds, continuity refs, permitted audience information and forbidden inventions. The parent packet carries exactly one `dramatic_presentation_intent_ref`; the extension carries the matching `parent_director_beat_packet_ref`. Both sides must bind the same `world_instance_id`, world-state version/cursor and exact confirmed-event set, causal emphasis must be a subset of those events, and allowed information cannot exceed the parent packet's player/public visibility envelope. An orphan, duplicate, wrong-world, stale-cursor, event-mismatched or information-expanding intent fails closed. The parent packet remains the single AWRSE Director handoff boundary.
+
+`DramaticPresentationIntent` does not specify or compete for concrete shot, lens, edit, performance or sound authority; those remain with the separate AI Director inside the validated envelope. It cannot be submitted independently as a second handoff object and has no world, event, knowledge, Director or render authority of its own.
 
 `AudienceExposurePolicy` is an AF-H projection policy. Game mode normally limits output to player-visible information; film mode may expose audience-only events when policy permits. Neither audience knowledge nor rendered information is an AF-E acquisition event, and neither may flow back into player/NPC knowledge.
 

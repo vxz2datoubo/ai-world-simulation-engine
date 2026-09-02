@@ -132,7 +132,7 @@ AF-A WorldOrchestrationPlan (coordination only)
 AF-A/B DeferredConcretizationReceipt -> owning-domain event (never prior-event edit)
 AF-F/G NarrativeInfluenceReceipt -> already-legal candidate selection
 AF-H AudienceExposurePolicy -> PublicationProjection (never AF-E acquisition)
-AF-H DramaticPresentationIntent -> existing DIRECTOR-BEAT-PACKET extension
+AF-H DramaticPresentationIntent <-> existing DIRECTOR-BEAT-PACKET exact parent/context binding
 ```
 
 No post-freeze runtime task may silently depend on an unresolved lower-layer architectural decision. Deferred ruleset/balance policy must remain explicit and version-bound, but it does not by itself re-open an already resolved architectural substrate.
@@ -185,6 +185,11 @@ The additive `mids_vnext_architecture_checks` registry covers architecture-only 
 | `PLAYER_DEATH_SAME_WORLD_SUCCESSION` | A/B/E/F/H | Rebinding cannot erase death, fork world or transfer unsupported knowledge |
 | `LONG_ABSENCE_AND_TEMPORAL_COMPRESSION` | A/B/E/H | Presentation compression cannot erase time or activate disabled modules |
 | `PEACEFUL_ORDINARY_LIFE` | F/G/H | Narrative cannot force catastrophe or replace an empty set with illegality |
+| `DIRECTOR_INTENT_PARENT_CONTEXT_BINDING` | A/H | Orphan, stale-world, event-mismatched or information-expanding intent cannot become a parallel Director handoff |
+
+### MIDS AF-H adjunct binding
+
+`DIRECTOR-BEAT-PACKET` remains the sole AWRSE-to-Director handoff boundary. `DramaticPresentationIntent` is admitted only when the parent's `dramatic_presentation_intent_ref` and the extension's `parent_director_beat_packet_ref` are bidirectionally equal, `world_instance_id` and `world_state_version`/cursor are identical, the ordered confirmed-event set and its digest match, causal emphasis is a subset of that event set, and allowed information is within the parent visibility envelope. Any orphan, duplicate, wrong world, stale cursor, event mismatch or information superset fails closed. The extension owns no canonical data and cannot be transported as an independent Director packet.
 
 Human-readable scenario prose remains in the eval registry. Each scenario also has a machine `machine_spec` whose type refs and decision dependencies must resolve.
 
