@@ -22,7 +22,10 @@ from runtime.awrse import (
 from runtime.awrse.model import ResolutionStatus
 
 
-def _world() -> WorldState:
+def _world(*, actor_visible_to_b=False) -> WorldState:
+    visible_pairs = {("DOOR", "B")}
+    if actor_visible_to_b:
+        visible_pairs.add(("A", "B"))
     return WorldState(
         world_id="WORLD-ECHO-EVAL-001",
         active_scene_id="S1",
@@ -55,13 +58,13 @@ def _world() -> WorldState:
             )
         },
         principal_actor_bindings={"P1": {"A"}},
-        visible_pairs={("DOOR", "B")},
+        visible_pairs=visible_pairs,
         zone_scene_bindings={"Z1": "S1"},
     )
 
 
-def _damaged_world():
-    world = _world()
+def _damaged_world(*, actor_visible_to_b=False):
+    world = _world(actor_visible_to_b=actor_visible_to_b)
     baseline = capture_pristine_baseline(world)
     action = ActionCompiler().compile("砸木门", "A", world, principal_id="P1")
     resolution = SimulationEngine().resolve_and_commit(action, world)
@@ -74,8 +77,12 @@ def _damaged_world():
     return baseline, world, source_event, witness_event
 
 
-def test_witness_gets_noncanonical_known_cause_candidate_but_not_realization_authority():
+def test_object_event_witness_gets_unknown_cause_candidate_not_simulator_actor_identity():
     _, world, source_event, witness_event = _damaged_world()
+    assert source_event.actor_id == "A"
+    assert world.can_see("DOOR", "B") is True
+    assert world.can_see("A", "B") is False
+
     result = derive_world_echo_opportunity(
         world=world,
         speaker_npc_id="B",
@@ -84,18 +91,33 @@ def test_witness_gets_noncanonical_known_cause_candidate_but_not_realization_aut
     )
 
     assert result.status == "CANDIDATE_BLOCKED_PENDING_CURRENT_PERCEPTION"
+    assert result.reason == "OBJECT_DAMAGE_ACQUIRED_CAUSAL_ACTOR_NOT_PROVEN"
     assert result.opportunity is not None
     opportunity = result.opportunity
     assert opportunity.authority == NON_CANONICAL_AUTHORITY
-    assert opportunity.attribution_state == "WITNESSED_CAUSE"
-    assert opportunity.culprit_actor_ref == "A"
+    assert opportunity.attribution_state == "OBJECT_STATE_WITNESSED_CAUSE_UNPROVEN"
+    assert opportunity.culprit_actor_ref is None
     assert opportunity.knowledge_attribution_refs == (witness_event.event_id,)
-    assert opportunity.response_concept == "REMARK_WITNESSED_OBJECT_DAMAGE"
+    assert opportunity.response_concept == "REMARK_OBSERVED_DAMAGE_CAUSE_UNKNOWN"
     assert opportunity.realization_gate == "CURRENT_PERCEPTION_EVIDENCE_REQUIRED"
     assert opportunity.realization_authorized is False
     assert opportunity.canonical_world_authority is False
     assert opportunity.knowledge_write_authority is False
     assert opportunity.speech_commit_authority is False
+
+
+def test_current_symbolic_actor_visibility_still_does_not_retroactively_prove_event_time_causal_observation():
+    _, world, source_event, _ = _damaged_world(actor_visible_to_b=True)
+    assert world.can_see("A", "B") is True
+    result = derive_world_echo_opportunity(
+        world=world,
+        speaker_npc_id="B",
+        entity_id="DOOR",
+        source_event_id=source_event.event_id,
+    )
+    assert result.opportunity is not None
+    assert result.opportunity.culprit_actor_ref is None
+    assert result.opportunity.attribution_state == "OBJECT_STATE_WITNESSED_CAUSE_UNPROVEN"
 
 
 def test_nonwitness_cannot_inherit_simulator_omniscience_or_name_culprit():
@@ -119,6 +141,7 @@ def test_api_has_no_caller_attribution_or_culprit_override_surface():
     assert "attribution_state" not in parameters
     assert "culprit_actor_ref" not in parameters
     assert "knowledge_ref" not in parameters
+    assert "actor_witnessed" not in parameters
 
 
 def test_fabricated_source_or_secondary_event_cannot_mint_echo():
@@ -183,7 +206,7 @@ def test_generation_is_read_only_and_cannot_invent_npc_knowledge():
         world.npc_minds["C"].knowledge_boundary_refs += (source_event.event_id,)
 
 
-def test_candidate_identity_and_attribution_are_stable_across_restart_replay():
+def test_candidate_identity_and_unknown_attribution_are_stable_across_restart_replay():
     baseline, world, source_event, _ = _damaged_world()
     first = derive_world_echo_opportunity(
         world=world,
@@ -204,12 +227,13 @@ def test_candidate_identity_and_attribution_are_stable_across_restart_replay():
     assert second is not None
     assert second.opportunity_id == first.opportunity_id
     assert second.attribution_state == first.attribution_state
-    assert second.culprit_actor_ref == first.culprit_actor_ref
+    assert second.culprit_actor_ref is None
+    assert first.culprit_actor_ref is None
     assert second.source_event_or_delta_refs == first.source_event_or_delta_refs
     assert second.knowledge_attribution_refs == first.knowledge_attribution_refs
 
 
-def test_even_visible_historical_witness_still_requires_future_current_perception_receipt():
+def test_even_historical_object_witness_still_requires_future_current_perception_receipt():
     _, world, source_event, _ = _damaged_world()
     assert world.can_see("DOOR", "B") is True
     result = derive_world_echo_opportunity(
@@ -236,3 +260,5 @@ def test_opportunity_is_immutable_and_cannot_be_promoted_by_caller():
         opportunity.canonical_world_authority = True
     with pytest.raises(Exception):
         opportunity.realization_authorized = True
+    with pytest.raises(Exception):
+        opportunity.culprit_actor_ref = "A"
