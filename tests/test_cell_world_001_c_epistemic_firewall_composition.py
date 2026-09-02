@@ -38,7 +38,7 @@ def _world() -> WorldState:
                 name="玩家",
                 scene_id="S1",
                 zone_id="Z1",
-                capabilities={"PICK"},
+                capabilities={"HIT", "PICK"},
             ),
             "B": ActorState(
                 actor_id="B",
@@ -151,7 +151,6 @@ def test_world_truth_player_binding_npc_history_and_current_visibility_remain_di
     assert observation_gap.trusted_discrete_trigger_available is False
     assert observation_gap.receipt_available is False
 
-    # All three planes are evidence/proof surfaces only, never canonicalizing authorities.
     assert participation_gap.canonical_world_authority is False
     assert participation_gap.knowledge_projection_authority is False
     assert participation_gap.chronicle_write_authority is False
@@ -166,9 +165,6 @@ def test_world_truth_player_binding_npc_history_and_current_visibility_remain_di
 def test_same_player_caused_damage_event_still_cannot_bridge_player_and_npc_knowledge_planes():
     _, world, damage_event, _ = _committed_world()
 
-    # The exact same committed event simultaneously demonstrates the separation:
-    # world knows the actor, player binding is proven, but replay lacks explicit-player
-    # source provenance and the NPC lacks causal-actor acquisition provenance.
     participation_gap = assess_direct_participation_gap(
         world=world,
         player_id="P1",
@@ -221,8 +217,6 @@ def test_npc_acquisition_cannot_be_laundered_into_player_direct_participation():
             event=npc_acquisition,
         )
 
-    # NPC-local acquisition remains sufficient only for the bounded object-state echo path;
-    # it still does not prove causal actor recognition.
     echo = derive_world_echo_opportunity(
         world=world,
         speaker_npc_id="B",
