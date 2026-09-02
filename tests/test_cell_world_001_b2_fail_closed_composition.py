@@ -122,7 +122,8 @@ def test_simulator_knows_actor_but_composition_cannot_launder_it_into_speaker_cu
     echo, gap = _compose(world, source_event.event_id)
     assert echo.opportunity is not None
     assert echo.opportunity.culprit_actor_ref is None
-    assert "A" not in echo.opportunity.response_concept
+    assert echo.opportunity.attribution_state == "OBJECT_STATE_WITNESSED_CAUSE_UNPROVEN"
+    assert echo.opportunity.response_concept == "REMARK_OBSERVED_DAMAGE_CAUSE_UNKNOWN"
     assert gap.receipt_available is False
 
 
