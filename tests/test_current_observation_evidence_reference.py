@@ -5,7 +5,9 @@ import pytest
 from evals.current_observation_evidence_reference import (
     OBSERVATION_POLICY_DIGEST,
     OBSERVATION_POLICY_VERSION,
+    CurrentObservationEvidence,
     CurrentObservationEvidenceError,
+    assess_current_visual_observation_gap,
     capture_current_visual_observation,
     validate_current_observation,
 )
@@ -67,126 +69,153 @@ def _sealed_world(*, visible=True):
     return baseline, world
 
 
-def test_explicit_visual_sample_produces_object_only_noncanonical_receipt():
-    _, world = _sealed_world()
-    before_events = world.event_log
-    before_memories = world.npc_minds["B"].memories
-    receipt = capture_current_visual_observation(
+def _forged_receipt(world: WorldState) -> CurrentObservationEvidence:
+    return CurrentObservationEvidence(
+        schema="AWRSE.CurrentObservationEvidence.Reference/v2",
+        receipt_id="FORGED-COE",
+        capture_semantics="EXPLICIT_OBSERVATION_SAMPLE",
+        observation_mode="VISUAL",
+        world_id=world.world_id,
+        world_state_version=world.world_state_version,
+        baseline_version=world.baseline_version,
+        source_event_cursor=len(world.event_log),
+        observer_actor_id="B",
+        entity_id="DOOR",
+        scene_id="S1",
+        observer_zone_id="Z1",
+        entity_zone_id="Z1",
+        observable_state_refs=(
+            "OBJECT_PRESENT:DOOR",
+            "OBJECT_DAMAGE_STATE:DOOR:BROKEN",
+            "OBJECT_OPEN_STATE:DOOR:OPEN",
+        ),
+        observation_policy_version=OBSERVATION_POLICY_VERSION,
+        observation_policy_digest=OBSERVATION_POLICY_DIGEST,
+        trusted_trigger_ref="CALLER:FAKE",
+    )
+
+
+def test_visibility_true_is_only_eligibility_and_produces_explicit_gap_proof():
+    _, world = _sealed_world(visible=True)
+    proof = assess_current_visual_observation_gap(
         world=world,
         observer_actor_id="B",
         entity_id="DOOR",
     )
-
-    assert receipt.capture_semantics == "EXPLICIT_OBSERVATION_SAMPLE"
-    assert receipt.observation_mode == "VISUAL"
-    assert receipt.world_state_version == world.world_state_version
-    assert receipt.source_event_cursor == 0
-    assert receipt.observer_actor_id == "B"
-    assert receipt.entity_id == "DOOR"
-    assert receipt.observable_state_refs == (
-        "OBJECT_PRESENT:DOOR",
-        "OBJECT_DAMAGE_STATE:DOOR:BROKEN",
-        "OBJECT_OPEN_STATE:DOOR:OPEN",
-    )
-    assert receipt.observation_policy_version == OBSERVATION_POLICY_VERSION
-    assert receipt.observation_policy_digest == OBSERVATION_POLICY_DIGEST
-    assert receipt.canonical_world_authority is False
-    assert receipt.knowledge_write_authority is False
-    assert receipt.narrative_realization_authority is False
-    assert world.event_log == before_events
-    assert world.npc_minds["B"].memories == before_memories
+    assert proof.status == "NO_TRUSTED_OBSERVATION_TRIGGER"
+    assert proof.visibility_eligible is True
+    assert proof.trusted_discrete_trigger_available is False
+    assert proof.receipt_available is False
+    assert proof.world_state_version == world.world_state_version
+    assert proof.source_event_cursor == len(world.event_log)
+    assert proof.canonical_world_authority is False
+    assert proof.knowledge_write_authority is False
+    assert proof.narrative_realization_authority is False
+    assert "trusted_trigger_authority_ref" in proof.required_future_trigger_fields
 
 
-def test_visual_receipt_does_not_expose_hidden_cause_owner_or_internal_actor_values():
-    _, world = _sealed_world()
-    receipt = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
-    encoded = "\n".join(receipt.observable_state_refs)
-    forbidden = ["culprit", "caused_by", "owner", "possessor", "relationship", "belief", "injury"]
-    assert all(token not in encoded.lower() for token in forbidden)
-
-    with pytest.raises(CurrentObservationEvidenceError, match="OBJECTS_ONLY"):
-        capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="A")
-
-
-def test_visibility_predicate_is_required_but_caller_cannot_assert_observed_true():
-    _, world = _sealed_world(visible=False)
-    with pytest.raises(CurrentObservationEvidenceError, match="VISUAL_ELIGIBILITY_NOT_PROVEN"):
-        capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
-
-
-def test_policy_version_is_bound_and_old_policy_fails_closed():
-    _, world = _sealed_world()
-    with pytest.raises(CurrentObservationEvidenceError, match="OBSERVATION_POLICY_VERSION_MISMATCH"):
+def test_can_see_true_plus_public_capture_call_cannot_mint_observation_receipt():
+    _, world = _sealed_world(visible=True)
+    assert world.can_see("DOOR", "B") is True
+    with pytest.raises(CurrentObservationEvidenceError, match="NO_TRUSTED_OBSERVATION_TRIGGER"):
         capture_current_visual_observation(
             world=world,
             observer_actor_id="B",
             entity_id="DOOR",
-            observation_policy_version="AWRSE-CURRENT-VISUAL-OBSERVATION-POLICY/v0",
         )
 
 
-def test_same_world_state_sample_is_idempotent_not_receipt_spam():
-    _, world = _sealed_world()
-    first = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
-    second = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
-    assert second == first
-    assert second.receipt_id == first.receipt_id
+def test_visibility_false_fails_before_any_observation_claim():
+    _, world = _sealed_world(visible=False)
+    proof = assess_current_visual_observation_gap(
+        world=world,
+        observer_actor_id="B",
+        entity_id="DOOR",
+    )
+    assert proof.status == "VISUAL_ELIGIBILITY_NOT_PROVEN"
+    assert proof.visibility_eligible is False
+    assert proof.receipt_available is False
+    with pytest.raises(CurrentObservationEvidenceError, match="VISUAL_ELIGIBILITY_NOT_PROVEN"):
+        capture_current_visual_observation(
+            world=world,
+            observer_actor_id="B",
+            entity_id="DOOR",
+        )
 
 
-def test_receipt_becomes_stale_after_world_event_cursor_advances():
+def test_arbitrary_caller_observer_or_entity_cannot_create_authority():
+    _, world = _sealed_world(visible=True)
+    with pytest.raises(CurrentObservationEvidenceError, match="OBSERVER_ACTOR_NOT_FOUND"):
+        capture_current_visual_observation(world=world, observer_actor_id="FORGED", entity_id="DOOR")
+    with pytest.raises(CurrentObservationEvidenceError, match="OBJECTS_ONLY"):
+        capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="A")
+
+
+def test_old_policy_version_fails_closed_before_gap_assessment():
     _, world = _sealed_world()
-    receipt = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
-    validate_current_observation(world=world, receipt=receipt)
+    with pytest.raises(CurrentObservationEvidenceError, match="OBSERVATION_POLICY_VERSION_MISMATCH"):
+        assess_current_visual_observation_gap(
+            world=world,
+            observer_actor_id="B",
+            entity_id="DOOR",
+            observation_policy_version="AWRSE-CURRENT-VISUAL-OBSERVATION-POLICY/v1",
+        )
+
+
+def test_caller_constructed_receipt_is_never_treated_as_trusted_trigger_evidence():
+    _, world = _sealed_world()
+    forged = _forged_receipt(world)
+    with pytest.raises(CurrentObservationEvidenceError, match="UNTRUSTED_OBSERVATION_RECEIPT"):
+        validate_current_observation(world=world, receipt=forged)
+
+    with pytest.raises(CurrentObservationEvidenceError, match="AUTHORITY_ESCALATION"):
+        validate_current_observation(
+            world=world,
+            receipt=replace(forged, knowledge_write_authority=True),
+        )
+
+
+def test_world_event_advance_changes_gap_cursor_but_still_does_not_create_trigger():
+    _, world = _sealed_world()
+    first = assess_current_visual_observation_gap(world=world, observer_actor_id="B", entity_id="DOOR")
 
     action = ActionCompiler().compile("告诉B门还坏着", "A", world, principal_id="P1")
     resolution = SimulationEngine().resolve_and_commit(action, world)
     assert resolution.action.resolution_status is ResolutionStatus.RESOLVED_SUCCESS
-    assert len(world.event_log) > receipt.source_event_cursor
 
-    with pytest.raises(CurrentObservationEvidenceError, match="STALE_OBSERVATION_WORLD_STATE_VERSION"):
-        validate_current_observation(world=world, receipt=receipt)
-
-    fresh = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
-    assert fresh.receipt_id != receipt.receipt_id
-    assert fresh.source_event_cursor == len(world.event_log)
+    second = assess_current_visual_observation_gap(world=world, observer_actor_id="B", entity_id="DOOR")
+    assert second.source_event_cursor > first.source_event_cursor
+    assert second.world_state_version != first.world_state_version
+    assert second.status == "NO_TRUSTED_OBSERVATION_TRIGGER"
+    assert second.receipt_available is False
 
 
-def test_forged_receipt_fields_fail_current_validation():
-    _, world = _sealed_world()
-    receipt = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
-
-    with pytest.raises(CurrentObservationEvidenceError):
-        validate_current_observation(world=world, receipt=replace(receipt, world_id="FORGED"))
-    with pytest.raises(CurrentObservationEvidenceError):
-        validate_current_observation(world=world, receipt=replace(receipt, source_event_cursor=99))
-    with pytest.raises(CurrentObservationEvidenceError):
-        validate_current_observation(
-            world=world,
-            receipt=replace(receipt, observable_state_refs=("OBJECT_DAMAGE_STATE:DOOR:INTACT",)),
-        )
-    with pytest.raises(CurrentObservationEvidenceError):
-        validate_current_observation(
-            world=world,
-            receipt=replace(receipt, observation_policy_digest="0" * 64),
-        )
-
-
-def test_restart_replay_rebuilds_same_receipt_from_same_state_and_policy():
+def test_restart_replay_reproduces_same_negative_gap_at_same_world_state():
     baseline, world = _sealed_world()
-    first = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
+    first = assess_current_visual_observation_gap(world=world, observer_actor_id="B", entity_id="DOOR")
     package = export_solo_replay_package(baseline, world)
     rebuilt = rehydrate_solo_replay_package(package)
-    second = capture_current_visual_observation(world=rebuilt, observer_actor_id="B", entity_id="DOOR")
+    second = assess_current_visual_observation_gap(world=rebuilt, observer_actor_id="B", entity_id="DOOR")
     assert second == first
-    validate_current_observation(world=rebuilt, receipt=second)
+    with pytest.raises(CurrentObservationEvidenceError, match="NO_TRUSTED_OBSERVATION_TRIGGER"):
+        capture_current_visual_observation(world=rebuilt, observer_actor_id="B", entity_id="DOOR")
 
 
-def test_receipt_is_immutable_and_has_no_authority_upgrade_path():
+def test_gap_proof_exposes_no_object_state_or_hidden_cause_as_observation_claims():
     _, world = _sealed_world()
-    receipt = capture_current_visual_observation(world=world, observer_actor_id="B", entity_id="DOOR")
+    proof = assess_current_visual_observation_gap(world=world, observer_actor_id="B", entity_id="DOOR")
+    encoded = str(proof.to_dict()).lower()
+    forbidden = ["culprit", "caused_by", "owner_actor_id", "possessor", "relationship", "belief", "injury"]
+    assert all(token not in encoded for token in forbidden)
+    assert not hasattr(proof, "observable_state_refs")
+
+
+def test_gap_proof_is_immutable_and_has_no_authority_upgrade_path():
+    _, world = _sealed_world()
+    proof = assess_current_visual_observation_gap(world=world, observer_actor_id="B", entity_id="DOOR")
     with pytest.raises(Exception):
-        receipt.knowledge_write_authority = True
+        proof.knowledge_write_authority = True
     with pytest.raises(Exception):
-        receipt.narrative_realization_authority = True
+        proof.narrative_realization_authority = True
     with pytest.raises(Exception):
-        receipt.observable_state_refs += ("CULPRIT:A",)
+        proof.receipt_available = True
