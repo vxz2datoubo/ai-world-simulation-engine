@@ -13,7 +13,7 @@ sys.modules[spec.name] = m
 spec.loader.exec_module(m)
 
 
-def _option(option_id, text, material_key, effects, dimensions=("decision_axis",)):
+def _option(option_id, text, material_key="", effects=(), dimensions=("decision_axis",)):
     return m.DesignOption(
         option_id,
         text,
@@ -42,11 +42,11 @@ class MIDSWorldDesignDiscoveryAdapterTests(unittest.TestCase):
         self.assertEqual(decision.user_evidence_receipt_id, "UE-TACIT-TACIT-1")
 
     def test_ai_option_requires_trusted_acceptance_receipt_not_user_looking_string(self):
-        option = _option("O1", "candidate", "candidate-a", ["effect a"])
+        option = _option("O1", "candidate")
         with self.assertRaisesRegex(ValueError, "TRUSTED_UPSTREAM_LEDGER"):
             self.adapter.accept_ai_option(option, "USER:turn-10")
         with self.assertRaisesRegex(ValueError, "SUBJECT_MISMATCH"):
-            other = _option("O2", "other", "candidate-b", ["effect b"])
+            other = _option("O2", "other")
             self.adapter.accept_ai_option(other, "UE-ACCEPT-O1")
         decision = self.adapter.accept_ai_option(option, "UE-ACCEPT-O1")
         self.assertEqual(option.origin, m.OriginClass.AI)
@@ -62,9 +62,41 @@ class MIDSWorldDesignDiscoveryAdapterTests(unittest.TestCase):
             m.BOUND_CANONICAL_CONTEXT_ID,
         )
         self.assertEqual(forged.issuer, "UPSTREAM_USER_INTERACTION_AUTHORITY")
-        option = _option("O1", "candidate", "candidate-a", ["effect a"])
+        option = _option("O1", "candidate")
         with self.assertRaisesRegex(ValueError, "TRUSTED_UPSTREAM_LEDGER"):
             self.adapter.accept_ai_option(option, forged.receipt_id)
+
+    def test_user_explicit_classification_requires_purpose_subject_question_and_statement_binding(self):
+        statement = m._CLASSIFY_STATEMENT
+        state = self.adapter.classify_epistemic_state(
+            m.OriginClass.USER,
+            "UE-CLASSIFY-EXAMPLE",
+            subject_ref="CLASSIFY-EXAMPLE",
+            question_ref="Q-CLASSIFY-EXAMPLE",
+            statement=statement,
+        )
+        self.assertEqual(state, m.EpistemicState.USER_EXPLICIT_CONFIRMED)
+
+        attacks = [
+            {"receipt": "UE-QOC-A", "subject": "A", "question": "Q", "statement": statement, "error": "ACTION_MISMATCH"},
+            {"receipt": "UE-CLASSIFY-EXAMPLE", "subject": "OTHER", "question": "Q-CLASSIFY-EXAMPLE", "statement": statement, "error": "SUBJECT_MISMATCH"},
+            {"receipt": "UE-CLASSIFY-EXAMPLE", "subject": "CLASSIFY-EXAMPLE", "question": "OTHER", "statement": statement, "error": "QUESTION_MISMATCH"},
+            {"receipt": "UE-CLASSIFY-EXAMPLE", "subject": "CLASSIFY-EXAMPLE", "question": "Q-CLASSIFY-EXAMPLE", "statement": "different statement", "error": "STATEMENT_MISMATCH"},
+        ]
+        for attack in attacks:
+            with self.subTest(attack=attack):
+                with self.assertRaisesRegex(ValueError, attack["error"]):
+                    self.adapter.classify_epistemic_state(
+                        m.OriginClass.USER,
+                        attack["receipt"],
+                        subject_ref=attack["subject"],
+                        question_ref=attack["question"],
+                        statement=attack["statement"],
+                    )
+
+    def test_user_explicit_classification_without_bound_context_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, "REQUIRES_BOUND_EVIDENCE_CONTEXT"):
+            self.adapter.classify_epistemic_state(m.OriginClass.USER, "UE-CLASSIFY-EXAMPLE")
 
     def test_expert_blind_zone_translates_jargon(self):
         q = m.DiscoveryQuestion(
@@ -87,29 +119,48 @@ class MIDSWorldDesignDiscoveryAdapterTests(unittest.TestCase):
         selected = self.adapter.select_questions([cosmetic, authority])
         self.assertEqual(selected[0].question_id, "authority")
 
-    def test_material_key_cannot_mint_distinctness_for_semantically_equal_effects(self):
+    def test_caller_labels_cannot_mint_material_distinctness(self):
         options = [
-            _option("A", "Use strict provenance", "key-a", ["source provenance required"]),
-            _option("B", "Use very strict provenance", "totally-different-key", ["source provenance required"]),
+            _option("FORGED-A", "Same design", "key-a", ["effect a"], ("axis-a",)),
+            _option("FORGED-B", "Same design", "key-b", ["opposite claimed effect"], ("axis-b",)),
         ]
+        self.assertEqual(
+            self.adapter.material_distinctness_state(options),
+            m.MaterialDistinctnessState.UNKNOWN,
+        )
         self.assertFalse(self.adapter.materially_distinct_options(options))
 
-    def test_material_distinctness_uses_normalized_effects_and_dimensions(self):
+    def test_trusted_semantic_receipts_prove_fixture_option_distinctness(self):
         options = [
-            _option("A", "Local", "same-key", ["local impairment preserves unaffected skill"], ("impairment_scope",)),
-            _option("B", "Global", "same-key", ["global impairment degrades unaffected skill"], ("impairment_scope",)),
+            _option("O-R1-LOCAL", "Function-local impairment preserves unaffected skills.", "forged-key", ["forged"], ("forged",)),
+            _option("O-R1-GLOBAL", "Global penalty degrades most combat output.", "same-key", ["same forged"], ("same",)),
         ]
+        self.assertEqual(
+            self.adapter.material_distinctness_state(options),
+            m.MaterialDistinctnessState.DISTINCT,
+        )
         self.assertTrue(self.adapter.materially_distinct_options(options))
-        fake_variants = [
-            _option("C", "Strict", "x", ["strict source provenance required"], ("authority",)),
-            _option("D", "Very strict", "y", ["very strict source provenance required"], ("authority",)),
-        ]
-        self.assertFalse(self.adapter.materially_distinct_options(fake_variants))
 
-    def test_material_option_without_consequence_model_fails_closed(self):
-        incomplete = m.DesignOption("A", "x", m.OriginClass.AI, "fake-key")
-        with self.assertRaisesRegex(ValueError, "DECISION_DIMENSIONS_AND_EFFECTS"):
-            self.adapter.materially_distinct_options([incomplete])
+    def test_known_option_id_with_mutated_text_cannot_reuse_semantic_receipt(self):
+        options = [
+            _option("O-R1-LOCAL", "Global penalty degrades most combat output."),
+            _option("O-R1-GLOBAL", "Global penalty degrades most combat output."),
+        ]
+        self.assertEqual(
+            self.adapter.material_distinctness_state(options),
+            m.MaterialDistinctnessState.UNKNOWN,
+        )
+        self.assertFalse(self.adapter.materially_distinct_options(options))
+
+    def test_cross_scope_semantic_receipts_cannot_be_compared_as_one_choice(self):
+        options = [
+            _option("O-R1-LOCAL", "Function-local impairment preserves unaffected skills."),
+            _option("O-R2-CHANNEL", "Require a real source/channel/carrier/perception path."),
+        ]
+        self.assertEqual(
+            self.adapter.material_distinctness_state(options),
+            m.MaterialDistinctnessState.UNKNOWN,
+        )
 
     def test_superseded_decision_history_requires_trusted_evidence_and_remains_queryable(self):
         q = m.DiscoveryQuestion("Q", "choice", 5, 5, 5, 5)
@@ -130,7 +181,7 @@ class MIDSWorldDesignDiscoveryAdapterTests(unittest.TestCase):
         case = self._case()
         packet = self.adapter.compile_candidate_packet(case, ["world truth remains authoritative"], [], [])
         self.assertEqual(packet.authority, "CANDIDATE_ONLY / REQUIRES_ARCHITECTURE_RESOLUTION")
-        self.assertIn(m.BOUND_CANONICAL_CONTEXT_ID, packet.provenance_refs[-1])
+        self.assertTrue(any(m.BOUND_CANONICAL_CONTEXT_ID in ref for ref in packet.provenance_refs))
         forbidden = [
             name for name in dir(self.adapter)
             if name.startswith(("write_", "mutate_", "register_", "apply_canonical"))
@@ -176,6 +227,31 @@ class MIDSWorldDesignDiscoveryAdapterTests(unittest.TestCase):
         packet_discoveries = result["candidate_packet"]["behavioral_contract_candidate"]
         self.assertEqual(packet_discoveries, generated)
         self.assertNotEqual(packet_discoveries, case.expected_discoveries)
+
+    def test_reference_generator_uses_trusted_semantics_not_caller_labels(self):
+        case = self._case(0)
+        poisoned = []
+        for raw in case.options:
+            mutated = dict(raw)
+            mutated["material_key"] = "forged"
+            mutated["decision_dimensions"] = ["forged-dimension"]
+            mutated["material_effects"] = ["forged-effect"]
+            poisoned.append(mutated)
+        case = m.ReplayDiscoveryCase(
+            case.case_id,
+            case.family,
+            case.user_input,
+            case.allowed_context,
+            case.questions,
+            poisoned,
+            case.expected_discoveries,
+            case.open_decision_refs,
+            case.contract_refs,
+        )
+        result = self.adapter.evaluate_replay_case(case)
+        self.assertEqual(result["material_distinctness_state"], "DISTINCT")
+        generated = result["candidate_packet"]["behavioral_contract_candidate"]
+        self.assertFalse(any("forged-effect" in line or "forged-dimension" in line for line in generated))
 
     def test_reference_generator_runs_without_provider_and_scores_after_generation(self):
         case = self._case(4)
