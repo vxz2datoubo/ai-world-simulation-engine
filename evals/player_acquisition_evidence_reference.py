@@ -4,17 +4,14 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 from runtime.awrse.model import Event, WorldState
 
 
 DIRECT_PARTICIPATION = "DIRECT_PARTICIPATION"
-ELIGIBILITY_POLICY_VERSION = "AWRSE-DIRECT-PARTICIPATION-EVENT-POLICY/v1"
+ELIGIBILITY_POLICY_VERSION = "AWRSE-DIRECT-PARTICIPATION-EVENT-POLICY/v2-GAP-PROOF"
 
-# Eval-only frozen policy snapshot of the currently accepted R002 primary player-action
-# result families. Receipt identity binds both the version and digest so historical
-# evidence cannot silently change meaning if a later policy revision adds/removes types.
 _EVENT_TARGET_KEYS = MappingProxyType(
     {
         "SPEECH_UTTERED": (),
@@ -35,6 +32,15 @@ def _policy_digest() -> str:
         {
             "version": ELIGIBILITY_POLICY_VERSION,
             "event_target_keys": {key: list(value) for key, value in sorted(_EVENT_TARGET_KEYS.items())},
+            "required_explicit_player_provenance": [
+                "player_or_principal_id",
+                "actor_id",
+                "action_id",
+                "source_channel",
+                "explicit_input_presence",
+                "accepted_resolution_or_commit_binding",
+                "replay_integrity_ref",
+            ],
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -51,6 +57,8 @@ class PlayerAcquisitionEvidenceError(ValueError):
 
 @dataclass(frozen=True)
 class PlayerAcquisitionEvidence:
+    """Candidate receipt shape only. Current accepted replay evidence cannot mint it safely."""
+
     schema: str
     receipt_id: str
     acquisition_mode: str
@@ -65,12 +73,43 @@ class PlayerAcquisitionEvidence:
     baseline_version: str
     source_event_cursor: int
     world_state_version: str
+    explicit_player_action_provenance_ref: str
     eligibility_policy_version: str
     eligibility_policy_digest: str
     supported_claim_refs: tuple[str, ...]
-    canonical_world_authority: bool
-    knowledge_projection_authority: bool
-    chronicle_write_authority: bool
+    canonical_world_authority: bool = False
+    knowledge_projection_authority: bool = False
+    chronicle_write_authority: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class DirectParticipationGapProof:
+    schema: str
+    status: str
+    reason: str
+    world_id: str
+    player_id: str
+    actor_id: str
+    source_event_id: str
+    source_event_type: str
+    caused_by_action_id: str
+    event_supported_target_refs: tuple[str, ...]
+    baseline_version: str
+    source_event_cursor: int
+    world_state_version: str
+    player_actor_binding_proven: bool
+    primary_event_eligibility_proven: bool
+    replay_explicit_player_action_provenance_available: bool
+    receipt_available: bool
+    eligibility_policy_version: str
+    eligibility_policy_digest: str
+    required_future_provenance_fields: tuple[str, ...]
+    canonical_world_authority: bool = False
+    knowledge_projection_authority: bool = False
+    chronicle_write_authority: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -85,11 +124,6 @@ def _event_cursor(world: WorldState, event: Event) -> int:
     if len(matches) != 1:
         raise _fail("SOURCE_EVENT_NOT_EXACTLY_ONCE_IN_COMMITTED_LOG")
     return matches[0]
-
-
-def _receipt_id(payload: Mapping[str, Any]) -> str:
-    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return "PAE-" + hashlib.sha256(encoded).hexdigest()[:24]
 
 
 def _extract_event_supported_targets(world: WorldState, event: Event) -> tuple[str, ...]:
@@ -115,20 +149,22 @@ def _extract_event_supported_targets(world: WorldState, event: Event) -> tuple[s
     return tuple(targets)
 
 
-def derive_direct_participation_evidence(
+def assess_direct_participation_gap(
     *,
     world: WorldState,
     player_id: str,
     event: Event,
     acquisition_mode: str = DIRECT_PARTICIPATION,
     eligibility_policy_version: str = ELIGIBILITY_POLICY_VERSION,
-) -> PlayerAcquisitionEvidence:
-    """Derive recipient-local evidence only from replay-available committed evidence.
+) -> DirectParticipationGapProof:
+    """Prove exactly why current replay evidence cannot establish DIRECT_PARTICIPATION.
 
-    The caller supplies no Action object. Direct participation is proven from the exact
-    committed primary event, its non-null causing action reference, the replayed
-    principal↔actor binding, and a frozen/versioned event-eligibility policy. Supported
-    target claims are extracted only from the committed event payload.
+    Accepted R002 replay reconstructs baseline + committed Event evidence and player/actor
+    bindings. `Event.caused_by_action_id` proves a causal action identifier exists, but the
+    replayed Event does not carry authoritative `source_channel` or explicit-player-input
+    provenance. Therefore a system/NPC/narrative-originated action for a player-controlled
+    avatar cannot be distinguished from an explicit player-originated action by this
+    evidence surface alone. The safe result is a negative architecture gap proof.
     """
     if acquisition_mode != DIRECT_PARTICIPATION:
         raise _fail("DIRECT_PARTICIPATION_MODE_ONLY")
@@ -150,36 +186,26 @@ def derive_direct_participation_evidence(
     if not event.actor_id:
         raise _fail("SOURCE_EVENT_ACTOR_REQUIRED")
     if not event.caused_by_action_id:
-        raise _fail("SOURCE_EVENT_ACTION_PROVENANCE_REQUIRED")
+        raise _fail("SOURCE_EVENT_ACTION_ID_REQUIRED")
     if not world.can_principal_control(player_id, event.actor_id):
         raise _fail("PLAYER_ACTOR_BINDING_NOT_PROVEN")
 
     target_refs = _extract_event_supported_targets(world, event)
-    supported_claim_refs = (
-        f"EVENT_OCCURRED:{event.event_id}:{event.event_type}",
-        f"DIRECT_ACTOR:{event.actor_id}",
-        *(f"EVENT_SUPPORTED_TARGET:{target_ref}" for target_ref in target_refs),
+
+    # This is intentionally a mechanical check of the accepted replay surface, not a
+    # caller flag. Current Event does not persist the Action source channel or explicit
+    # input provenance needed by Issue #107's `explicit player action` requirement.
+    replay_action_provenance_available = all(
+        hasattr(event, field_name)
+        for field_name in ("source_channel", "literal_user_input", "principal_id")
     )
-    identity_payload = {
-        "schema": "AWRSE.PlayerAcquisitionEvidence.Reference/v1",
-        "mode": DIRECT_PARTICIPATION,
-        "world_id": world.world_id,
-        "player_id": player_id,
-        "actor_id": event.actor_id,
-        "source_event_id": event.event_id,
-        "source_event_type": event.event_type,
-        "caused_by_action_id": event.caused_by_action_id,
-        "event_supported_target_refs": list(target_refs),
-        "baseline_version": world.baseline_version,
-        "source_event_cursor": cursor,
-        "eligibility_policy_version": ELIGIBILITY_POLICY_VERSION,
-        "eligibility_policy_digest": ELIGIBILITY_POLICY_DIGEST,
-    }
-    return PlayerAcquisitionEvidence(
-        schema="AWRSE.PlayerAcquisitionEvidence.Reference/v1",
-        receipt_id=_receipt_id(identity_payload),
-        acquisition_mode=DIRECT_PARTICIPATION,
-        source_evidence_basis="COMMITTED_PRIMARY_EVENT_PLUS_REPLAYED_PLAYER_ACTOR_BINDING",
+    if replay_action_provenance_available:
+        raise _fail("UNEXPECTED_REPLAY_ACTION_PROVENANCE_SURFACE_REQUIRES_FRESH_ARCHITECTURE_REVIEW")
+
+    return DirectParticipationGapProof(
+        schema="AWRSE.PlayerAcquisitionEvidence.GapProof/v1",
+        status="BLOCKED_MISSING_REPLAY_PLAYER_ACTION_PROVENANCE",
+        reason="COMMITTED_EVENT_AND_PLAYER_ACTOR_BINDING_DO_NOT_PROVE_EXPLICIT_PLAYER_SOURCE_CHANNEL_OR_INPUT",
         world_id=world.world_id,
         player_id=player_id,
         actor_id=event.actor_id,
@@ -190,15 +216,52 @@ def derive_direct_participation_evidence(
         baseline_version=world.baseline_version,
         source_event_cursor=cursor,
         world_state_version=world.world_state_version,
+        player_actor_binding_proven=True,
+        primary_event_eligibility_proven=True,
+        replay_explicit_player_action_provenance_available=False,
+        receipt_available=False,
         eligibility_policy_version=ELIGIBILITY_POLICY_VERSION,
         eligibility_policy_digest=ELIGIBILITY_POLICY_DIGEST,
-        supported_claim_refs=tuple(supported_claim_refs),
+        required_future_provenance_fields=(
+            "provenance_receipt_id",
+            "player_or_principal_id",
+            "actor_id",
+            "action_id",
+            "eligible_source_channel",
+            "explicit_input_presence_without_raw_text",
+            "accepted_resolution_or_commit_ref",
+            "baseline_version",
+            "world_or_event_cursor",
+            "policy_version",
+            "integrity_digest",
+        ),
         canonical_world_authority=False,
         knowledge_projection_authority=False,
         chronicle_write_authority=False,
     )
 
 
+def derive_direct_participation_evidence(
+    *,
+    world: WorldState,
+    player_id: str,
+    event: Event,
+    acquisition_mode: str = DIRECT_PARTICIPATION,
+    eligibility_policy_version: str = ELIGIBILITY_POLICY_VERSION,
+) -> PlayerAcquisitionEvidence:
+    """Fail closed until replay contains trusted explicit-player action provenance."""
+    assessment = assess_direct_participation_gap(
+        world=world,
+        player_id=player_id,
+        event=event,
+        acquisition_mode=acquisition_mode,
+        eligibility_policy_version=eligibility_policy_version,
+    )
+    if not assessment.receipt_available:
+        raise _fail("EXPLICIT_PLAYER_ACTION_PROVENANCE_NOT_REPLAY_AVAILABLE")
+    raise _fail("UNREACHABLE_DIRECT_PARTICIPATION_RECEIPT_PATH")
+
+
 def validate_supported_claim(receipt: PlayerAcquisitionEvidence, claim_ref: str) -> bool:
-    """Return True only for claims mechanically enumerated from committed event evidence."""
-    return claim_ref in receipt.supported_claim_refs
+    """Caller-constructed candidate receipts are not trusted by the current runtime."""
+    raise _fail("UNTRUSTED_PLAYER_ACQUISITION_RECEIPT_UNSUPPORTED_BY_CURRENT_RUNTIME")
