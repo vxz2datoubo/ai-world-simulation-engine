@@ -438,3 +438,69 @@ AF-001 is independently accepted and merged canonical architecture. `CAPABILITY-
 `I2_RUNTIME_AUTHORITY_NOT_GRANTED=true`
 
 `AF001_ACCEPTED_CANONICAL / FURTHER_RUNTIME_EXPANSION_REQUIRES_EXPLICIT_RELEASE`
+
+## 17. MIDS Living World vNext architecture candidate
+
+Status: `MIDS_ARCHITECTURE_CANDIDATE / ARCHITECTURE_ONLY / NO_RUNTIME_AUTHORITY / REQUIRES_INDEPENDENT_REVIEW`.
+
+This section compiles the user-confirmed MIDS Living World direction into AF-A..H. It is additive to the frozen authority graph and creates no new truth plane. The detailed classification, contradictions and deferred decisions are recorded in `docs/research/AWRSE-MIDS-TO-AF-VNEXT-MAPPING-v0.1.md`.
+
+### 17.1 Breadth-first minimal living world
+
+The first small-world vertical slice enables a minimal connected skeleton of each required domain rather than completing one domain in isolation. Every enabled module must declare its AF authority scope, dependencies, input event classes, output request/receipt classes, update granularity and lifecycle. A disabled or unavailable module cannot adjudicate, guess defaults or emit canonical events for its domain.
+
+The only truth scope remains `WorldInstance` plus AF-A canonical event evidence. Domain authorities own their declared facts; a `WorldOrchestrationPlan` may schedule and correlate work but cannot mutate domain truth, mint evidence or commit events. Every accepted cross-domain consequence returns through the receiving authority's normal validation and canonical event path.
+
+### 17.2 Selective causal propagation
+
+An authoritative change may publish a `DomainChangeNotice` containing source event refs, exact world cursor, originating authority, potentially affected domains and causal relevance—not a pre-decided downstream outcome. Receiving authorities independently decide whether the notice is relevant and whether any legal consequence follows. Cycles are allowed only as ordered event-to-request-to-event chains with correlation and causation refs; direct recursive mutation and hidden shared state are forbidden.
+
+This preserves one event ledger while allowing feedback such as regulation -> price pressure -> scarcity -> social response. Fidelity reduction may coarsen derived calculation or aggregate resource lots, but cannot remove source requirements, duplicate entities, change prior events or bypass conservation.
+
+### 17.3 Adaptive fidelity and deferred concretization
+
+`SimulationFidelityPolicy` selects declared update granularity by domain/entity relevance, causal risk and available budget. Fidelity controls computation detail, never existence or authority. Established entities, locations and history remain addressable when outside the player's view.
+
+`UNKNOWN` and unresolved alternatives are legal states. `DeferredConcretizationReceipt` may select an alternative only when it binds the exact world cursor, unresolved slot, authorized constraint refs, candidate-set digest and selected candidate. It must fail closed if the slot was already resolved, evidence conflicts, the cursor is stale or the candidate was outside the admissible set. Concretization creates a new canonical event through the owning domain; it never edits prior evidence.
+
+### 17.4 Intent, autonomy, institutions and time
+
+Open natural-language input remains an untrusted attempted goal. AF-B/C translate it into an evidence-bound plan of methods, capability demands, resources, time, permissions and consequences before world resolution. Model intelligence cannot supply character knowledge, skill, resources or hidden plans as fact.
+
+The player has final control of attempted intent for the currently bound actor. Persona policy may alter opted-in low-risk expression, not veto intent or choose a materially different action. NPCs and institutions remain autonomous: an `InstitutionAggregate` has stable identity and references goals, resources, factions, policies and authorized acting roles; detailed institutional mechanics require later versioned rulesets.
+
+There is one canonical world timeline. Domains may update at different declared granularities. Repetitive activity consumes real world time; `TemporalCompressionPlan` only compresses presentation and must expose interruption points for materially new decisions. Closing and reopening defaults to no elapsed-world advance; optional long-absence advancement remains an explicit open product/ruleset decision.
+
+Player-actor death remains permanent canonical evidence. Continuing play may rebind `PlayerIdentity.actor_id` through an authorized continuity event to an eligible heir, partner, companion or other actor in the same `WorldInstance`; it does not reload or fork away the death.
+
+### 17.5 Narrative influence without narrative truth
+
+AF-F/G may propose and rank only currently legal opportunities. `NarrativeInfluenceReceipt` binds the candidate-set digest, policy revision, declared dimensions, bounded budget consumption, selected candidate and rejected alternatives. Narrative influence cannot:
+
+- create an otherwise unavailable candidate;
+- change feasibility, capability, resource or outcome probability;
+- fabricate evidence or character knowledge;
+- force disaster when peaceful ordinary continuation is legal;
+- resurrect invalidated anchors or rewrite history.
+
+Exact weights, budgets, thresholds and learned ranking remain versioned ruleset/product policy, not architecture constants. `NO_VALID_OPPORTUNITY` and ordinary life remain valid outputs.
+
+### 17.6 Law, evidence, entities and place history
+
+Objective world fact, physical/documentary evidence, investigator belief, legal action, legal judgment and social belief are separate. A `LegalProcessProjection` may be wrong and may drive lawful institutional action, but it cannot rewrite the event/evidence history it interprets. Evidence can be hidden, moved, destroyed or forged only through world-authorized events; narrative importance cannot create it.
+
+Physical entity IDs persist through movement and history. Destroyed IDs are never reused. `EntityLifecycleReceipt` records destruction, split or composition provenance; independently addressable outputs receive new IDs. Ownership, possession, permission, worn, equipped and location remain separate AF-B/C/D relations. `PlaceHistoryProjection` summarizes settlement, land-use and social-identity change from canonical events and is rebuildable rather than a second spatial authority.
+
+Causally material history and provenance remain explainable. Compaction may replace derived indexes, summaries and low-value presentation caches, never the evidence required to reproduce important causal claims.
+
+### 17.7 AWRSE-to-Director boundary and audience modes
+
+AWRSE may add `DramaticPresentationIntent` only as a mechanically bound extension of the existing `DIRECTOR-BEAT-PACKET`: causal emphasis, emotional objective, reveal timing bounds, continuity refs, permitted audience information and forbidden inventions. The parent packet carries exactly one `dramatic_presentation_intent_ref`; the extension carries the matching `parent_director_beat_packet_ref`. Both sides must bind the same `world_instance_id`, world-state version/cursor and exact confirmed-event set, causal emphasis must be a subset of those events, and allowed information cannot exceed the parent packet's player/public visibility envelope. An orphan, duplicate, wrong-world, stale-cursor, event-mismatched or information-expanding intent fails closed. The parent packet remains the single AWRSE Director handoff boundary.
+
+`DramaticPresentationIntent` does not specify or compete for concrete shot, lens, edit, performance or sound authority; those remain with the separate AI Director inside the validated envelope. It cannot be submitted independently as a second handoff object and has no world, event, knowledge, Director or render authority of its own.
+
+`AudienceExposurePolicy` is an AF-H projection policy. Game mode normally limits output to player-visible information; film mode may expose audience-only events when policy permits. Neither audience knowledge nor rendered information is an AF-E acquisition event, and neither may flow back into player/NPC knowledge.
+
+### 17.8 Candidate activation boundary
+
+The interfaces in this section are `INTERFACE_ONLY_NOT_RUNTIME_IMPLEMENTED`. Acceptance of the architecture candidate does not authorize MIDS adapter work, domain runtime, providers, multiplayer, save/load, hardcore mode, external Director integration or production deployment. Each later slice requires a separate bounded release, exact contract/eval bindings and independent review.

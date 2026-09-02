@@ -280,6 +280,79 @@
       ]
     }
   },
+  "mids_vnext_architecture_checks": {
+    "registry_id": "AWRSE-MIDS-ARCH-001-GOLDEN-CHECKS",
+    "registry_version": "1.0.0-candidate",
+    "implementation_state": "ARCHITECTURE_CONTRACT_CHECKS_ONLY_NOT_RUNTIME_IMPLEMENTED",
+    "effective_spec_snapshot": "MIDS-ARCH-001-SPEC-2026-09-02-R1",
+    "checks": {
+      "PRICE_CONTROL_TO_BLACK_MARKET": {
+        "required_contracts": ["AF-A", "AF-B", "AF-C", "AF-E", "AF-F", "AF-G"],
+        "required_type_refs": ["WorldOrchestrationPlan", "DomainChangeNotice", "InstitutionAggregate", "NarrativeInfluenceReceipt"],
+        "ordered_architecture_assertions": ["CANONICAL_REGULATION_EVENT_PRECEDES_DOMAIN_CHANGE_NOTICE", "RECEIVING_AUTHORITY_REVALIDATES_RESOURCE_AND_RULE_CONSEQUENCES", "NARRATIVE_OBSERVES_ONLY_COMMITTED_EVENTS_OR_DERIVED_PROJECTIONS"],
+        "forbidden_outcomes": ["ORCHESTRATOR_DIRECTLY_MUTATES_DOMAIN_TRUTH", "LOW_FIDELITY_CREATES_SOURCE_FREE_GOODS", "NARRATIVE_CHANGES_LEGALITY_OR_OUTCOME_PROBABILITY"],
+        "expected_disposition": "CROSS_DOMAIN_FEEDBACK_USES_ONE_ORDERED_EVENT_EVIDENCE_PATH"
+      },
+      "DEFERRED_TOWN_CONCRETIZATION": {
+        "required_contracts": ["AF-A", "AF-B", "AF-F"],
+        "required_type_refs": ["DeferredConcretizationReceipt", "SimulationFidelityPolicy", "PlaceHistoryProjection"],
+        "ordered_architecture_assertions": ["UNRESOLVED_SLOT_AND_LOCKED_CONSTRAINTS_PRECEDE_SELECTION", "SELECTION_RECEIPT_PRECEDES_OWNING_DOMAIN_EVENT"],
+        "forbidden_outcomes": ["CONTRADICT_LOCKED_HISTORY", "REROLL_RESOLVED_EVIDENCE", "TREAT_UNKNOWN_AS_PERMISSION_TO_INVENT"],
+        "expected_disposition": "FAIL_CLOSED_ON_STALE_CURSOR_CONFLICT_OR_NONMEMBER_CANDIDATE"
+      },
+      "FALSE_ARREST_AND_PUBLIC_BELIEF": {
+        "required_contracts": ["AF-A", "AF-B", "AF-E", "AF-F", "AF-H"],
+        "required_type_refs": ["InstitutionAggregate", "LegalProcessProjection", "PublicationProjection", "AudienceExposurePolicy"],
+        "ordered_architecture_assertions": ["WORLD_FACT_AND_EVIDENCE_PRECEDE_INVESTIGATOR_BELIEF", "BELIEF_MAY_PRECEDE_LEGAL_ACTION_AND_MISTAKEN_JUDGMENT", "PUBLICATION_SELECTS_INFORMATION_WITHOUT_KNOWLEDGE_FLOWBACK"],
+        "forbidden_outcomes": ["LEGAL_JUDGMENT_REWRITES_OBJECTIVE_HISTORY", "FORGED_EVIDENCE_WITHOUT_WORLD_EVENT_PROVENANCE", "AUDIENCE_KNOWLEDGE_UPDATES_CHARACTER_KNOWLEDGE"],
+        "expected_disposition": "MISTAKEN_INSTITUTIONAL_ACTION_IS_POSSIBLE_WITHOUT_TRUTH_COLLAPSE"
+      },
+      "LONG_HORIZON_BUTTERFLY_PAYOFF": {
+        "required_contracts": ["AF-A", "AF-B", "AF-E", "AF-F", "AF-G", "AF-H"],
+        "required_type_refs": ["DomainChangeNotice", "NarrativeInfluenceReceipt", "DramaticPresentationIntent", "PlaceHistoryProjection"],
+        "ordered_architecture_assertions": ["EARLY_CANONICAL_CAUSE_IS_RETAINED", "LATER_OPPORTUNITY_REFERENCES_CAUSAL_CHAIN", "DRAMATIC_INTENT_REFERENCES_CONFIRMED_EVENTS"],
+        "forbidden_outcomes": ["PAYOFF_RETCONS_EARLY_CAUSE", "COMPACTION_REMOVES_CAUSAL_PROVENANCE", "DIRECTOR_INVENTS_PAYOFF_EVENT"],
+        "expected_disposition": "LONG_TERM_PAYOFF_REMAINS_EXPLAINABLE_AND_REPLAY_BOUND"
+      },
+      "PLAYER_DEATH_SAME_WORLD_SUCCESSION": {
+        "required_contracts": ["AF-A", "AF-B", "AF-E", "AF-F", "AF-H"],
+        "required_type_refs": ["WorldInstance", "PlayerIdentity", "ActorAggregate", "PlayerChronicle"],
+        "ordered_architecture_assertions": ["ACTOR_DEATH_EVENT_PRECEDES_PLAYER_IDENTITY_REBIND", "REBIND_TARGET_IS_ELIGIBLE_AND_IN_SAME_WORLD_INSTANCE"],
+        "forbidden_outcomes": ["DEATH_REMOVED_BY_RELOAD_OR_RETCON", "SUCCESSOR_INHERITS_KNOWLEDGE_WITHOUT_PROVENANCE", "WORLD_INSTANCE_SILENTLY_FORKED"],
+        "expected_disposition": "PLAYER_CONTINUITY_CHANGES_ACTOR_BINDING_NOT_WORLD_HISTORY"
+      },
+      "LONG_ABSENCE_AND_TEMPORAL_COMPRESSION": {
+        "required_contracts": ["AF-A", "AF-B", "AF-E", "AF-H"],
+        "required_type_refs": ["TemporalCompressionPlan", "SimulationFidelityPolicy", "DomainModuleManifest"],
+        "ordered_architecture_assertions": ["WORLD_TIME_EVENTS_PRECEDE_COMPRESSED_PRESENTATION", "MATERIAL_DECISION_INTERRUPT_SPLITS_COMPRESSION"],
+        "forbidden_outcomes": ["COMPRESSION_ERASES_WORLD_TIME", "DISABLED_MODULE_ADJUDICATES_DURING_ABSENCE", "UNVERSIONED_ABSENCE_POLICY_ADVANCES_WORLD_BY_DEFAULT"],
+        "expected_disposition": "DEFAULT_FREEZE_AND_OPTIONAL_ADVANCE_POLICY_REMAIN_DISTINCT"
+      },
+      "PEACEFUL_ORDINARY_LIFE": {
+        "required_contracts": ["AF-F", "AF-G", "AF-H"],
+        "required_type_refs": ["NarrativeOpportunityBroker", "NarrativeInfluenceReceipt", "DramaticPresentationIntent"],
+        "ordered_architecture_assertions": ["LEGAL_CANDIDATE_SET_PRECEDES_NARRATIVE_RANKING", "PEACEFUL_CONTINUATION_MAY_PRECEDE_PRESENTATION"],
+        "forbidden_outcomes": ["NARRATIVE_FORCES_CATASTROPHE", "DRAMATIC_INTENT_CREATES_WORLD_EVENT", "EMPTY_CANDIDATE_SET_REPLACED_WITH_ILLEGAL_EVENT"],
+        "expected_disposition": "ORDINARY_LIFE_IS_A_VALID_NONFAILURE_BRANCH"
+      },
+      "DIRECTOR_INTENT_PARENT_CONTEXT_BINDING": {
+        "required_contracts": ["AF-A", "AF-H"],
+        "required_type_refs": ["DIRECTOR-BEAT-PACKET", "DramaticPresentationIntent", "AudienceExposurePolicy"],
+        "ordered_architecture_assertions": ["CONFIRMED_EVENTS_AND_VISIBILITY_ENVELOPE_PRECEDE_PARENT_PACKET", "PARENT_PACKET_PRECEDES_BOUND_DRAMATIC_INTENT", "BOUND_PACKET_AND_INTENT_PRECEDE_EXTERNAL_DIRECTOR_STAGING"],
+        "admission_cases": [
+          {"case_id": "DPI-B1-VALID-EXACT-PARENT-CONTEXT", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "ACCEPT_BOUND_EXTENSION"},
+          {"case_id": "DPI-B2-ORPHAN", "parent_ref_match": false, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_ORPHAN"},
+          {"case_id": "DPI-B3-WRONG-WORLD", "parent_ref_match": true, "world_instance_id_match": false, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_WORLD_INSTANCE_MISMATCH"},
+          {"case_id": "DPI-B4-STALE-CURSOR", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": false, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_WORLD_STATE_MISMATCH"},
+          {"case_id": "DPI-B5-EVENT-MISMATCH", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": false, "confirmed_event_set_digest_match": false, "causal_emphasis_subset": false, "allowed_information_subset": true, "expected": "REJECT_FAIL_CLOSED_EVENT_CONTEXT_MISMATCH"},
+          {"case_id": "DPI-B6-INFORMATION-SUPERSET", "parent_ref_match": true, "world_instance_id_match": true, "world_state_version_match": true, "confirmed_event_set_match": true, "confirmed_event_set_digest_match": true, "causal_emphasis_subset": true, "allowed_information_subset": false, "expected": "REJECT_FAIL_CLOSED_INFORMATION_ENVELOPE_EXPANSION"}
+        ],
+        "forbidden_outcomes": ["ORPHAN_INTENT_USED_AS_DIRECTOR_HANDOFF", "INTENT_BINDS_DIFFERENT_WORLD_OR_EVENTS_THAN_PARENT", "INTENT_EXPANDS_PARENT_KNOWLEDGE_VISIBILITY", "INTENT_GAINS_WORLD_EVENT_DIRECTOR_OR_RENDER_AUTHORITY"],
+        "expected_disposition": "ONLY_EXACT_PARENT_CONTEXT_BOUND_INTENT_IS_ADMISSIBLE"
+      }
+    },
+    "acceptance": ["ALL_REQUIRED_TYPE_REFS_RESOLVE_IN_PARENT_CONTRACT", "ALL_REQUIRED_CONTRACTS_RESOLVE_TO_AF_A_THROUGH_AF_H", "NO_CHECK_CLAIMS_RUNTIME_IMPLEMENTATION", "NO_SECOND_AUTHORITY_PLANE", "EVERY_CHECK_HAS_ORDERED_ASSERTIONS_FORBIDDEN_OUTCOMES_AND_EXPECTED_DISPOSITION"]
+  },
   "suite_acceptance": [
     "ALL_EIGHT_SCENARIOS_PRESENT",
     "ALL_HUMAN_REQUIRED_FIELDS_PRESENT_PER_SCENARIO",
@@ -295,6 +368,7 @@
     "SKILL_LEDGER_ADMISSION_FIXTURES_BOUND_TO_FIGHTER_VS_SCHOLAR",
     "ACTION_DEMAND_PROJECTION_FIXTURE_EXTENSION_EXPLICITLY_REGISTERED_BY_CANONICAL_SUITE",
     "BRANCH_QUALITY_REPLAY_PROVENANCE_FIXTURE_EXPLICITLY_REGISTERED_BY_CANONICAL_SUITE",
-    "NO_SCENARIO_CLAIMS_RUNTIME_IMPLEMENTATION_BEYOND_ACCEPTED_R001_R002_FOUNDATION"
+    "NO_SCENARIO_CLAIMS_RUNTIME_IMPLEMENTATION_BEYOND_ACCEPTED_R001_R002_FOUNDATION",
+    "MIDS_VNEXT_ARCHITECTURE_CHECKS_RESOLVE_WITHOUT_RUNTIME_OR_SECOND_AUTHORITY"
   ]
 }

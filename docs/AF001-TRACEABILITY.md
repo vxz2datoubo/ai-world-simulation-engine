@@ -91,13 +91,14 @@ Only evidence-backed mappings are legal. `baseline_version` remains legacy basel
 
 The unified contract registry resolves the current Freeze surface. At minimum the following must exist with version, domain, authority owner and implementation state:
 
-- AF-B: `WorldInstance`, `WorldFrame`, `Scene`, `Zone`, `Portal`, `ActorAggregate`, `ObjectAggregate`, `PlayerIdentity`.
+- AF-A coordination-only candidate interfaces: `WorldOrchestrationPlan`, `DomainChangeNotice`, `SimulationFidelityPolicy`, `DeferredConcretizationReceipt`, `TemporalCompressionPlan`, `DomainModuleManifest`. None owns canonical data or direct event-commit authority.
+- AF-B: `WorldInstance`, `WorldFrame`, `Scene`, `Zone`, `Portal`, `ActorAggregate`, `ObjectAggregate`, `PlayerIdentity`, plus vNext candidate `InstitutionAggregate`, `EntityLifecycleReceipt`, `PlaceHistoryProjection`.
 - AF-C: `ActorBaseProfile`, `SkillLedger`, `DerivedCapability`, `ActionDemandProfile`, `ActionResolutionReceipt`, `InjuryState`, `EquipmentLoadout`.
 - AF-D: `ActorPresentationState`, `OutfitState`, `DressingState`, `ActorAppearanceSnapshot`, `View`, `MediaAsset`, `MediaVersion`.
-- AF-E: `PlayerChronicle`, `PlayerSnapshot`, `IntentBelief`, `CharacterCore`, `EnactedPersonaHypothesis`, `NPCPerceptionEvent`, `NPCPerceptionStream`, `NPCEpisodicMemory`, `BeliefState`, `NPCPlayerRelationshipState`.
+- AF-E: `PlayerChronicle`, `PlayerSnapshot`, `IntentBelief`, `CharacterCore`, `EnactedPersonaHypothesis`, `NPCPerceptionEvent`, `NPCPerceptionStream`, `NPCEpisodicMemory`, `BeliefState`, `NPCPlayerRelationshipState`, plus vNext candidate `LegalProcessProjection`.
 - AF-F: `StoryDNA`, `StoryBible`, `HardCausalAnchor`, `SoftDramaticAttractor`, `Storylet`, `EventDeckEntry`, `InformationPacket`, `NarrativePromise`.
-- AF-G: `NarrativeOpportunityBroker`, `EncounterCandidate`, `WorldEchoOpportunity`, `ResponseConcept`, `PlayerAutoExpressionPolicy`.
-- AF-H: `DIRECTOR-BEAT-PACKET`, `PublicationProjection`.
+- AF-G: `NarrativeOpportunityBroker`, `EncounterCandidate`, `WorldEchoOpportunity`, `ResponseConcept`, `PlayerAutoExpressionPolicy`, plus vNext candidate `NarrativeInfluenceReceipt`.
+- AF-H: `DIRECTOR-BEAT-PACKET`, `PublicationProjection`, plus vNext candidate `DramaticPresentationIntent`, `AudienceExposurePolicy`.
 
 `EventDeckEntry` is explicitly an alias/wrapper of `Storylet` plus deck-selection metadata. It is not an independent world-truth type.
 
@@ -119,6 +120,21 @@ R001/R002 accepted foundations
 
 Cross-links: AF-B->AF-D, AF-C->AF-D, AF-E->AF-F, AF-E->AF-G, AF-F->AF-G, AF-D+AF-E+AF-G->AF-H.
 
+MIDS vNext adds coordination cross-links without changing authority order:
+
+```text
+AF-A WorldOrchestrationPlan (coordination only)
+  -> typed request to owning AF domain
+  <- owning domain receipt / canonical event ref
+  -> DomainChangeNotice (derived causal hint)
+  -> receiving domain independently validates
+
+AF-A/B DeferredConcretizationReceipt -> owning-domain event (never prior-event edit)
+AF-F/G NarrativeInfluenceReceipt -> already-legal candidate selection
+AF-H AudienceExposurePolicy -> PublicationProjection (never AF-E acquisition)
+AF-H DramaticPresentationIntent <-> existing DIRECTOR-BEAT-PACKET exact parent/context binding
+```
+
 No post-freeze runtime task may silently depend on an unresolved lower-layer architectural decision. Deferred ruleset/balance policy must remain explicit and version-bound, but it does not by itself re-open an already resolved architectural substrate.
 
 ## 8. Design-source traceability
@@ -139,6 +155,9 @@ No post-freeze runtime task may silently depend on an unresolved lower-layer arc
 | Issue #24 / PR #25 `CAP-EVAL-001` | AF-C | executable evaluation evidence only; candidates non-canonical; no I2 authority |
 | Issue #26 / PR #27 `CAP-EVAL-002` | AF-C | held-out robustness evidence only; Independent Review `5004524795` accepted exact head `91a46c7c1ac8a5c7e13f389a81497a5307166ca0`; no I2 authority |
 | Issue #28 `CAPABILITY-ARCH-RESOLUTION-001` | AF-C governance | Control Tower architectural substrate resolution; tuning/balance/genre policy deferred; no runtime release |
+| Issue #102 `MIDS-WORLD-DESIGN-001` | research/governance | shadow discovery/replay tooling remains separate; its candidate output cannot write canonical architecture |
+| Issue #103 `MIDS-ARCH-001` + snapshot `MIDS-ARCH-001-SPEC-2026-09-02-R1` | AF-A..H | user-confirmed design compiled into this architecture-only candidate; independent exact-head review required |
+| Evidence head `f20c097de5d91ba580b807a2bf86e10b0fe5439d` | AF-A..H | three MIDS design files are immutable non-canonical evidence; classification recorded in `docs/research/AWRSE-MIDS-TO-AF-VNEXT-MAPPING-v0.1.md` |
 
 Candidate skills S13-S61 remain `CANDIDATE / NOT_PROMOTED`.
 
@@ -154,6 +173,23 @@ Candidate skills S13-S61 remain `CANDIDATE / NOT_PROMOTED`.
 | `ASSET_APPEARANCE_REVISIT` |  | ✓ |  | ✓ |  |  |  | ✓ |
 | `HOSTILE_PLAYER_BREAKS_PLOT` | ✓ | ✓ |  |  | ✓ | ✓ | ✓ | ✓ |
 | `MULTIPLAYER_DIFFERENT_KNOWLEDGE` | ✓ | ✓ |  |  | ✓ | ✓ | ✓ | ✓ |
+
+The additive `mids_vnext_architecture_checks` registry covers architecture-only cross-domain cases without pretending to execute runtime:
+
+| MIDS check | Main AF coverage | Critical prohibition |
+|---|---|---|
+| `PRICE_CONTROL_TO_BLACK_MARKET` | A/B/C/E/F/G | Orchestrator cannot mutate price, scarcity or social truth |
+| `DEFERRED_TOWN_CONCRETIZATION` | A/B/F | Unknown cannot be invented or locked history re-rolled |
+| `FALSE_ARREST_AND_PUBLIC_BELIEF` | A/B/E/F/H | Legal judgment and audience knowledge cannot rewrite truth/character knowledge |
+| `LONG_HORIZON_BUTTERFLY_PAYOFF` | A/B/E/F/G/H | Payoff cannot retcon cause or lose causal provenance |
+| `PLAYER_DEATH_SAME_WORLD_SUCCESSION` | A/B/E/F/H | Rebinding cannot erase death, fork world or transfer unsupported knowledge |
+| `LONG_ABSENCE_AND_TEMPORAL_COMPRESSION` | A/B/E/H | Presentation compression cannot erase time or activate disabled modules |
+| `PEACEFUL_ORDINARY_LIFE` | F/G/H | Narrative cannot force catastrophe or replace an empty set with illegality |
+| `DIRECTOR_INTENT_PARENT_CONTEXT_BINDING` | A/H | Orphan, stale-world, event-mismatched or information-expanding intent cannot become a parallel Director handoff |
+
+### MIDS AF-H adjunct binding
+
+`DIRECTOR-BEAT-PACKET` remains the sole AWRSE-to-Director handoff boundary. `DramaticPresentationIntent` is admitted only when the parent's `dramatic_presentation_intent_ref` and the extension's `parent_director_beat_packet_ref` are bidirectionally equal, `world_instance_id` and `world_state_version`/cursor are identical, the ordered confirmed-event set and its digest match, causal emphasis is a subset of that event set, and allowed information is within the parent visibility envelope. Any orphan, duplicate, wrong world, stale cursor, event mismatch or information superset fails closed. The extension owns no canonical data and cannot be transported as an independent Director packet.
 
 Human-readable scenario prose remains in the eval registry. Each scenario also has a machine `machine_spec` whose type refs and decision dependencies must resolve.
 
@@ -311,6 +347,38 @@ A historical `OD-*` identifier is durable traceability. Its presence does not im
 - **Dependency:** future AI Director federation.
 - **Risk:** transport-specific assumptions leak into canonical semantics.
 - **Required experiment/research:** contract serialization round-trip, version skew tests and failure-isolation prototype after freeze acceptance.
+
+### OD-FIDELITY-POLICY-001 — adaptive simulation fidelity thresholds and budgets
+- **Current status:** `OPEN_DECISION / ARCHITECTURE_BOUNDARY_RESOLVED_POLICY_VALUES_DEFERRED`.
+- **Competing options:** fixed domain tiers; causal-risk adaptive tiers; attention/resource-budget scheduler; hybrid with per-domain minimums.
+- **Evidence:** MIDS P011/P020 require adaptive fidelity and modular domains while preserving established history and conservation.
+- **Dependency:** `SimulationFidelityPolicy`, domain update scheduling, background-world cost and reproducibility.
+- **Risk:** hidden truth loss, inconsistent updates, resource creation or nondeterministic replay if fidelity becomes an authority switch.
+- **Required experiment/research:** active/background/dormant world corpus measuring cost, causal divergence, conservation and replay stability.
+
+### OD-NARRATIVE-INFLUENCE-POLICY-001 — narrative influence dimensions, weights and budget
+- **Current status:** `OPEN_DECISION / ARCHITECTURE_BOUNDARY_RESOLVED_POLICY_VALUES_DEFERRED`.
+- **Competing options:** fixed transparent dimensions; genre-scoped rule packs; bounded learned ranking; hybrid with hard human-authored caps.
+- **Evidence:** MIDS P005 permits bounded audited influence over legal opportunities, while AF-F/G forbid fact/outcome authority.
+- **Dependency:** `NarrativeInfluenceReceipt`, `PXRankingReceipt`, storylet selection and player-facing narrative exposure preference.
+- **Risk:** covert railroading, engagement optimization over agency, or accidental mutation of feasibility/outcome probability.
+- **Required experiment/research:** offline legal-candidate ranking corpus, counterfactual agency audit, budget exhaustion behavior and human review.
+
+### OD-LONG-ABSENCE-001 — optional world advancement while player is absent
+- **Current status:** `OPEN_DECISION / DEFAULT_FREEZE_RESOLVED_OPTIONAL_ADVANCE_DEFERRED`.
+- **Competing options:** always freeze; opt-in elapsed-time cap; authored safe windows; causal-risk bounded catch-up simulation.
+- **Evidence:** MIDS P016 confirms default close/reopen freeze and allows a later optional long-absence policy without choosing threshold or algorithm.
+- **Dependency:** canonical time cursor, `SimulationFidelityPolicy`, `TemporalCompressionPlan`, interruption and player fairness.
+- **Risk:** irreversible surprise, excessive catch-up cost, missed decisions, or divergent replay.
+- **Required experiment/research:** long-absence scenario matrix with caps, critical interrupts, deterministic catch-up and user-consent evaluation.
+
+### OD-ENTITY-PROVENANCE-001 — split/composition and material provenance depth
+- **Current status:** `OPEN_DECISION / PERSISTENT_ID_AND_NO_REUSE_RESOLVED_PROVENANCE_DEPTH_DEFERRED`.
+- **Competing options:** direct parent refs only; material-lot provenance graph; domain-specific composition receipts; tiered provenance by causal importance.
+- **Evidence:** MIDS P025-P027 require persistent identity, destroyed-ID retention and new IDs for split/composed outputs, but defer atom-level provenance.
+- **Dependency:** `EntityLifecycleReceipt`, resource conservation, repair/crafting and forensic evidence.
+- **Risk:** identity laundering, duplication, storage explosion or inability to explain material origin.
+- **Required experiment/research:** destruction/split/merge/repair/crafting corpus measuring identity correctness, conservation and provenance cost.
 
 ## 13. Governance
 
