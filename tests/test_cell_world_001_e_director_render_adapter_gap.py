@@ -1,9 +1,14 @@
 import importlib.util
+import json
 from pathlib import Path
 
 import evals.i9a_director_beat_packet_federation_mock as i9a
 from runtime.awrse.model import thaw_value
 from runtime.awrse.render import build_render_packet, validate_render_claims
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACT_PATH = ROOT / "contracts" / "AF001-LIVING-STORY-CONTRACTS.json"
 
 
 def _load_accepted_i9a_fixture_module():
@@ -17,6 +22,11 @@ def _load_accepted_i9a_fixture_module():
 
 
 FIXTURE = _load_accepted_i9a_fixture_module()
+
+
+def _director_handoff_profile():
+    contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    return contract["authority_semantics"]["profiles"]["AWRSE_DIRECTOR_HANDOFF"]
 
 
 def _materials(staging=None):
@@ -76,6 +86,20 @@ def _aligned_validation(render_packet):
     )
 
 
+def test_contract_authorizes_bounded_director_staging_but_not_fact_rewrite():
+    profile = _director_handoff_profile()
+
+    assert profile["contract_schema_steward"] == "AWRSE_AF_H_CONTRACT_STEWARD"
+    assert "AWRSE_DIRECTOR_PACKET_ASSEMBLER" in profile["producer_or_assembler"]
+    assert "AI_DIRECTOR" in profile["downstream_consumer"]
+    assert "RENDERER_PUBLICATION" in profile["downstream_consumer"]
+    assert profile["staging_authority"] == ["AI_DIRECTOR"]
+    assert (
+        profile["mutation_constraint"]
+        == "AI_DIRECTOR_MAY_CHOOSE_STAGING_CAMERA_PERFORMANCE_EDIT_AND_SOUND_ONLY_INSIDE_THE_PACKET_ENVELOPE_AND_MAY_NOT_REWRITE_PACKET_FACTS_KNOWLEDGE_VISIBILITY_ACTOR_IDENTITY_OR_PRESENTATION_REQUIREMENTS"
+    )
+
+
 def test_valid_i9a_staging_and_canonical_render_packet_can_coexist_without_being_same_authority():
     _, director_packet, receipt, render_packet, damage, speech, acquisition = _materials()
 
@@ -94,8 +118,8 @@ def test_valid_i9a_staging_and_canonical_render_packet_can_coexist_without_being
     assert receipt.provider_call_count == 0
     assert _aligned_validation(render_packet).status == "RENDER_ALIGNED"
 
-    # Same event context, different authority surfaces. The accepted I9A staging tokens
-    # are not a runtime render-camera claim or adapter receipt.
+    # Contract-level staging authority exists, but the accepted I9A staging tokens are
+    # not yet a runtime render-camera claim or an adapter receipt.
     assert set(thaw_value(render_packet.camera)) == {"mode", "framing"}
     assert set(thaw_value(receipt.staging_metadata)) == {
         "camera_intent",
@@ -197,14 +221,16 @@ def test_two_valid_director_staging_choices_do_not_change_canonical_render_truth
     assert _aligned_validation(render_b).status == "RENDER_ALIGNED"
 
 
-def test_gap_proof_does_not_invent_an_adapter_contract():
+def test_gap_proof_classifies_missing_runtime_adapter_without_redesigning_af_h():
     _, _, receipt, render_packet, *_ = _materials()
+    profile = _director_handoff_profile()
 
-    # Pin the negative result: current endpoints expose disjoint camera/staging surfaces.
-    # Closing this gap later requires a separately governed adapter/receipt, not a silent
-    # mapping inside an eval or renderer caller.
+    # AF-H already authorizes bounded staging. The missing piece is the governed runtime
+    # translation/admission bridge into the current renderer camera vocabulary.
     staging = thaw_value(receipt.staging_metadata)
     camera = thaw_value(render_packet.camera)
+    assert profile["staging_authority"] == ["AI_DIRECTOR"]
+    assert "RENDERER_PUBLICATION" in profile["downstream_consumer"]
     assert "camera_intent" in staging
     assert "camera_intent" not in camera
     assert "mode" in camera
