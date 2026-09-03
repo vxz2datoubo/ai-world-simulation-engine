@@ -146,6 +146,24 @@ class SimulationEngine:
         }
     )
 
+    def __init__(self) -> None:
+        # This is not a ledger.  It records that this engine's existing
+        # canonical commit/replay path produced the current sealed projection.
+        self._stage1_committed_projection_fingerprints: dict[int, tuple[str, tuple[str, ...]]] = {}
+
+    def stage1_orchestration_inputs(self, world: WorldState):
+        """Return read-only Stage 1 scheduler inputs from this engine's projection."""
+        from .orchestration_authority import inputs_from_committed_engine
+        return inputs_from_committed_engine(self, world)
+
+    def _stage1_read_committed_events(self, world: WorldState) -> tuple[Event, ...]:
+        event_ids = tuple(event.event_id for event in world.event_log)
+        expected = self._stage1_committed_projection_fingerprints.get(id(world))
+        actual = (world.world_state_version, event_ids)
+        if expected != actual or not world.is_read_only or not event_ids:
+            raise ValueError("STAGE1_COMMITTED_ENGINE_PROVENANCE_REQUIRED")
+        return tuple(world.event_log)
+
     def resolve(self, action: Action, world: WorldState) -> Resolution:
         """Resolve for inspection only. Sealing prevents caller mutation after live evaluation begins."""
         world.seal_live()
@@ -646,6 +664,9 @@ class SimulationEngine:
         self.__apply_prevalidated_events(staged, new_events)
         staged._seal_graph_authorized(_LIVE_MUTATION_TOKEN)
         world._adopt_authorized_state(staged, _LIVE_MUTATION_TOKEN)
+        self._stage1_committed_projection_fingerprints[id(world)] = (
+            world.world_state_version, tuple(event.event_id for event in world.event_log)
+        )
 
     def __prevalidate_event_batch(
         self,

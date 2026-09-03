@@ -1,0 +1,27 @@
+{
+  "schema": "AF001-LW-STAGE1-DOMAIN-MODULES/v1",
+  "registry_id": "AF001-LW-STAGE1-COORDINATION-ADMISSION",
+  "authority_epoch": "LW-STAGE1-ORCH-001-R2",
+  "modules": [
+    {
+      "module_id": "physical",
+      "version": "1",
+      "authority_scope": "AF-B",
+      "accepted_event_types": ["OBJECT_DAMAGED", "ACTOR_STRUCK"],
+      "output_request_types": ["EVALUATE"],
+      "dependencies": [],
+      "enabled": true,
+      "contract_ref": "AF001-LIVING-STORY-CONTRACTS@1"
+    },
+    {
+      "module_id": "legal",
+      "version": "1",
+      "authority_scope": "AF-E",
+      "accepted_event_types": ["OBJECT_DAMAGED", "SPEECH_UTTERED"],
+      "output_request_types": ["EVALUATE"],
+      "dependencies": ["physical"],
+      "enabled": true,
+      "contract_ref": "AF001-LIVING-STORY-CONTRACTS@1"
+    }
+  ]
+}
