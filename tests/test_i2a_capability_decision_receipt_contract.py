@@ -8,6 +8,11 @@ from pathlib import Path
 import pytest
 
 from runtime.awrse.capability_resolution import resolve_capability
+from runtime.awrse.orchestration import (
+    STAGE1_PROVENANCE,
+    Stage1Provenance,
+    _stage1_provenance_matches,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -866,17 +871,31 @@ def test_runtime_and_r003_persistence_authority_are_preserved_with_exact_b1_regi
 
     baseline = tree_map(fixture["runtime_tree_sha"])
     current = tree_map("HEAD:runtime")
-    allowed = "awrse/functional_impairment_admission.py"
-    assert {k: v for k, v in current.items() if k != allowed} == {
-        k: v for k, v in baseline.items() if k != allowed
+    historical_exception = "awrse/functional_impairment_admission.py"
+    stage1_exception = "awrse/orchestration.py"
+    assert _stage1_provenance_matches(STAGE1_PROVENANCE) is True
+    assert STAGE1_PROVENANCE.task_id == "LW-STAGE1-ORCH-001-R1"
+    assert STAGE1_PROVENANCE.snapshot_id == "AWRSE-LW-STAGE1-ORCH-001-R1-SNAPSHOT-001"
+    assert STAGE1_PROVENANCE.baseline_sha == "37dd0310a2740013cf971100789fba0e7d45f7e1"
+    assert current[stage1_exception] == _git_object(f"runtime/{stage1_exception}")
+
+    assert {k: v for k, v in current.items() if k not in {historical_exception, stage1_exception}} == {
+        k: v for k, v in baseline.items() if k not in {historical_exception, stage1_exception}
     }
-    assert set(current) == set(baseline)
+    assert set(current) == set(baseline).union({stage1_exception})
+
+    for wrong_identity in (
+        Stage1Provenance("WRONG-TASK", STAGE1_PROVENANCE.snapshot_id, STAGE1_PROVENANCE.baseline_sha),
+        Stage1Provenance(STAGE1_PROVENANCE.task_id, "WRONG-SNAPSHOT", STAGE1_PROVENANCE.baseline_sha),
+        Stage1Provenance(STAGE1_PROVENANCE.task_id, STAGE1_PROVENANCE.snapshot_id, "0" * 40),
+    ):
+        assert _stage1_provenance_matches(wrong_identity) is False
 
     old_source = subprocess.check_output(
-        ["git", "cat-file", "blob", baseline[allowed]], cwd=ROOT
+        ["git", "cat-file", "blob", baseline[historical_exception]], cwd=ROOT
     )
     current_source = subprocess.check_output(
-        ["git", "cat-file", "blob", current[allowed]], cwd=ROOT
+        ["git", "cat-file", "blob", current[historical_exception]], cwd=ROOT
     )
     expected_source = old_source.replace(
         b"AF001-AUTHORITY-GRAPH-1.9-I2A008@1", AUTHORITY_GRAPH.encode("utf-8"), 1
