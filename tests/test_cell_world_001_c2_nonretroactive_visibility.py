@@ -66,7 +66,7 @@ def _world() -> WorldState:
         objects={
             "DOOR": ObjectState(
                 object_id="DOOR",
-                name="Wooden door",
+                name="木门",
                 scene_id="S1",
                 zone_id="Z1",
                 fragility=0.25,
