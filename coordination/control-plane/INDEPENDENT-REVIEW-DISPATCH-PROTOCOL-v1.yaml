@@ -6,7 +6,7 @@ queue_model: GITHUB_REVIEW_REQUEST_PLUS_PR_HANDOFF
 purpose:
   - separate GitHub review-ticket publication from cross-window delivery and final review-result recording
   - keep complete review facts in GitHub while keeping cross-window dispatch minimal
-  - prevent queue comments, PR comments, or send API acknowledgements from being misreported as completed dispatch
+  - prevent queue comments, PR comments, send API acknowledgements, executor tests, or cleanroom reruns from being misreported as independent acceptance
 
 authority_split:
   github_coordinator:
@@ -18,8 +18,9 @@ authority_split:
       - record formal lifecycle state only when its evidence gate is satisfied
     prohibited:
       - cross_window_delivery
-      - independent_review_execution
+      - independent_review_execution_by_default
       - treating ticket publication or API acknowledgement as dispatch confirmation
+      - treating L1 or L2 evidence as L3 independent acceptance
 
   codex_scheduler:
     responsibilities:
@@ -41,6 +42,96 @@ authority_split:
     prohibited:
       - implementation or remediation on the reviewed head
       - merge or canonicalization authority by virtue of review
+
+role_identity:
+  codex01:
+    primary_role: GITHUB_COORDINATION_AND_REVIEW_TICKET_PUBLISHER
+    default_l3_eligibility: false
+    rationale:
+      - coordination, task publication, remediation release, integration, or review-ticket publication can create role overlap with the engineering lifecycle
+      - such participation must not be silently converted into independent-review authority
+    exceptional_l3_eligibility_requires_all:
+      - explicit_separate_user_designation_for_l3
+      - no_participation_in_implementation
+      - no_participation_in_task_publication_or_execution_release
+      - no_participation_in_remediation
+      - no_participation_in_integration_or_merge_preparation
+      - no_other_material_role_conflict_with_the_exact_head
+    invariant: absent_all_exception_conditions_codex01_must_not_claim_INDEPENDENT_REVIEWED
+
+verification_levels:
+  order:
+    - L1_EXECUTOR_VERIFIED
+    - L2_CLEANROOM_REPRODUCED
+    - L3_INDEPENDENT_REVIEWED
+
+  L1_EXECUTOR_VERIFIED:
+    actor: implementation_executor
+    typical_actors:
+      - CODEX_ENGINEERING_WORKER
+      - WORKBUDDY
+    evidence:
+      - executor_local_tests
+      - executor_local_static_checks
+      - executor_local_reproduction_commands
+    meaning: executor has verified its own exact-head candidate in its working environment
+    does_not_prove:
+      - cleanroom_reproducibility
+      - reviewer_independence
+      - independent_acceptance
+      - merge_authority
+
+  L2_CLEANROOM_REPRODUCED:
+    actor: same_executor_as_L1
+    environment_requirements:
+      - newly_created_independent_clone_or_worktree
+      - exact_head_checked_out
+      - no_uncommitted_changes_before_reproduction
+      - no_reuse_of_dirty_implementation_workspace_as_cleanroom_evidence
+    evidence:
+      - exact_head_tests_reexecuted_in_clean_environment
+      - exact_head_reproduction_commands_reexecuted_in_clean_environment
+    meaning: same executor reproduced the candidate from a clean checkout and reduced risk of hidden local-state dependence
+    naming_rules:
+      allowed:
+        - CLEANROOM_REPRODUCED
+        - EXECUTOR_CLEANROOM_REPRODUCTION
+      forbidden:
+        - INDEPENDENT_ACCEPTANCE
+        - INDEPENDENT_REVIEWED
+        - INDEPENDENT_T3
+    does_not_prove:
+      - actor_independence
+      - independent_acceptance
+      - merge_authority
+
+  L3_INDEPENDENT_REVIEWED:
+    actor: GPT_INDEPENDENT_REVIEWER
+    independence_requirements:
+      - reviewer_did_not_implement_the_exact_head
+      - reviewer_did_not_remediate_the_exact_head
+      - reviewer_has_no_disqualifying_role_overlap_for_the_exact_head
+    required_actions:
+      - fresh_exact_head_T3_review
+      - exact_head_PR_review_evidence_written
+      - matching_QUEUE_REVIEW_RESULT_v1_written
+    evidence_gate:
+      - PR_review_and_queue_REVIEW_RESULT_bind_same_exact_head
+      - queue_verdict_is_ACCEPT_or_CHANGES_REQUIRED_or_BLOCKED
+      - independence_attestation_present
+    meaning: independent exact-head T3 has been completed and formally recorded
+    only_level_that_may_be_called_independent_review: true
+    does_not_grant:
+      - merge_authority
+      - implementation_authority
+      - canonicalization_authority
+
+verification_semantics:
+  L1_and_L2_may_support_review_request: true
+  L1_or_L2_must_never_be_promoted_to_L3_without_independent_reviewer_evidence: true
+  same_executor_cleanroom_is_reproducibility_not_independence: true
+  green_CI_is_engineering_evidence_not_independent_acceptance: true
+  exact_head_change_invalidates_prior_L1_L2_L3_for_new_head_unless_reexecuted_or_rereviewed: true
 
 cross_window_dispatch:
   target_discovery: DYNAMIC_ONLY
@@ -87,6 +178,7 @@ lifecycle:
       - exact_head_PR_review_evidence_exists
       - matching_REVIEW_RESULT_v1_exists_in_canonical_queue
       - reviewed_head_matches_pending_ticket_exact_head
+      - verification_level_is_L3_INDEPENDENT_REVIEWED
     does_not_grant:
       - merge_authority
       - implementation_authority
@@ -102,6 +194,12 @@ source_of_truth:
     - matching_PR_handoff
   dispatch_confirmation:
     - Codex_scheduler_target_window_readback_evidence
+  verification_level_evidence:
+    L1: executor_test_evidence
+    L2: cleanroom_exact_head_reproduction_evidence_by_same_executor
+    L3:
+      - exact_head_PR_review
+      - REVIEW_RESULT/v1
   final_review_result:
     - exact_head_PR_review
     - REVIEW_RESULT/v1
